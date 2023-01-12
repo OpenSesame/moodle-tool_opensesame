@@ -37,4 +37,4 @@ $string['apiauthtoken'] = 'API Authorization token';
 $string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integration';
 $string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
 $string['apitokenempty'] = 'TOKEN of OpenSesame API is not configured correctly.';
-$string['opensesamesync'] = 'OpenSesame Sync';
+$string['opensesamesync'] = 'OpenSesame Course Sync';
