@@ -41,8 +41,11 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/customerintegrationid',
             get_string('customerintegrationid', 'tool_opensesame'),
             get_string('customerintegrationiddesc', 'tool_opensesame'), ''));
-    $settings->add(new admin_setting_configtext('tool_opensesame/apiurl', get_string('apiurl', 'tool_opensesame'),
-            get_string('apiurldesc', 'tool_opensesame'), 'https://api.delivery.opensesame.com', PARAM_URL));
+    $settings->add(new admin_setting_configtext('tool_opensesame/authurl', get_string('authurl', 'tool_opensesame'),
+            get_string('authurldesc', 'tool_opensesame'), 'https://auth.coursecloud.net/oauth2/aus1l01v8s55riV0C0h8/v1/token',
+            PARAM_URL));
+    $settings->add(new admin_setting_configtext('tool_opensesame/baseurl', get_string('baseurl', 'tool_opensesame'),
+            get_string('baseurldesc', 'tool_opensesame'), 'https://api.delivery.opensesame.com', PARAM_URL));
     $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/apiauthtoken',
             get_string('apiauthtoken', 'tool_opensesame'),
             get_string('apiauthtokendesc', 'tool_opensesame'), ''));
