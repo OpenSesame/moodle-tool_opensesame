@@ -49,6 +49,8 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/apiauthtoken',
             get_string('apiauthtoken', 'tool_opensesame'),
             get_string('apiauthtokendesc', 'tool_opensesame'), ''));
+    $settings->add(new admin_setting_configtext('tool_opensesame/bearertoken', get_string('bearertoken', 'tool_opensesame'),
+            get_string('bearertokendesc', 'tool_opensesame'), '', PARAM_RAW));
     //add to the admin settings for opensesameintegration
     $ADMIN->add('opensesameintegration', $settings);
 
