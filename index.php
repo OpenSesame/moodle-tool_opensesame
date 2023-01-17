@@ -39,7 +39,7 @@ $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
 $PAGE->set_heading($SITE->fullname);
 $PAGE->set_title($SITE->fullname . ': ' . get_string('pluginname', 'tool_opensesame'));
-$PAGE->set_url(new moodle_url('tool/opensesame/configsettings.php'));
+$PAGE->set_url('/tool/opensesame/index.php');
 $PAGE->set_pagetype('admin-' . $PAGE->pagetype);
 
 echo $OUTPUT->header();
@@ -48,7 +48,7 @@ echo $OUTPUT->heading(get_string('pluginname', 'tool_opensesame'));
 //testing opensesame task in userinterface
 $task = new \tool_opensesame\task\opensesamesync();
 
-echo html_writer::tag('div', html_writer::tag('p', $task->name()));
+echo html_writer::tag('div', html_writer::tag('p', $task->get_name()));
 try {
     $task->execute(true);
 } catch (Exception $e) {

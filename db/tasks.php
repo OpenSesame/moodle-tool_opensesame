@@ -28,7 +28,7 @@ $tasks = [
         [
                 'classname' => 'tool_opensesame\task\opensesamesync',
                 'blocking' => 0,
-                'minute' => 'R',
+                'minute' => '*',
                 'hour' => 'R',
                 'day' => '*',
                 'dayofweek' => '*',

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 namespace tool_opensesame\task;
+require_once($CFG->dirroot . '/lib/filelib.php');
 
 /**
  * Simple task class responsible for integrating with OpenSesame every 24 hours. Disclaimer:
@@ -41,7 +42,32 @@ class opensesamesync extends \core\task\scheduled_task {
      * @return bool
      */
     public function execute($testing = null) {
-        // Cron expects Exception to recognise errors.
+        global $DB;
+        mtrace("Opensesame task just started.");
+        $authurl = get_config('tool_opensesame', 'authurl');
+        mtrace('?????????' . $authurl . 'authurl');
+        $clientid = get_config('tool_opensesame', 'clientid');
+        mtrace('???????' . $clientid . '=clientid');
+        $clientsecret = get_config('tool_opensesame', 'clientsecret');
+        mtrace($clientsecret . '=clientsecret');
+
+        $curl = new \curl();
+        $curl->setHeader([
+                'Content-Type: application/x-www-form-urlencoded',
+                'Accept: application/json',
+                sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
+        ]);
+
+        $response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
+        );
+        $statuscode = $curl->info['http_code'];
+        $decoded = json_decode($response);
+        $access_token = $decoded->access_token;
+        mtrace('response = ' . $response);
+        mtrace('statuscode = ' . $statuscode);
+        mtrace('response access_token' . gettype($response));
+        mtrace('decoded =' . $decoded->access_token);
+        mtrace('opensesame just finished.');
         return true;
     }
 }
