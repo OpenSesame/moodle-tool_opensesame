@@ -142,57 +142,47 @@ class opensesamesync extends \core\task\scheduled_task {
                         get_config('tool_opensesame', 'customerintegrationid');
                 mtrace('get url' . $url);
                 $response = $c->get($url);
+
                 $statuscode = $c->info['http_code'];
-                if ($statuscode == 401) {
-                    //Get required credentials
-                    $authurl = get_config('tool_opensesame', 'authurl');
-                    //mtrace('?????????' . $authurl . 'authurl');
-                    $clientid = get_config('tool_opensesame', 'clientid');
-                    //mtrace('???????' . $clientid . '=clientid');
-                    $clientsecret = get_config('tool_opensesame', 'clientsecret');
-                    //mtrace($clientsecret . '=clientsecret');
-                    //  Request an access token
-                    $curl = new \curl();
-                    $curl->setHeader([
-                            'Content-Type: application/x-www-form-urlencoded',
-                            'Accept: application/json',
-                            sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
+
+                mtrace('Statuscode' . $statuscode);
+                //mtrace('decoded response' . $response);
+                $dcoded = json_decode($response);
+                $data = $dcoded->data;//an array of courses
+                foreach ($data as $idkey => $course) {
+                    mtrace($course->idkey);
+                    mtrace($course->active);
+                    //mtrace($course->title);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    //mtrace($course->idkey);
+                    $DB->insert_record_raw('tool_opensesame', [
+                            'idOpenSesame' => $idkey,
+                            'provider' => 'OpenSesame',
+                        //'isActive' => $course->active,
+                            'title' => $course->title,
+                            'descriptionText' => $course->descriptionHTML =
+                                    true ? $course->descriptionText : $course->descriptionHTML,
+                            'thumbnailURL' => $course->thumbnailURL,
+                            'duration' => $course->duration,
+                            'languages' => $course->languages,
+                            'oscategories' => $course->categories,
+                            'publisherName' => $course->publisherName,
+                            'packageDownloadUrl' => $course->packageDownloadUrl,
+                            'aiccLaunchUrl' => $course->aiccLaunchUrl,
+                        //'dateUpdated' => $course->dateUpdated,
+                        //'xApiActivityId' => $course->xApiActivityId
                     ]);
 
-                    $response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
-                    );
-                    $statuscode = $curl->info['http_code'];
-                    $decoded = json_decode($response);
-                    mtrace('response authtoke' . $response);
-                    //Access token is returned
-                    $access_token = $decoded->access_token;
-                    set_config('bearertoken', $access_token, 'tool_opensesame');
-                    //set hidden bearertoken create time stamp
-                    set_config('bearertokencreatetime', time(), 'tool_opensesame');
-                    $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-                    mtrace('createtime: ' . ($createtime));
-                    //set hidden bearertoken expire time stamp
-                    set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-                    $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
-                    mtrace('!!!!Expiretime' . $expiretime);
-                    //second attempt to content
-                    $c = new \curl();
-                    $bearertoken = get_config('tool_opensesame', 'bearertoken');
-                    mtrace($bearertoken);
-                    $c->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
-
-                    $ci = get_config('tool_opensesame', 'customerintegrationid');
-                    mtrace('ci = ' . $ci);
-                    $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                            get_config('tool_opensesame', 'customerintegrationid');
-                    mtrace('get url' . $url);
-                    $response = $c->get($url);
-                    $statuscode = $c->info['http_code'];
-                    mtrace('second attempt to content' . $statuscode);
                 }
-                mtrace('Statuscode' . $statuscode);
-
-                mtrace('decoded response' . $response);
+                mtrace(json_encode($data));
             }
             //mtrace('bearertoken is set to: ' . $bearertoken);
             $access_token = get_config('tool_opensesame', 'bearertoken');
