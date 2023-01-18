@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="admin/tool/opensesame/db" VERSION="20230118" COMMENT="XMLDB file for Moodle admin/tool/opensesame"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="tool_opensesame" COMMENT="Stores the course metadata for integration with OpenSesame">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="provider" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="OpenSesame" SEQUENCE="false" COMMENT="OpenSesame. All courses should be displayed as from OpenSesame."/>
+        <FIELD NAME="idopensesame" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="IdOpenSesame is the unique Identifier OpenSesame uses to identify individual content items."/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="Default Title" SEQUENCE="false" COMMENT="OpenSesame course title."/>
+        <FIELD NAME="descriptiontext" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="thumbnailurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="All courses should be viewable with a high-resolution thumbnail image."/>
+        <FIELD NAME="duration" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="000000" SEQUENCE="false" COMMENT="Course duration is provided in hh:mm:ss format. The duration is based on how long it will take an average learner to complete, review,  the course material."/>
+        <FIELD NAME="languages" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="The audio language of the course. Some courses are available in multiple languages is an array."/>
+        <FIELD NAME="oscategories" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="One to three subjects from OpenSesame's set of categories ."/>
+        <FIELD NAME="publishername" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Courses are not authored by OpenSesame. They are created by one of OpenSesame's publisher partners."/>
+        <FIELD NAME="packagedownloadurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The URL of the content package."/>
+        <FIELD NAME="aicclaunchurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The content item's AICC URL."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>
