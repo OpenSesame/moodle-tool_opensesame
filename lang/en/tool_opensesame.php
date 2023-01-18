@@ -42,3 +42,4 @@ $string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integratio
 $string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
 $string['apitokenempty'] = 'TOKEN of OpenSesame API is not configured correctly.';
 $string['opensesamesync'] = 'OpenSesame Course Sync';
+$string['cachedef_bearertokencreatetime'] = 'The time the bearer token was first created.';

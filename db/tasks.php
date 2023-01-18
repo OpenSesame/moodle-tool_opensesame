@@ -35,4 +35,5 @@ $tasks = [
                 'month' => '*'
         ],
     // Second task configuration.
+
 ];
