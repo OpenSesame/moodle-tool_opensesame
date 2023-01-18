@@ -146,33 +146,39 @@ class opensesamesync extends \core\task\scheduled_task {
                 $statuscode = $c->info['http_code'];
 
                 mtrace('Statuscode' . $statuscode);
-                //mtrace('decoded response' . $response);
+                mtrace('decoded response' . $response);
                 $dcoded = json_decode($response);
                 $data = $dcoded->data;//an array of courses
-                foreach ($data as $idkey => $course) {
-                    mtrace($course->idkey);
-                    mtrace($course->active);
+                foreach ($data as $course) {
+                    mtrace($course->id);
 
-                    $DB->insert_record_raw('tool_opensesame', [
-                            'idOpenSesame' => $idkey,
-                            'provider' => 'OpenSesame',
-                            'active' => $course->active,
-                            'title' => $course->title,
-                            'descriptionText' => $course->descriptionHTML =
-                                    true ? $course->descriptionText : $course->descriptionHTML,
-                            'thumbnailURL' => $course->thumbnailURL,
-                            'duration' => $course->duration,
-                            'languages' => $course->languages,
-                            'oscategories' => $course->categories,
-                            'publisherName' => $course->publisherName,
-                            'packageDownloadUrl' => $course->packageDownloadUrl,
-                            'aiccLaunchUrl' => $course->aiccLaunchUrl,
-                        //'dateUpdated' => $course->dateUpdated,
-                        //'xApiActivityId' => $course->xApiActivityId
-                    ]);
+                    mtrace($course->active);
+                    mtrace('check if bearertokenexpiretime setting exist');
+                    $keyexist =
+                            $DB->record_exists('tool_opensesame', ['idopensesame' => $course->id]);
+                    mtrace('keyexist: ' . $keyexist);
+                    if ($keyexist !== true) {
+                        $DB->insert_record_raw('tool_opensesame', [
+                                'idOpenSesame' => $course->id,
+                                'provider' => 'OpenSesame',
+                                'active' => $course->active,
+                                'title' => $course->title,
+                                'descriptionText' => $course->descriptionHTML =
+                                        true ? $course->descriptionText : $course->descriptionHTML,
+                                'thumbnailURL' => $course->thumbnailUrl,
+                                'duration' => $course->duration,
+                                'languages' => $course->languages,
+                                'oscategories' => $course->categories,
+                                'publisherName' => $course->publisherName,
+                                'packageDownloadUrl' => $course->packageDownloadUrl,
+                                'aiccLaunchUrl' => $course->aiccLaunchUrl,
+                            //'dateUpdated' => $course->dateUpdated,
+                            //'xApiActivityId' => $course->xApiActivityId
+                        ]);
+                    }
 
                 }
-                mtrace(json_encode($data));
+                //mtrace(json_encode($data));
             }
             //mtrace('bearertoken is set to: ' . $bearertoken);
             $access_token = get_config('tool_opensesame', 'bearertoken');
