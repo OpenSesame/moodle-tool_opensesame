@@ -68,6 +68,27 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         // Opensesame savepoint reached.
         upgrade_plugin_savepoint(true, 2023011115, 'tool', 'opensesame');
     }
+    if ($oldversion < 2023011116) {
+
+        // Define field active to be added to tool_opensesame.
+        $table = new xmldb_table('tool_opensesame');
+        $field = new xmldb_field('active', XMLDB_TYPE_CHAR, '5', null, XMLDB_NOTNULL, null, '0', 'aicclaunchurl');
+
+        // Conditionally launch add field active.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Changing type of field idopensesame on table tool_opensesame to char.
+        $table = new xmldb_table('tool_opensesame');
+        $field = new xmldb_field('idopensesame', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, '0', 'provider');
+
+        // Launch change of type for field idopensesame.
+        $dbman->change_field_type($table, $field);
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023011116, 'tool', 'opensesame');
+    }
 
     return true;
 }

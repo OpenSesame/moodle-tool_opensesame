@@ -11,7 +11,7 @@
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="provider" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="OpenSesame" SEQUENCE="false" COMMENT="OpenSesame. All courses should be displayed as from OpenSesame."/>
-        <FIELD NAME="idopensesame" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="IdOpenSesame is the unique Identifier OpenSesame uses to identify individual content items."/>
+        <FIELD NAME="idopensesame" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="IdOpenSesame is the unique Identifier OpenSesame uses to identify individual content items."/>
         <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="Default Title" SEQUENCE="false" COMMENT="OpenSesame course title."/>
         <FIELD NAME="descriptiontext" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="thumbnailurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="All courses should be viewable with a high-resolution thumbnail image."/>
@@ -21,6 +21,7 @@
         <FIELD NAME="publishername" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Courses are not authored by OpenSesame. They are created by one of OpenSesame's publisher partners."/>
         <FIELD NAME="packagedownloadurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The URL of the content package."/>
         <FIELD NAME="aicclaunchurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The content item's AICC URL."/>
+        <FIELD NAME="active" TYPE="char" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

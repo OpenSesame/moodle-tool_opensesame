@@ -152,21 +152,11 @@ class opensesamesync extends \core\task\scheduled_task {
                 foreach ($data as $idkey => $course) {
                     mtrace($course->idkey);
                     mtrace($course->active);
-                    //mtrace($course->title);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
-                    //mtrace($course->idkey);
+
                     $DB->insert_record_raw('tool_opensesame', [
                             'idOpenSesame' => $idkey,
                             'provider' => 'OpenSesame',
-                        //'isActive' => $course->active,
+                            'active' => $course->active,
                             'title' => $course->title,
                             'descriptionText' => $course->descriptionHTML =
                                     true ? $course->descriptionText : $course->descriptionHTML,
