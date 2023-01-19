@@ -118,11 +118,13 @@ class opensesamesync extends \core\task\scheduled_task {
             //Integrator issues request with access token
         }
         if ($bearertoken !== '') {
+            mtrace('Is Bearer Token Expired?');
             $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
 
             $now = time();
 
             if ($now >= $expiretime) {
+                mtrace('Bearer Token is Expired. Resetting Bearer token to empty.');
                 set_config('bearertoken', '', 'tool_opensesame');
             } else {
                 mtrace('bearer token is not expired');
@@ -173,11 +175,16 @@ class opensesamesync extends \core\task\scheduled_task {
                         $data->fullname = $course->title;
                         $data->shortname = $course->title;
                         $data->idnumber = $course->id;
+                        $data->summary = $course->descriptionHTML;
                         $data->timecreated = time();
                         $data->category = $DB->get_field('course_categories', 'id', ['name' => 'Miscellaneous']);
                         //$data->catogory = $DB->get_record('course_categories', array('name' => 'Miscellaneous'), 'id', MUST_EXIST);
                         create_course($data);
+
                         mtrace('Course Created: ' . $course->id);
+                    }
+                    if ($coursexist == true) {
+                        mtrace('Course: ' . $course->title . ' needs updating');
                     }
                 }
             }
