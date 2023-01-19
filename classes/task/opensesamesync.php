@@ -16,6 +16,7 @@
 namespace tool_opensesame\task;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
+require_once($CFG->dirroot . '/course/lib.php');
 
 /**
  * Simple task class responsible for integrating with OpenSesame every 24 hours. Disclaimer:
@@ -47,25 +48,19 @@ class opensesamesync extends \core\task\scheduled_task {
         mtrace("Opensesame task just started.");
 
         //make two hidden settings in config_plugin table
-        mtrace('check if bearertokenexpiretime setting exist');
         $setting1 = $DB->record_exists('config_plugins', ['plugin' => 'tool_opensesame', 'name' => 'bearertokenexpiretime']);
-        mtrace($setting1 . ' setting1');
         if ($setting1 === 0) {
             mtrace('bearertokenexpiretime setting does not exist');
             set_config('bearertokenexpiretime', '', 'tool_opensesame');
             mtrace('bearertokenexpiretime setting is created');
-        } else {
-            mtrace('bearertokenexpiretime setting does exist');
         }
 
         $setting2 = $DB->record_exists('config_plugins', ['plugin' => 'tool_opensesame', 'name' => 'bearertokencreatetime']);
-        mtrace('checking  if bearertokencreatetime setting exist' . $setting2);
+
         if ($setting2 === 0) {
             mtrace('bearertokencreatetime setting does not exist');
             set_config('bearertokencreatetime', '', 'tool_opensesame');
             mtrace('bearertokencreatetime setting is created');
-        } else {
-            mtrace('bearertokencreatetime setting does exist');
         }
         /*
          * When the task runs
@@ -76,7 +71,8 @@ class opensesamesync extends \core\task\scheduled_task {
          * */
 
         $bearertoken = get_config('tool_opensesame', 'bearertoken');
-        //mtrace('Checking for the Bearer Token: ' . $bearertoken);
+
+        //second run:
         if ($bearertoken === '') {
             mtrace('You need to create the Bearer Token.' . $bearertoken);
 
@@ -100,7 +96,7 @@ class opensesamesync extends \core\task\scheduled_task {
             );
             $statuscode = $curl->info['http_code'];
             $decoded = json_decode($response);
-            mtrace('response authtoke' . $response);
+            //prints mtrace('response authtoke' . $response);
             //Access token is returned
             $access_token = $decoded->access_token;
             set_config('bearertoken', $access_token, 'tool_opensesame');
@@ -120,43 +116,34 @@ class opensesamesync extends \core\task\scheduled_task {
                 set_config('bearertoken', '', 'tool_opensesame');
             }
             //Integrator issues request with access token
-        } else if ($bearertoken !== '') {
+        }
+        if ($bearertoken !== '') {
             $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
-            mtrace('!!!!Expiretime' . $expiretime);
-            mtrace('time: ' . time() . '> $expiretime: ' . $expiretime);
+
             $now = time();
-            mtrace($now - $expiretime);
+
             if ($now >= $expiretime) {
-                mtrace($now - $expiretime);
                 set_config('bearertoken', '', 'tool_opensesame');
             } else {
                 mtrace('bearer token is not expired');
                 //Integrator issues request with access token
                 $c = new \curl();
                 $bearertoken = get_config('tool_opensesame', 'bearertoken');
-                mtrace($bearertoken);
+                //mtrace($bearertoken);
                 $c->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
                 $ci = get_config('tool_opensesame', 'customerintegrationid');
-                mtrace('ci = ' . $ci);
                 $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                         get_config('tool_opensesame', 'customerintegrationid');
-                mtrace('get url' . $url);
+
                 $response = $c->get($url);
-
                 $statuscode = $c->info['http_code'];
-
-                mtrace('Statuscode' . $statuscode);
-                mtrace('decoded response' . $response);
                 $dcoded = json_decode($response);
                 $data = $dcoded->data;//an array of courses
                 foreach ($data as $course) {
-                    mtrace($course->id);
 
-                    mtrace($course->active);
-                    mtrace('check if bearertokenexpiretime setting exist');
                     $keyexist =
                             $DB->record_exists('tool_opensesame', ['idopensesame' => $course->id]);
-                    mtrace('keyexist: ' . $keyexist);
+
                     if ($keyexist !== true) {
                         $DB->insert_record_raw('tool_opensesame', [
                                 'idOpenSesame' => $course->id,
@@ -175,19 +162,29 @@ class opensesamesync extends \core\task\scheduled_task {
                             //'dateUpdated' => $course->dateUpdated,
                             //'xApiActivityId' => $course->xApiActivityId
                         ]);
-                    }
 
+                    }
+                    $coursexist =
+                            $DB->record_exists('course', ['idnumber' => $course->id]);
+
+                    if ($coursexist !== true) {
+                        $data = new \stdClass();
+
+                        $data->fullname = $course->title;
+                        $data->shortname = $course->title;
+                        $data->idnumber = $course->id;
+                        $data->timecreated = time();
+                        $data->category = $DB->get_field('course_categories', 'id', ['name' => 'Miscellaneous']);
+                        //$data->catogory = $DB->get_record('course_categories', array('name' => 'Miscellaneous'), 'id', MUST_EXIST);
+                        create_course($data);
+                        mtrace('Course Created: ' . $course->id);
+                    }
                 }
-                //mtrace(json_encode($data));
             }
-            //mtrace('bearertoken is set to: ' . $bearertoken);
             $access_token = get_config('tool_opensesame', 'bearertoken');
-            //mtrace('Accesstoken: ' . $bearertoken);
             set_config('bearertokencreatetime', time(), 'tool_opensesame');
             $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-            mtrace('createtime: ' . $createtime);
         }
-
         mtrace('opensesame just finished.');
         return true;
     }
