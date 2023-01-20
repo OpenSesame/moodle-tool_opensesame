@@ -178,6 +178,7 @@ class opensesamesync extends \core\task\scheduled_task {
                         $data->summary = $course->descriptionHTML;
                         $data->timecreated = time();
                         $data->category = $DB->get_field('course_categories', 'id', ['name' => 'Miscellaneous']);
+                        $data->summary .= ' Publisher Name: ' . $course->publisherName . ' Duration: ' . $course->duration;
                         //$data->catogory = $DB->get_record('course_categories', array('name' => 'Miscellaneous'), 'id', MUST_EXIST);
                         create_course($data);
 
