@@ -111,23 +111,23 @@ class api extends \curl {
         return $this->get($url);
     }
 
-    public static function authenticate() {//Get required credentials
+    public function authenticate() {//Get required credentials
         $authurl = get_config('tool_opensesame', 'authurl');
         //mtrace('?????????' . $authurl . 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
 
         mtrace('Requesting an access token');
-        $curl = new \curl();
-        $curl->setHeader([
+
+        $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
                 'Accept: application/json',
                 sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
         ]);
 
-        $response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
+        $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
         );
-        $statuscode = $curl->info['http_code'];
+        $statuscode = $this->info['http_code'];
         $decoded = json_decode($response);
         //prints mtrace('response authtoke' . $response);
         mtrace('Access token is returned');
@@ -142,17 +142,16 @@ class api extends \curl {
         $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
     }
 
-    public static function get_oscontent() {
+    public function get_oscontent() {
         //Integrator issues request with access token
-        $c = new \curl();
         $bearertoken = get_config('tool_opensesame', 'bearertoken');
-        $c->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
+        $this->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
         //$ci = get_config('tool_opensesame', 'customerintegrationid');
         $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                 get_config('tool_opensesame', 'customerintegrationid');
 
-        $response = $c->get($url);
-        $statuscode = $c->info['http_code'];
+        $response = $this->get($url);
+        $statuscode = $this->info['http_code'];
         $dcoded = json_decode($response);
         $data = $dcoded->data;
         return $data;

@@ -64,8 +64,8 @@ class opensesamesync extends \core\task\scheduled_task {
         //If the token does not exist, it is created
         if ($bearertoken === '') {
             mtrace('You need to create the Bearer Token.' . $bearertoken);
-
-            api::authenticate();
+            $api = new api;
+            $api->authenticate();
 
             //Integrator issues request with access token
         }
@@ -74,8 +74,8 @@ class opensesamesync extends \core\task\scheduled_task {
             mtrace('If the token exists and it has expired, it is created');
             mtrace('Bearer Token is Expired. Resetting Bearer token to empty.');
             set_config('bearertoken', '', 'tool_opensesame');
-
-            api::authenticate();
+            $api = new api;
+            $api->authenticate();
 
         }
         //If the token exists and has not expired, no auth process takes place, get content using bearer token
@@ -84,7 +84,8 @@ class opensesamesync extends \core\task\scheduled_task {
             mtrace('bearer token is not expired no auth takes place, get content using bearer token');
             ////Integrator issues request with access token
 
-            $data = api::get_oscontent();
+            $api = new api;
+            $data = $api->get_oscontent();
             foreach ($data as $oscourse) {
 
                 $keyexist =
