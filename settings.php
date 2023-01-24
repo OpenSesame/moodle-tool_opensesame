@@ -44,10 +44,6 @@ if ($hassiteconfig) {
             PARAM_URL));
     $settings->add(new admin_setting_configtext('tool_opensesame/baseurl', get_string('baseurl', 'tool_opensesame'),
             get_string('baseurldesc', 'tool_opensesame'), 'https://api.delivery.opensesame.com', PARAM_URL));
-    $settings->add(new admin_setting_configtext('tool_opensesame/bearertoken', get_string('bearertoken', 'tool_opensesame'),
-            get_string('bearertokendesc', 'tool_opensesame'), '', PARAM_RAW));
-    $settings->add(new admin_setting_configtext('tool_opensesame/bearertoken', get_string('bearertoken', 'tool_opensesame'),
-            get_string('bearertokendesc', 'tool_opensesame'), '', PARAM_RAW));
 
     //add to the admin settings for opensesameintegration
     $ADMIN->add('opensesameintegration', $settings);

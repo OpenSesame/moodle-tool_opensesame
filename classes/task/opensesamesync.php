@@ -50,26 +50,11 @@ class opensesamesync extends \core\task\scheduled_task {
         global $DB;
         mtrace("Opensesame task just started.");
 
-        //make two hidden settings in config_plugin table
-        $setting1 = $DB->record_exists('config_plugins', ['plugin' => 'tool_opensesame', 'name' => 'bearertokenexpiretime']);
-        if ($setting1 === 0) {
-            mtrace('bearertokenexpiretime setting does not exist');
-            set_config('bearertokenexpiretime', '', 'tool_opensesame');
-            mtrace('bearertokenexpiretime setting is created');
-        }
-
-        $setting2 = $DB->record_exists('config_plugins', ['plugin' => 'tool_opensesame', 'name' => 'bearertokencreatetime']);
-
-        if ($setting2 === 0) {
-            mtrace('bearertokencreatetime setting does not exist');
-            set_config('bearertokencreatetime', '', 'tool_opensesame');
-            mtrace('bearertokencreatetime setting is created');
-        }
         /*
          * When the task runs
          * If the token does not exist, it is created
          * If the token exists and has not expired, no auth process takes place
-         * If the token exists and it has expired, it is created
+         * If the token exists, and it has expired, it is created
          *
          * */
 
@@ -79,36 +64,7 @@ class opensesamesync extends \core\task\scheduled_task {
         //If the token does not exist, it is created
         if ($bearertoken === '') {
             mtrace('You need to create the Bearer Token.' . $bearertoken);
-            //todo make into a function 79-110
-            //Get required credentials
-            //$authurl = get_config('tool_opensesame', 'authurl');
-            ////mtrace('?????????' . $authurl . 'authurl');
-            //$clientid = get_config('tool_opensesame', 'clientid');
-            //$clientsecret = get_config('tool_opensesame', 'clientsecret');
-            //
-            //mtrace('Requesting an access token');
-            //$curl = new \curl();
-            //$curl->setHeader([
-            //        'Content-Type: application/x-www-form-urlencoded',
-            //        'Accept: application/json',
-            //        sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
-            //]);
-            //
-            //$response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
-            //);
-            //$statuscode = $curl->info['http_code'];
-            //$decoded = json_decode($response);
-            ////prints mtrace('response authtoke' . $response);
-            //mtrace('Access token is returned');
-            //$access_token = $decoded->access_token;
-            //set_config('bearertoken', $access_token, 'tool_opensesame');
-            //mtrace('set hidden bearertoken create time stamp');
-            //set_config('bearertokencreatetime', time(), 'tool_opensesame');
-            //$createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-            //
-            //mtrace('set hidden bearertoken expire time stamp');
-            //set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-            //$expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
+
             api::get_authentication();
 
             //Integrator issues request with access token
