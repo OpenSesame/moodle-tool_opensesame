@@ -92,19 +92,19 @@ class opensesamesync extends \core\task\scheduled_task {
 
                 if ($keyexist !== true) {
                     $DB->insert_record_raw('tool_opensesame', [
-                            'idOpenSesame' => $oscourse->id,
+                            'idopensesame' => $oscourse->id,
                             'provider' => 'OpenSesame',
                             'active' => $oscourse->active,
                             'title' => $oscourse->title,
-                            'descriptionText' => $oscourse->descriptionHtml =
+                            'descriptiontext' => $oscourse->descriptionHtml =
                                     true ? $oscourse->descriptionText : $oscourse->descriptionHtml,
-                            'thumbnailURL' => $oscourse->thumbnailUrl,
+                            'thumbnailurl' => $oscourse->thumbnailUrl,
                             'duration' => $oscourse->duration,
                             'languages' => $oscourse->languages,
                             'oscategories' => $oscourse->categories,
-                            'publisherName' => $oscourse->publisherName,
-                            'packageDownloadUrl' => $oscourse->packageDownloadUrl,
-                            'aiccLaunchUrl' => $oscourse->aiccLaunchUrl,
+                            'publishername' => $oscourse->publisherName,
+                            'packageDownloadurl' => $oscourse->packageDownloadUrl,
+                            'aicclaunchurl' => $oscourse->aiccLaunchUrl,
                     ]);
 
                 }

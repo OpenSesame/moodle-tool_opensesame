@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="admin/tool/opensesame/db" VERSION="20230118" COMMENT="XMLDB file for Moodle admin/tool/opensesame"
+<XMLDB PATH="admin/tool/opensesame/db" VERSION="20230124" COMMENT="XMLDB file for Moodle admin/tool/opensesame"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
@@ -9,7 +9,6 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="provider" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="OpenSesame" SEQUENCE="false" COMMENT="OpenSesame. All courses should be displayed as from OpenSesame."/>
         <FIELD NAME="idopensesame" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="IdOpenSesame is the unique Identifier OpenSesame uses to identify individual content items."/>
         <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="Default Title" SEQUENCE="false" COMMENT="OpenSesame course title."/>
