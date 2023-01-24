@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 namespace tool_opensesame\task;
 
+use context_course;
 use tool_opensesame\api;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
@@ -128,49 +129,66 @@ class opensesamesync extends \core\task\scheduled_task {
             ////Integrator issues request with access token
 
             $data = api::get_oscontent();
-            foreach ($data as $course) {
+            foreach ($data as $oscourse) {
 
                 $keyexist =
-                        $DB->record_exists('tool_opensesame', ['idopensesame' => $course->id]);
+                        $DB->record_exists('tool_opensesame', ['idopensesame' => $oscourse->id]);
 
                 if ($keyexist !== true) {
                     $DB->insert_record_raw('tool_opensesame', [
-                            'idOpenSesame' => $course->id,
+                            'idOpenSesame' => $oscourse->id,
                             'provider' => 'OpenSesame',
-                            'active' => $course->active,
-                            'title' => $course->title,
-                            'descriptionText' => $course->descriptionHTML =
-                                    true ? $course->descriptionText : $course->descriptionHTML,
-                            'thumbnailURL' => $course->thumbnailUrl,
-                            'duration' => $course->duration,
-                            'languages' => $course->languages,
-                            'oscategories' => $course->categories,
-                            'publisherName' => $course->publisherName,
-                            'packageDownloadUrl' => $course->packageDownloadUrl,
-                            'aiccLaunchUrl' => $course->aiccLaunchUrl,
+                            'active' => $oscourse->active,
+                            'title' => $oscourse->title,
+                            'descriptionText' => $oscourse->descriptionHtml =
+                                    true ? $oscourse->descriptionText : $oscourse->descriptionHtml,
+                            'thumbnailURL' => $oscourse->thumbnailUrl,
+                            'duration' => $oscourse->duration,
+                            'languages' => $oscourse->languages,
+                            'oscategories' => $oscourse->categories,
+                            'publisherName' => $oscourse->publisherName,
+                            'packageDownloadUrl' => $oscourse->packageDownloadUrl,
+                            'aiccLaunchUrl' => $oscourse->aiccLaunchUrl,
                     ]);
 
                 }
                 $coursexist =
-                        $DB->record_exists('course', ['idnumber' => $course->id]);
+                        $DB->record_exists('course', ['idnumber' => $oscourse->id]);
 
                 if ($coursexist !== true) {
                     $data = new \stdClass();
 
-                    $data->fullname = $course->title;
-                    $data->shortname = $course->title;
-                    $data->idnumber = $course->id;
-                    $data->summary = $course->descriptionHTML;
+                    $data->fullname = $oscourse->title;
+                    $data->shortname = $oscourse->title;
+                    $data->idnumber = $oscourse->id;
+                    $data->summary = $oscourse->descriptionHtml;
                     $data->timecreated = time();
                     $data->category = $DB->get_field('course_categories', 'id', ['name' => 'Miscellaneous']);
-                    $data->summary .= ' Publisher Name: ' . $course->publisherName . ' Duration: ' . $course->duration;
+                    $data->summary .= ' Publisher Name: ' . $oscourse->publisherName . ' Duration: ' . $oscourse->duration;
                     //$data->catogory = $DB->get_record('course_categories', array('name' => 'Miscellaneous'), 'id', MUST_EXIST);
-                    create_course($data);
+                    $course = create_course($data);
+                    //this should now be moodle courseid not osid.
+                    $courseid = $course->id;
+                    $context = context_course::instance($courseid);
 
-                    mtrace('Course Created: ' . $course->id);
+                    mtrace('Course Created: ' . $course->id . ' Thumbnail url: ' . $oscourse->thumbnailUrl);
+                    $fileinfo = [
+                            'contextid' => $context->id,   // ID of the context.
+                            'component' => 'course', // Your component name.
+                            'filearea' => 'overviewfiles',       // Usually = table name.
+                            'itemid' => 0,              // Usually = ID of row in table.
+                            'filepath' => '/',            // Any path beginning and ending in /.
+                            'filename' => 'courseimage.txt',   // Any filename.
+                    ];
+                    //create course image
+                    $fs = get_file_storage();
+
+                    // Create a new file containing the text 'hello world'.
+                    $fs->create_file_from_url($fileinfo, $oscourse->thumbnailUrl);
+                    mtrace('Course image placed inside of database');
                 }
                 if ($coursexist == true) {
-                    mtrace('Course: ' . $course->title . ' needs updating');
+                    mtrace('Course: ' . $oscourse->title . ' needs updating');
                 }
             }
 
