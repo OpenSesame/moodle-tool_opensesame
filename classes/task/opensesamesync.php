@@ -178,7 +178,7 @@ class opensesamesync extends \core\task\scheduled_task {
                             'filearea' => 'overviewfiles',       // Usually = table name.
                             'itemid' => 0,              // Usually = ID of row in table.
                             'filepath' => '/',            // Any path beginning and ending in /.
-                            'filename' => 'courseimage.txt',   // Any filename.
+                            'filename' => 'courseimage.jpg',   // Any filename.
                     ];
                     //create course image
                     $fs = get_file_storage();
