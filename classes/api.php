@@ -111,7 +111,7 @@ class api extends \curl {
         return $this->get($url);
     }
 
-    public static function get_authentication() {//Get required credentials
+    public static function authenticate() {//Get required credentials
         $authurl = get_config('tool_opensesame', 'authurl');
         //mtrace('?????????' . $authurl . 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');

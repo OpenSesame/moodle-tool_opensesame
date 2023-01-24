@@ -65,7 +65,7 @@ class opensesamesync extends \core\task\scheduled_task {
         if ($bearertoken === '') {
             mtrace('You need to create the Bearer Token.' . $bearertoken);
 
-            api::get_authentication();
+            api::authenticate();
 
             //Integrator issues request with access token
         }
@@ -75,7 +75,7 @@ class opensesamesync extends \core\task\scheduled_task {
             mtrace('Bearer Token is Expired. Resetting Bearer token to empty.');
             set_config('bearertoken', '', 'tool_opensesame');
 
-            api::get_authentication();
+            api::authenticate();
 
         }
         //If the token exists and has not expired, no auth process takes place, get content using bearer token
