@@ -25,12 +25,9 @@
 
 namespace tool_opensesame;
 
-use core_user;
-
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
-require_once($CFG->dirroot . '/user/profile/lib.php');
 
 class api extends \curl {
 
@@ -53,10 +50,8 @@ class api extends \curl {
     public function __construct($settings = array()) {
         parent::__construct($settings);
 
-        $this->token = get_config('local_usski', 'apitoken');
-        $this->baseurl = get_config('local_usski', 'apiurl');
-
-        $this->set_user_profile_fields();
+        $this->bearertoken = get_config('local_opensesame', 'bearertoken');
+        $this->baseurl = get_config('local_opensesame', 'baseurl');
 
         // If the admin omitted the protocol part, add the HTTPS protocol on-the-fly.
         if (!preg_match('/^https?:\/\//', $this->baseurl)) {
@@ -64,12 +59,9 @@ class api extends \curl {
         }
 
         if (empty($this->baseurl)) {
-            throw new \moodle_exception('apiurlempty', 'local_usski');
+            throw new \moodle_exception('apiurlempty', 'local_opensesame');
         }
 
-        if (empty($this->token)) {
-            throw new \moodle_exception('apitokenempty', 'local_usski');
-        }
     }
 
     /**
@@ -78,7 +70,6 @@ class api extends \curl {
      * @return int|boolean status code or false if not available.
      */
     public function get_http_code() {
-
         $info = $this->get_info();
         if (!isset($info['http_code'])) {
             return false;
@@ -92,12 +83,12 @@ class api extends \curl {
      * @return array of authentification headers
      * @throws \moodle_exception
      */
-    private function get_authentication_header(): array {
+    private function get_bearer_token(): array {
         $this->setopt('CURLOPT_HEADER', true);
         $this->setopt('CURLOPT_RETURNTRANSFER', true);
 
         $header = array();
-        $header[] = sprintf('Authorization: Bearer %s', $this->token);
+        $header[] = sprintf('Authorization: Bearer %s', $this->bearertoken);
 
         return $header;
     }
@@ -118,6 +109,53 @@ class api extends \curl {
         $this->setHeader($header);
 
         return $this->get($url);
+    }
+
+    public static function get_authentication() {//Get required credentials
+        $authurl = get_config('tool_opensesame', 'authurl');
+        //mtrace('?????????' . $authurl . 'authurl');
+        $clientid = get_config('tool_opensesame', 'clientid');
+        $clientsecret = get_config('tool_opensesame', 'clientsecret');
+
+        mtrace('Requesting an access token');
+        $curl = new \curl();
+        $curl->setHeader([
+                'Content-Type: application/x-www-form-urlencoded',
+                'Accept: application/json',
+                sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
+        ]);
+
+        $response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
+        );
+        $statuscode = $curl->info['http_code'];
+        $decoded = json_decode($response);
+        //prints mtrace('response authtoke' . $response);
+        mtrace('Access token is returned');
+        $access_token = $decoded->access_token;
+        set_config('bearertoken', $access_token, 'tool_opensesame');
+        mtrace('set hidden bearertoken create time stamp');
+        set_config('bearertokencreatetime', time(), 'tool_opensesame');
+        $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
+
+        mtrace('set hidden bearertoken expire time stamp');
+        set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
+        $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
+    }
+
+    public static function get_oscontent() {
+        //Integrator issues request with access token
+        $c = new \curl();
+        $bearertoken = get_config('tool_opensesame', 'bearertoken');
+        $c->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
+        //$ci = get_config('tool_opensesame', 'customerintegrationid');
+        $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
+                get_config('tool_opensesame', 'customerintegrationid');
+
+        $response = $c->get($url);
+        $statuscode = $c->info['http_code'];
+        $dcoded = json_decode($response);
+        $data = $dcoded->data;
+        return $data;
     }
 
 }

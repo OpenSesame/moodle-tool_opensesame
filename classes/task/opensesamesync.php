@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 namespace tool_opensesame\task;
 
+use tool_opensesame\api;
+
 require_once($CFG->dirroot . '/lib/filelib.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
@@ -78,41 +80,36 @@ class opensesamesync extends \core\task\scheduled_task {
             mtrace('You need to create the Bearer Token.' . $bearertoken);
             //todo make into a function 79-110
             //Get required credentials
-            $authurl = get_config('tool_opensesame', 'authurl');
-            //mtrace('?????????' . $authurl . 'authurl');
-            $clientid = get_config('tool_opensesame', 'clientid');
-            $clientsecret = get_config('tool_opensesame', 'clientsecret');
+            //$authurl = get_config('tool_opensesame', 'authurl');
+            ////mtrace('?????????' . $authurl . 'authurl');
+            //$clientid = get_config('tool_opensesame', 'clientid');
+            //$clientsecret = get_config('tool_opensesame', 'clientsecret');
+            //
+            //mtrace('Requesting an access token');
+            //$curl = new \curl();
+            //$curl->setHeader([
+            //        'Content-Type: application/x-www-form-urlencoded',
+            //        'Accept: application/json',
+            //        sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
+            //]);
+            //
+            //$response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
+            //);
+            //$statuscode = $curl->info['http_code'];
+            //$decoded = json_decode($response);
+            ////prints mtrace('response authtoke' . $response);
+            //mtrace('Access token is returned');
+            //$access_token = $decoded->access_token;
+            //set_config('bearertoken', $access_token, 'tool_opensesame');
+            //mtrace('set hidden bearertoken create time stamp');
+            //set_config('bearertokencreatetime', time(), 'tool_opensesame');
+            //$createtime = get_config('tool_opensesame', 'bearertokencreatetime');
+            //
+            //mtrace('set hidden bearertoken expire time stamp');
+            //set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
+            //$expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
+            api::get_authentication();
 
-            mtrace('Requesting an access token');
-            $curl = new \curl();
-            $curl->setHeader([
-                    'Content-Type: application/x-www-form-urlencoded',
-                    'Accept: application/json',
-                    sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
-            ]);
-
-            $response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
-            );
-            $statuscode = $curl->info['http_code'];
-            $decoded = json_decode($response);
-            //prints mtrace('response authtoke' . $response);
-            mtrace('Access token is returned');
-            $access_token = $decoded->access_token;
-            set_config('bearertoken', $access_token, 'tool_opensesame');
-            mtrace('set hidden bearertoken create time stamp');
-            set_config('bearertokencreatetime', time(), 'tool_opensesame');
-            $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-
-            mtrace('set hidden bearertoken expire time stamp');
-            set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-            $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
-
-            $now = time();
-            if ($now >= $expiretime) {
-                mtrace('Bearer Token is expired, Clearing Bearer Token.'
-                );
-                set_config('bearertoken', '', 'tool_opensesame');
-            }
             //Integrator issues request with access token
         }
         //If the token exists and it has expired, it is created
@@ -120,57 +117,17 @@ class opensesamesync extends \core\task\scheduled_task {
             mtrace('If the token exists and it has expired, it is created');
             mtrace('Bearer Token is Expired. Resetting Bearer token to empty.');
             set_config('bearertoken', '', 'tool_opensesame');
-            //todo make into a function 79-110
-            //Get required credentials
-            $authurl = get_config('tool_opensesame', 'authurl');
-            //mtrace('?????????' . $authurl . 'authurl');
-            $clientid = get_config('tool_opensesame', 'clientid');
-            //mtrace('???????' . $clientid . '=clientid');
-            $clientsecret = get_config('tool_opensesame', 'clientsecret');
-            //mtrace($clientsecret . '=clientsecret');
 
-            //  Request an access token
-            $curl = new \curl();
-            $curl->setHeader([
-                    'Content-Type: application/x-www-form-urlencoded',
-                    'Accept: application/json',
-                    sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
-            ]);
-
-            $response = $curl->post($authurl, 'grant_type=client_credentials&scope=content'
-            );
-            $statuscode = $curl->info['http_code'];
-            $decoded = json_decode($response);
-            //prints mtrace('response authtoke' . $response);
-            //Access token is returned
-            $access_token = $decoded->access_token;
-            set_config('bearertoken', $access_token, 'tool_opensesame');
-            //set hidden bearertoken create time stamp
-            set_config('bearertokencreatetime', time(), 'tool_opensesame');
-            $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-            mtrace('createtime: ' . ($createtime));
-            //set hidden bearertoken expire time stamp
-            set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-            $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
-            mtrace('!!!!Expiretime' . $expiretime);
+            api::get_authentication();
 
         }
         //If the token exists and has not expired, no auth process takes place, get content using bearer token
         if ($bearertoken !== '' && $now <= $expiretime) {
             //no auth takes place, get content using bearer token
             mtrace('bearer token is not expired no auth takes place, get content using bearer token');
-            //Integrator issues request with access token
-            $c = new \curl();
-            $bearertoken = get_config('tool_opensesame', 'bearertoken');
-            $c->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
-            //$ci = get_config('tool_opensesame', 'customerintegrationid');
-            $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                    get_config('tool_opensesame', 'customerintegrationid');
+            ////Integrator issues request with access token
 
-            $response = $c->get($url);
-            $statuscode = $c->info['http_code'];
-            $dcoded = json_decode($response);
-            $data = $dcoded->data;//an array of courses
+            $data = api::get_oscontent();
             foreach ($data as $course) {
 
                 $keyexist =
