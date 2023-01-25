@@ -78,7 +78,8 @@ class opensesamesync extends \core\task\scheduled_task {
             $api->authenticate();
 
         }
-        //If the token exists and has not expired, no auth process takes place, get content using bearer token
+        //If the token exists and has not expired, no auth process takes place, get content using bearer token (creating a
+        // function to take care of this.)
         if ($bearertoken !== '' && $now <= $expiretime) {
             //no auth takes place, get content using bearer token
             mtrace('bearer token is not expired no auth takes place, get content using bearer token');
