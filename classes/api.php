@@ -166,7 +166,7 @@ class api extends \curl {
             $thumbnailurl = $osrecord->thumbnailUrl;
             $this->create_course_image($courseid, $thumbnailurl);
             $scormpackage = $osrecord->packageDownloadUrl;
-            //$this->create_scorm_file($courseid, $scormpackage);
+            $this->create_scorm_file($courseid, $scormpackage);
             //Todo add courseid to tool_opensesame table to cross to establish a relationship between opensesame data and moodle
             // course created.
         }
