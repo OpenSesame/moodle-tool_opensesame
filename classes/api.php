@@ -25,6 +25,8 @@
 
 namespace tool_opensesame;
 
+use context_course;
+
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
@@ -77,7 +79,8 @@ class api extends \curl {
         return $info['http_code'];
     }
 
-    public function authenticate() {//Get required credentials
+    public function authenticate() {
+        mtrace('Authenticating...');
         $authurl = get_config('tool_opensesame', 'authurl');
         //mtrace('?????????' . $authurl . 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');
@@ -107,39 +110,169 @@ class api extends \curl {
         set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
     }
 
-    /*
+    /**
      * get_auth_token: Getting the auth token
      * This method would validate that the token has not expired,
      *  and if it has, then creates a new one
-     * It returns a usable token
+     *
+     * @return false|mixed|object|string|null $token
+     * @throws \dml_exception
      */
 
-    private function get_auth_token() {
-
+    public function get_auth_token() {
+        mtrace('get_auth_token called');
         $token = get_config('tool_opensesame', 'bearertoken');
         $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
         $now = time();
+
+        if ($token === '' || $now >= $expiretime) {
+            mtrace('Token either does not exist or is expired. Token is being created');
+            $this->authenticate();
+        }
+
         if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
-        }
-        if ($token === '' || $now >= $expiretime) {
-            mtrace('Token either does not exist or is expired.');
-            $this->authenticate();
         }
         return $token;
     }
 
-    public function get_oscontent() {
+    /**
+     * add_open_sesame_course
+     * Adds an open sesame course to moodle,
+     *
+     * @param $osrecord
+     * @throws \file_exception
+     * @throws \moodle_exception
+     */
+
+    public function add_open_sesame_course($osrecord) {
+        global $DB;
+        $coursexist =
+                $DB->record_exists('course', ['idnumber' => $osrecord->id]);
+
+        if ($coursexist !== true) {
+            $data = new \stdClass();
+            $data->fullname = $osrecord->title;
+            $data->shortname = $osrecord->title;
+            $data->idnumber = $osrecord->id;
+            $data->summary = $osrecord->descriptionHtml;
+            $data->timecreated = time();
+            $data->category = $DB->get_field('course_categories', 'id', ['name' => 'Miscellaneous']);
+            $data->summary .= ' Publisher Name: ' . $osrecord->publisherName . ' Duration: ' . $osrecord->duration;
+
+            $course = create_course($data);
+            //this should now be moodle courseid not osid.
+            $courseid = $course->id;
+            $thumbnailurl = $osrecord->thumbnailUrl;
+            $this->create_course_image($courseid, $thumbnailurl);
+            $scormpackage = $osrecord->packageDownloadUrl;
+            //$this->create_scorm_file($courseid, $scormpackage);
+            //Todo add courseid to tool_opensesame table to cross to establish a relationship between opensesame data and moodle
+            // course created.
+        }
+        if ($coursexist == true) {
+            mtrace('Course: ' . $osrecord->title . ' needs updating');
+        }
+    }
+
+    /**
+     * get_open_sesame_course_list
+     *
+     * @param $token
+     * Does not validate the token, the token should be valid
+     * Gets a list of courses and processes them using
+     * add_open_sesame_course
+     */
+
+    public function get_open_sesame_course_list($token) {
+        global $DB;
         //Integrator issues request with access token
-        $bearertoken = $this->get_auth_token();
-        $this->setHeader(sprintf('Authorization: Bearer %s', $bearertoken));
+        mtrace('get_open_sesame_course list');
+        $this->setHeader(sprintf('Authorization: Bearer %s', $token));
         $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                 get_config('tool_opensesame', 'customerintegrationid');
         $response = $this->get($url);
-        $statuscode = $this->info['http_code'];
+        $statuscode = $this->get_http_code();
         $dcoded = json_decode($response);
-        $data = $dcoded->data;
-        return $data;
+        mtrace('Statuscode: ' . $statuscode);
+        if ($statuscode === 200) {
+
+            $data = $dcoded->data;
+            //mtrace('Response' . $response);
+            foreach ($data as $osrecord) {
+                $keyexist =
+                        $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
+                if ($keyexist !== true) {
+                    mtrace('Osrecord being created for ' . $osrecord->id);
+                    $DB->insert_record_raw('tool_opensesame', [
+                            'idopensesame' => $osrecord->id,
+                            'provider' => 'OpenSesame',
+                            'active' => $osrecord->active,
+                            'title' => $osrecord->title,
+                            'descriptiontext' => $osrecord->descriptionHtml =
+                                    true ? $osrecord->descriptionText : $osrecord->descriptionHtml,
+                            'thumbnailurl' => $osrecord->thumbnailUrl,
+                            'duration' => $osrecord->duration,
+                            'languages' => $osrecord->languages,
+                            'oscategories' => $osrecord->categories,
+                            'publishername' => $osrecord->publisherName,
+                            'packageDownloadurl' => $osrecord->packageDownloadUrl,
+                            'aicclaunchurl' => $osrecord->aiccLaunchUrl,
+                    ]);
+                    $this->add_open_sesame_course($osrecord);
+
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * @param $courseid
+     * @param $thumbnailurl
+     * @return void
+     * @throws \file_exception
+     */
+    public function create_course_image($courseid, $thumbnailurl) {
+        $context = context_course::instance($courseid);
+
+        mtrace('Course Created: ' . $courseid . ' Thumbnail url: ' . $thumbnailurl);
+        $fileinfo = [
+                'contextid' => $context->id,   // ID of the context.
+                'component' => 'course', // Your component name.
+                'filearea' => 'overviewfiles',       // Usually = table name.
+                'itemid' => 0,              // Usually = ID of row in table.
+                'filepath' => '/',            // Any path beginning and ending in /.
+                'filename' => 'courseimage' . $courseid . '.jpg',   // Any filename.
+        ];
+        //create course image
+        $fs = get_file_storage();
+
+        // Create a new file containing the text 'hello world'.
+        $fs->create_file_from_url($fileinfo, $thumbnailurl);
+        mtrace('Course image placed inside of database');
+    }
+
+    public function create_scorm_file($courseid, $scormpackage) {
+        $context = context_course::instance($courseid);
+
+        mtrace('Course Created: ' . $courseid . ' ScormPackage Download url: ' . $scormpackage);
+        $fileinfo = [
+                'contextid' => $context->id,   // ID of the context.
+                'component' => 'mod_scorm', // Your component name.
+                'filearea' => 'package',       // Usually = table name.
+                'itemid' => 0,              // Usually = ID of row in table.
+                'filepath' => '/',            // Any path beginning and ending in /.
+                'filename' => 'scorm_' . $courseid . '.zip',   // Any filename.
+        ];
+        //create course image
+        $fs = get_file_storage();
+        $scormurl = $scormpackage . '?standard=scorm';
+        // Create a new file .
+        $fs->create_file_from_url($fileinfo, $scormurl);
+        mtrace('Course image placed inside of database');
     }
 
 }
