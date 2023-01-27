@@ -27,6 +27,8 @@ namespace tool_opensesame;
 
 use context_course;
 
+require_once("$CFG->libdir/filelib.php");
+
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
@@ -37,10 +39,6 @@ class api extends \curl {
     private $token;
     /** @var string the api baseurl */
     private $baseurl;
-    /**
-     * @var array Profile fields.
-     */
-    public $profile_fields = [];
 
     /**
      * Constructor .
@@ -165,8 +163,9 @@ class api extends \curl {
             $courseid = $course->id;
             $thumbnailurl = $osrecord->thumbnailUrl;
             $this->create_course_image($courseid, $thumbnailurl);
-            $scormpackage = $osrecord->packageDownloadUrl;
-            $this->create_scorm_file($courseid, $scormpackage);
+            $scormpackagedownloadurl = $osrecord->packageDownloadUrl;
+            $token = $this->get_auth_token();
+            $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
             //Todo add courseid to tool_opensesame table to cross to establish a relationship between opensesame data and moodle
             // course created.
         }
@@ -194,9 +193,13 @@ class api extends \curl {
         $response = $this->get($url);
         $statuscode = $this->get_http_code();
         $dcoded = json_decode($response);
-        mtrace('Statuscode: ' . $statuscode);
-        if ($statuscode === 200) {
 
+        if ($statuscode === 400) {
+            mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+            $this->get_auth_token();
+        }
+        if ($statuscode === 200) {
+            mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
             $data = $dcoded->data;
             //mtrace('Response' . $response);
             foreach ($data as $osrecord) {
@@ -255,24 +258,38 @@ class api extends \curl {
         mtrace('Course image placed inside of database');
     }
 
-    public function create_scorm_file($courseid, $scormpackage) {
-        $context = context_course::instance($courseid);
+    public function get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid = null) {
+        global $CFG;
+        //Integrator issues request with access token
+        mtrace('get_open_sesame_scorm_package and token =' . $token);
+        $this->setHeader(['Content-Type: application/json', sprintf('Authorization: Bearer %s', $token)]);
 
-        mtrace('Course Created: ' . $courseid . ' ScormPackage Download url: ' . $scormpackage);
+        $url = $scormpackagedownloadurl . '?standard=scorm';
+        mtrace('url: ' . $url);
+        $headers = $this->header;
+
+        $filename = 'scorm_' . $courseid . '.zip';
+        $path = $CFG->tempdir . '/zip/' . $filename;
+        //Download to temp directory
+        download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
+        //create a file from temporary folder
+        $context = context_course::instance($courseid);
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
                 'component' => 'mod_scorm', // Your component name.
                 'filearea' => 'package',       // Usually = table name.
                 'itemid' => 0,              // Usually = ID of row in table.
                 'filepath' => '/',            // Any path beginning and ending in /.
-                'filename' => 'scorm_' . $courseid . '.zip',   // Any filename.
+                'filename' => $filename,   // Any filename.
         ];
-        //create course image
         $fs = get_file_storage();
-        $scormurl = $scormpackage . '?standard=scorm';
-        // Create a new file .
-        $fs->create_file_from_url($fileinfo, $scormurl);
-        mtrace('Course image placed inside of database');
+        // Create a new file scorm.zip package inside of course.
+        $storedfile = $fs->create_file_from_pathname($fileinfo, $path);
+        mtrace('trying to get storedfile');
+        mtrace('Stored File' . json_encode($storedfile));
+
+        //TODO: Activity scorm needs to be created with Scorm.zip package that is inside of course
+
     }
 
 }
