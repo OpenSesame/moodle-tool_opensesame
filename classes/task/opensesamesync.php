@@ -59,7 +59,7 @@ class opensesamesync extends \core\task\scheduled_task {
          * */
         $api = new api;
         $token = $api->get_auth_token();
-        $api->get_open_sesame_course_list($token);
+        //$api->get_open_sesame_course_list($token);
         mtrace('opensesame just finished.');
         return true;
     }

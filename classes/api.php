@@ -130,6 +130,7 @@ class api extends \curl {
 
         if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
+            $this->get_open_sesame_course_list($token);
         }
         return $token;
     }
@@ -143,7 +144,7 @@ class api extends \curl {
      * @throws \moodle_exception
      */
 
-    public function add_open_sesame_course($osrecord) {
+    public function add_open_sesame_course($osrecord, $token) {
 
         global $DB;
         $coursexist =
@@ -165,10 +166,11 @@ class api extends \curl {
             $thumbnailurl = $osrecord->thumbnailUrl;
             $this->create_course_image($courseid, $thumbnailurl);
             $scormpackagedownloadurl = $osrecord->packageDownloadUrl;
-            $token = $this->get_auth_token();
+            //$token = $this->get_auth_token();
             $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
             //Todo add courseid to tool_opensesame table to cross to establish a relationship between opensesame data and moodle
             // course created.
+            $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osrecord->id]);
         }
         if ($coursexist == true) {
             mtrace('Course: ' . $osrecord->title . ' needs updating');
@@ -208,6 +210,7 @@ class api extends \curl {
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
                 if ($keyexist !== true) {
                     mtrace('Osrecord being created for ' . $osrecord->id);
+                    mtrace('osrecord' . json_encode($osrecord));
                     $DB->insert_record_raw('tool_opensesame', [
                             'idopensesame' => $osrecord->id,
                             'provider' => 'OpenSesame',
@@ -223,7 +226,7 @@ class api extends \curl {
                             'packageDownloadurl' => $osrecord->packageDownloadUrl,
                             'aicclaunchurl' => $osrecord->aiccLaunchUrl,
                     ]);
-                    $this->add_open_sesame_course($osrecord);
+                    $this->add_open_sesame_course($osrecord, $token);
 
                 }
 
