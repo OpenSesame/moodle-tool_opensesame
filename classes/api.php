@@ -27,7 +27,7 @@ namespace tool_opensesame;
 
 use context_course;
 
-require_once("$CFG->libdir/filelib.php");
+//require_once("$CFG->libdir/filelib.php");
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -144,6 +144,7 @@ class api extends \curl {
      */
 
     public function add_open_sesame_course($osrecord) {
+
         global $DB;
         $coursexist =
                 $DB->record_exists('course', ['idnumber' => $osrecord->id]);
@@ -259,7 +260,8 @@ class api extends \curl {
     }
 
     public function get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid = null) {
-        global $CFG;
+        global $CFG, $USER;
+        require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
         //Integrator issues request with access token
         mtrace('get_open_sesame_scorm_package and token =' . $token);
         $this->setHeader(['Content-Type: application/json', sprintf('Authorization: Bearer %s', $token)]);
@@ -272,8 +274,10 @@ class api extends \curl {
         $path = $CFG->tempdir . '/zip/' . $filename;
         //Download to temp directory
         download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
-        //create a file from temporary folder
+        //create a file from temporary folder in the user file draft area
         $context = context_course::instance($courseid);
+        mtrace('contexid' . $context->id);
+        $fs = get_file_storage();
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
                 'component' => 'mod_scorm', // Your component name.
@@ -282,13 +286,77 @@ class api extends \curl {
                 'filepath' => '/',            // Any path beginning and ending in /.
                 'filename' => $filename,   // Any filename.
         ];
-        $fs = get_file_storage();
+
         // Create a new file scorm.zip package inside of course.
         $storedfile = $fs->create_file_from_pathname($fileinfo, $path);
-        mtrace('trying to get storedfile');
+        //create a new user draft file from mod_scorm package
+        // Get an unused draft itemid which will be used
+        $draftitemid = file_get_submitted_draft_itemid('packagefile');
+        // Copy the existing files which were previously uploaded
+        // into the draft area
+        $draft = file_prepare_draft_area(
+                $draftitemid, $context->id, 'mod_scorm', 'package', 0);
+
+        mtrace('trying to get storedfile' . $draft);
+
         mtrace('Stored File' . json_encode($storedfile));
 
         //TODO: Activity scorm needs to be created with Scorm.zip package that is inside of course
+        $this->create_course_scorm_mod($courseid, $draftitemid);
+
+    }
+
+    public function create_course_scorm_mod($courseid, $draftitemid) {
+        global $CFG;
+        require_once($CFG->dirroot . '/course/modlib.php');
+        require_once($CFG->dirroot . '/course/format/lib.php');
+        require_once($CFG->dirroot . '/mod/scorm/mod_form.php');
+
+        mtrace('calling create_course_scorm_mod');
+        global $DB;
+        //get course
+        $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+        //create top course section
+        $section = 0;
+        $sectionreturn = 0;
+        $add = 'scorm';
+        $courseformat = course_get_format($course);
+        $maxsections = $courseformat->get_max_sections();
+        if ($section > $maxsections) {
+            print_error('maxsectionslimit', 'moodle', '', $maxsections);
+        }
+        list($module, $context, $cw, $cm, $data) = prepare_new_moduleinfo_data($course, $add, $section);
+        $data->return = 0;
+        $data->sr = $sectionreturn;
+        $data->add = $add;
+
+        $moduleinfo = new \stdClass();
+        $moduleinfo->name = 'scorm_' . $courseid;
+        $moduleinfo->introeditor = ['text' => '',
+                'format' => '1', 'itemid' => ''];
+        $moduleinfo->showdescription = 0;
+        $moduleinfo->mform_isexpanded_id_packagehdr = 1;
+        $moduleinfo->scormtype = 'local';
+        $fs = get_file_storage();
+        mtrace('fs' . json_encode($fs));
+
+        $moduleinfo->packagefile = $draftitemid;
+        mtrace('packagefile' . $draftitemid);
+        $moduleinfo->updatefreq = 0;
+        $moduleinfo->popup = 0;
+        $moduleinfo->width = 100;
+        $moduleinfo->height = 500;
+        $moduleinfo->course = $courseid;
+        $moduleinfo->module = $module->id;
+        $moduleinfo->modulename = $module->name;
+        $moduleinfo->visible = $module->visible;
+        $moduleinfo->add = $add;
+        $moduleinfo->cmidnumber = '';
+        $moduleinfo->section = $section;
+        mtrace('module info' . json_encode($moduleinfo));
+
+        //$data stdclass with everything to add_mod_info
+        add_moduleinfo($moduleinfo, $course);
 
     }
 
