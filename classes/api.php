@@ -357,7 +357,5 @@ class api extends \curl {
 
         //$data stdclass with everything to add_mod_info
         add_moduleinfo($moduleinfo, $course);
-
     }
-
 }
