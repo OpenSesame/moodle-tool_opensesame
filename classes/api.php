@@ -197,7 +197,7 @@ class api extends \curl {
 
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            $this->get_auth_token();
+            $this->authenticate();
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
@@ -365,11 +365,19 @@ class api extends \curl {
     public function set_self_enrollment($courseid, $active) {
         mtrace('calling set_self_enrollment');
         global $DB;
+        // get enrollment plugin
+        $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
+        $enrolplugin = enrol_get_plugin($instance->enrol);
+
         if ($active) {
-            $DB->set_field('enrol', 'status', 0, ['courseid' => $courseid, 'enrol' => 'self']);
+            //$DB->set_field('enrol', 'status', 0, ['courseid' => $courseid, 'enrol' => 'self']);
+            $newstatus = 0;
+
         }
         if (!$active) {
-            $DB->set_field('enrol', 'status', 1, ['courseid' => $courseid, 'enrol' => 'self']);
+            //$DB->set_field('enrol', 'status', 1, ['courseid' => $courseid, 'enrol' => 'self']);
+            $newstatus = 1;
         }
+        $enrolplugin->update_status($instance, $newstatus);
     }
 }
