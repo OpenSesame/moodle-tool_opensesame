@@ -209,21 +209,24 @@ class api extends \curl {
                 if ($keyexist !== true) {
                     //mtrace('Osrecord being created for ' . $osrecord->id);
                     //mtrace('osrecord' . json_encode($osrecord));
-                    $DB->insert_record_raw('tool_opensesame', [
-                            'idopensesame' => $osrecord->id,
-                            'provider' => 'OpenSesame',
-                            'active' => $osrecord->active,
-                            'title' => $osrecord->title,
-                            'descriptiontext' => $osrecord->descriptionHtml =
-                                    true ? $osrecord->descriptionText : $osrecord->descriptionHtml,
-                            'thumbnailurl' => $osrecord->thumbnailUrl,
-                            'duration' => $osrecord->duration,
-                            'languages' => $osrecord->languages,
-                            'oscategories' => $osrecord->categories,
-                            'publishername' => $osrecord->publisherName,
-                            'packageDownloadurl' => $osrecord->packageDownloadUrl,
-                            'aicclaunchurl' => $osrecord->aiccLaunchUrl,
-                    ]);
+                    $osdataobject = new \stdClass();
+                    $osdataobject->idopensesame = $osrecord->id;
+                    $osdataobject->provider = 'OpenSesame';
+                    $osdataobject->active = $osrecord->active;
+                    $osdataobject->title = $osrecord->title;
+                    $osdataobject->descriptiontext =
+                            $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
+                    $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
+                    $osdataobject->duration = $osrecord->duration;
+                    $osdataobject->languages = $osrecord->languages[0];
+                    $osdataobject->oscategories = $osrecord->categories[0];
+                    $osdataobject->publishername = $osrecord->publisherName;
+                    $osdataobject->packageDownloadurl = $osrecord->packageDownloadUrl;
+                    $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+                    //mtrace('osdataobject:' . json_encode($osdataobject));
+                    $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
+                    mtrace('inserting record ' . $returnid);
+
                     $this->add_open_sesame_course($osrecord, $token);
 
                 }
