@@ -70,21 +70,21 @@ class api extends \curl {
      * @return int|boolean status code or false if not available.
      */
     public function get_http_code() {
+        mtrace('Calling get_http_code.');
         $info = $this->get_info();
         if (!isset($info['http_code'])) {
             return false;
         }
+        mtrace('returning status code' . $info['http_code']);
         return $info['http_code'];
     }
 
     public function authenticate() {
-        mtrace('Authenticating...');
+        mtrace('Calling Authenticate().');
         $authurl = get_config('tool_opensesame', 'authurl');
         //mtrace('?????????' . $authurl . 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
-
-        mtrace('Requesting an access token');
 
         $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
@@ -96,16 +96,13 @@ class api extends \curl {
         );
         $statuscode = $this->get_http_code();
         $decoded = json_decode($response);
-        //prints mtrace('response authtoke' . $response);
-        mtrace('Access token is returned');
         $token = $decoded->access_token;
         set_config('bearertoken', $token, 'tool_opensesame');
-        mtrace('set hidden bearertoken create time stamp');
+        //mtrace('set hidden bearertoken create time stamp');
         set_config('bearertokencreatetime', time(), 'tool_opensesame');
         $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-
-        mtrace('set hidden bearertoken expire time stamp');
         set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
+        return $this->get_auth_token();
     }
 
     /**
@@ -130,6 +127,7 @@ class api extends \curl {
 
         if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
+            $this->get_open_sesame_course_list($token);
         }
         return $token;
     }
@@ -143,8 +141,8 @@ class api extends \curl {
      * @throws \moodle_exception
      */
 
-    public function add_open_sesame_course($osrecord) {
-
+    public function add_open_sesame_course($osrecord, $token) {
+        mtrace('calling add_open_sesame_course');
         global $DB;
         $coursexist =
                 $DB->record_exists('course', ['idnumber' => $osrecord->id]);
@@ -165,10 +163,12 @@ class api extends \curl {
             $thumbnailurl = $osrecord->thumbnailUrl;
             $this->create_course_image($courseid, $thumbnailurl);
             $scormpackagedownloadurl = $osrecord->packageDownloadUrl;
-            $token = $this->get_auth_token();
             $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
-            //Todo add courseid to tool_opensesame table to cross to establish a relationship between opensesame data and moodle
-            // course created.
+            $this->update_osrecord($courseid, $osrecord->id);
+            $active = $this->os_is_active($osrecord->id, $courseid);
+
+            $this->set_self_enrollment($courseid, $active);
+
         }
         if ($coursexist == true) {
             mtrace('Course: ' . $osrecord->title . ' needs updating');
@@ -187,7 +187,7 @@ class api extends \curl {
     public function get_open_sesame_course_list($token) {
         global $DB;
         //Integrator issues request with access token
-        mtrace('get_open_sesame_course list');
+        mtrace('Calling get_open_sesame_course list');
         $this->setHeader(sprintf('Authorization: Bearer %s', $token));
         $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                 get_config('tool_opensesame', 'customerintegrationid');
@@ -197,7 +197,7 @@ class api extends \curl {
 
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            $this->get_auth_token();
+            $this->authenticate();
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
@@ -207,23 +207,27 @@ class api extends \curl {
                 $keyexist =
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
                 if ($keyexist !== true) {
-                    mtrace('Osrecord being created for ' . $osrecord->id);
-                    $DB->insert_record_raw('tool_opensesame', [
-                            'idopensesame' => $osrecord->id,
-                            'provider' => 'OpenSesame',
-                            'active' => $osrecord->active,
-                            'title' => $osrecord->title,
-                            'descriptiontext' => $osrecord->descriptionHtml =
-                                    true ? $osrecord->descriptionText : $osrecord->descriptionHtml,
-                            'thumbnailurl' => $osrecord->thumbnailUrl,
-                            'duration' => $osrecord->duration,
-                            'languages' => $osrecord->languages,
-                            'oscategories' => $osrecord->categories,
-                            'publishername' => $osrecord->publisherName,
-                            'packageDownloadurl' => $osrecord->packageDownloadUrl,
-                            'aicclaunchurl' => $osrecord->aiccLaunchUrl,
-                    ]);
-                    $this->add_open_sesame_course($osrecord);
+                    //mtrace('Osrecord being created for ' . $osrecord->id);
+                    //mtrace('osrecord' . json_encode($osrecord));
+                    $osdataobject = new \stdClass();
+                    $osdataobject->idopensesame = $osrecord->id;
+                    $osdataobject->provider = 'OpenSesame';
+                    $osdataobject->active = $osrecord->active;
+                    $osdataobject->title = $osrecord->title;
+                    $osdataobject->descriptiontext =
+                            $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
+                    $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
+                    $osdataobject->duration = $osrecord->duration;
+                    $osdataobject->languages = $osrecord->languages[0];
+                    $osdataobject->oscategories = $osrecord->categories[0];
+                    $osdataobject->publishername = $osrecord->publisherName;
+                    $osdataobject->packageDownloadurl = $osrecord->packageDownloadUrl;
+                    $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+                    //mtrace('osdataobject:' . json_encode($osdataobject));
+                    $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
+                    mtrace('inserting record ' . $returnid);
+
+                    $this->add_open_sesame_course($osrecord, $token);
 
                 }
 
@@ -240,9 +244,9 @@ class api extends \curl {
      * @throws \file_exception
      */
     public function create_course_image($courseid, $thumbnailurl) {
+        mtrace('Calling create_course_image');
         $context = context_course::instance($courseid);
 
-        mtrace('Course Created: ' . $courseid . ' Thumbnail url: ' . $thumbnailurl);
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
                 'component' => 'course', // Your component name.
@@ -256,18 +260,18 @@ class api extends \curl {
 
         // Create a new file containing the text 'hello world'.
         $fs->create_file_from_url($fileinfo, $thumbnailurl);
-        mtrace('Course image placed inside of database');
     }
 
     public function get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid = null) {
+        mtrace('calling get_open_sesame_scorm_package');
         global $CFG, $USER;
         require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
         //Integrator issues request with access token
-        mtrace('get_open_sesame_scorm_package and token =' . $token);
+
         $this->setHeader(['Content-Type: application/json', sprintf('Authorization: Bearer %s', $token)]);
 
         $url = $scormpackagedownloadurl . '?standard=scorm';
-        mtrace('url: ' . $url);
+
         $headers = $this->header;
 
         $filename = 'scorm_' . $courseid . '.zip';
@@ -276,7 +280,7 @@ class api extends \curl {
         download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
         //create a file from temporary folder in the user file draft area
         $context = context_course::instance($courseid);
-        mtrace('contexid' . $context->id);
+
         $fs = get_file_storage();
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
@@ -294,26 +298,20 @@ class api extends \curl {
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
         // Copy the existing files which were previously uploaded
         // into the draft area
-        $draft = file_prepare_draft_area(
+        file_prepare_draft_area(
                 $draftitemid, $context->id, 'mod_scorm', 'package', 0);
 
-        mtrace('trying to get storedfile' . $draft);
-
-        mtrace('Stored File' . json_encode($storedfile));
-
-        //TODO: Activity scorm needs to be created with Scorm.zip package that is inside of course
         $this->create_course_scorm_mod($courseid, $draftitemid);
 
     }
 
     public function create_course_scorm_mod($courseid, $draftitemid) {
-        global $CFG;
+        mtrace('calling create_course_scorm_mod');
+        global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
         require_once($CFG->dirroot . '/course/format/lib.php');
         require_once($CFG->dirroot . '/mod/scorm/mod_form.php');
 
-        mtrace('calling create_course_scorm_mod');
-        global $DB;
         //get course
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
         //create top course section
@@ -337,11 +335,7 @@ class api extends \curl {
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         $moduleinfo->scormtype = 'local';
-        $fs = get_file_storage();
-        mtrace('fs' . json_encode($fs));
-
         $moduleinfo->packagefile = $draftitemid;
-        mtrace('packagefile' . $draftitemid);
         $moduleinfo->updatefreq = 0;
         $moduleinfo->popup = 0;
         $moduleinfo->width = 100;
@@ -353,9 +347,40 @@ class api extends \curl {
         $moduleinfo->add = $add;
         $moduleinfo->cmidnumber = '';
         $moduleinfo->section = $section;
-        mtrace('module info' . json_encode($moduleinfo));
 
         //$data stdclass with everything to add_mod_info
         add_moduleinfo($moduleinfo, $course);
+    }
+
+    public function update_osrecord($courseid, $osrecordid) {
+        mtrace('calling update_osrecord');
+        global $DB;
+        $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osrecordid]);
+    }
+
+    public function os_is_active($osrecordid, $courseid) {
+        mtrace('calling os_is_active');
+        global $DB;
+        $active = $DB->get_field('tool_opensesame', 'active', ['idopensesame' => $osrecordid, 'courseid' => $courseid]);
+        return $active;
+    }
+
+    public function set_self_enrollment($courseid, $active) {
+        mtrace('calling set_self_enrollment');
+        global $DB;
+        // get enrollment plugin
+        $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
+        $enrolplugin = enrol_get_plugin($instance->enrol);
+
+        if ($active) {
+            //$DB->set_field('enrol', 'status', 0, ['courseid' => $courseid, 'enrol' => 'self']);
+            $newstatus = 0;
+
+        }
+        if (!$active) {
+            //$DB->set_field('enrol', 'status', 1, ['courseid' => $courseid, 'enrol' => 'self']);
+            $newstatus = 1;
+        }
+        $enrolplugin->update_status($instance, $newstatus);
     }
 }

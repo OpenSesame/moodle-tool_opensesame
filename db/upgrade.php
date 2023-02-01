@@ -89,6 +89,20 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         // Opensesame savepoint reached.
         upgrade_plugin_savepoint(true, 2023011116, 'tool', 'opensesame');
     }
+    if ($oldversion < 2023013100) {
+
+        // Define field courseid to be added to tool_opensesame.
+        $table = new xmldb_table('tool_opensesame');
+        $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'active');
+
+        // Conditionally launch add field courseid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023013100, 'tool', 'opensesame');
+    }
 
     return true;
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="admin/tool/opensesame/db" VERSION="20230124" COMMENT="XMLDB file for Moodle admin/tool/opensesame"
+<XMLDB PATH="admin/tool/opensesame/db" VERSION="20230131" COMMENT="XMLDB file for Moodle admin/tool/opensesame"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
@@ -21,6 +21,7 @@
         <FIELD NAME="packagedownloadurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The URL of the content package."/>
         <FIELD NAME="aicclaunchurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The content item's AICC URL."/>
         <FIELD NAME="active" TYPE="char" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
