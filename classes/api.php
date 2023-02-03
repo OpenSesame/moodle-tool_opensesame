@@ -203,45 +203,9 @@ class api extends \curl {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
             $data = $dcoded->data;
             mtrace('Response debug for Moodle category creation' . $response);
-            //mtrace('Response' . $response);
+
             foreach ($data as $osrecord) {
-                //categories": [
-                //                "|Compliance|HIPAA",
-                //                "|Industry Specific|Healthcare"
-                //            ],
-                //$categories = $osrecord->categories;
-                //foreach ($categories as $key => $value) {
-                //    mtrace('Categories' . $key . '-' . $value);
-                //    //$value = "|Compliance|HIPAA"
-                //    $values = explode('|', $value);
-                //    //$value
-                //    $values = array_values(array_filter($values));
-                //    mtrace('Values = ' . json_encode($values));
-                //    //returns [Compliance, HIPAA]
-                //    foreach ($values as $vkey => $vvalue) {
-                //        mtrace('vkey: ' . $vkey . 'vvalue: ' . $vvalue);
-                //        $catexist =
-                //                $DB->record_exists('course_categories', ['name' => $vvalue]);
-                //
-                //        if ($vkey === 0 && $catexist !== true) {
-                //            $data = new \stdClass();
-                //            mtrace('vkey is ' . $vkey);
-                //            mtrace('vvalue is ' . $vvalue);
-                //            $data->name = $vvalue;
-                //            core_course_category::create($data);
-                //        }
-                //
-                //        if ($vkey !== 0 && $catexist !== true) {
-                //            $data = new \stdClass();
-                //            $data->name = $vvalue;
-                //            $name = $values[$vkey - 1];
-                //            $parentid = $DB->get_field('course_categories', 'id', ['name' => $name]);
-                //            $data->parent = $parentid;
-                //            core_course_category::create($data);
-                //        }
-                //    }
-                //}
-                //target
+                //feature/DEF-625
                 $this->create_oscategories($osrecord);
                 $keyexist =
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
@@ -423,6 +387,7 @@ class api extends \curl {
         $enrolplugin->update_status($instance, $newstatus);
     }
 
+    //feature/DEF-625
     public function create_oscategories($osrecord) {
         global $DB;
         $categories = $osrecord->categories;
