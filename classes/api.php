@@ -26,6 +26,7 @@
 namespace tool_opensesame;
 
 use context_course;
+use core_course_category;
 
 //require_once("$CFG->libdir/filelib.php");
 
@@ -122,14 +123,13 @@ class api extends \curl {
 
         if ($token === '' || $now >= $expiretime) {
             mtrace('Token either does not exist or is expired. Token is being created');
-            $this->authenticate();
-        }
-
-        if ($token !== '' && $now <= $expiretime) {
+            $token = $this->authenticate();
+            return $token;
+        } else if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
             $this->get_open_sesame_course_list($token);
+            return $token;
         }
-        return $token;
     }
 
     /**
@@ -197,13 +197,52 @@ class api extends \curl {
 
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            $this->authenticate();
+            //$this->authenticate();
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
             $data = $dcoded->data;
+            mtrace('Response debug for Moodle category creation' . $response);
             //mtrace('Response' . $response);
             foreach ($data as $osrecord) {
+                //categories": [
+                //                "|Compliance|HIPAA",
+                //                "|Industry Specific|Healthcare"
+                //            ],
+                //$categories = $osrecord->categories;
+                //foreach ($categories as $key => $value) {
+                //    mtrace('Categories' . $key . '-' . $value);
+                //    //$value = "|Compliance|HIPAA"
+                //    $values = explode('|', $value);
+                //    //$value
+                //    $values = array_values(array_filter($values));
+                //    mtrace('Values = ' . json_encode($values));
+                //    //returns [Compliance, HIPAA]
+                //    foreach ($values as $vkey => $vvalue) {
+                //        mtrace('vkey: ' . $vkey . 'vvalue: ' . $vvalue);
+                //        $catexist =
+                //                $DB->record_exists('course_categories', ['name' => $vvalue]);
+                //
+                //        if ($vkey === 0 && $catexist !== true) {
+                //            $data = new \stdClass();
+                //            mtrace('vkey is ' . $vkey);
+                //            mtrace('vvalue is ' . $vvalue);
+                //            $data->name = $vvalue;
+                //            core_course_category::create($data);
+                //        }
+                //
+                //        if ($vkey !== 0 && $catexist !== true) {
+                //            $data = new \stdClass();
+                //            $data->name = $vvalue;
+                //            $name = $values[$vkey - 1];
+                //            $parentid = $DB->get_field('course_categories', 'id', ['name' => $name]);
+                //            $data->parent = $parentid;
+                //            core_course_category::create($data);
+                //        }
+                //    }
+                //}
+                //target
+                $this->create_oscategories($osrecord);
                 $keyexist =
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
                 if ($keyexist !== true) {
@@ -219,7 +258,7 @@ class api extends \curl {
                     $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
                     $osdataobject->duration = $osrecord->duration;
                     $osdataobject->languages = $osrecord->languages[0];
-                    $osdataobject->oscategories = $osrecord->categories[0];
+                    $osdataobject->oscategories = implode(', ', $osrecord->categories);
                     $osdataobject->publishername = $osrecord->publisherName;
                     $osdataobject->packageDownloadurl = $osrecord->packageDownloadUrl;
                     $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
@@ -382,5 +421,42 @@ class api extends \curl {
             $newstatus = 1;
         }
         $enrolplugin->update_status($instance, $newstatus);
+    }
+
+    public function create_oscategories($osrecord) {
+        global $DB;
+        $categories = $osrecord->categories;
+        foreach ($categories as $key => $value) {
+            mtrace('Categories' . $key . '-' . $value);
+            //$value = "|Compliance|HIPAA"
+            $values = explode('|', $value);
+            //$value
+            $values = array_values(array_filter($values));
+            mtrace('Values = ' . json_encode($values));
+            //returns [Compliance, HIPAA]
+            foreach ($values as $vkey => $vvalue) {
+                mtrace('vkey: ' . $vkey . 'vvalue: ' . $vvalue);
+                $catexist =
+                        $DB->record_exists('course_categories', ['name' => $vvalue]);
+
+                if ($vkey === 0 && $catexist !== true) {
+                    $data = new \stdClass();
+                    mtrace('vkey is ' . $vkey);
+                    mtrace('vvalue is ' . $vvalue);
+                    $data->name = $vvalue;
+                    core_course_category::create($data);
+                }
+
+                if ($vkey !== 0 && $catexist !== true) {
+                    $data = new \stdClass();
+                    $data->name = $vvalue;
+                    $name = $values[$vkey - 1];
+                    $parentid = $DB->get_field('course_categories', 'id', ['name' => $name]);
+                    $data->parent = $parentid;
+                    core_course_category::create($data);
+                }
+            }
+        }
+        \context_helper::build_all_paths();
     }
 }
