@@ -82,13 +82,10 @@ class api extends \curl {
     }
 
     public function authenticate() {
-        mtrace('Calling Authenticate().');
+        mtrace('Authenticating.');
         $authurl = get_config('tool_opensesame', 'authurl');
-        mtrace('Debug message: $authurl = ' . $authurl);
         $clientid = get_config('tool_opensesame', 'clientid');
-        mtrace('Debug message: $clientid = ' . $clientid);
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
-        mtrace('Debug message: $clientsecret = ' . $clientsecret);
 
         $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
@@ -225,7 +222,7 @@ class api extends \curl {
         $this->setHeader(sprintf('Authorization: Bearer %s', $token));
         $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                 get_config('tool_opensesame', 'customerintegrationid');
-        mtrace('Debug message: $url = ' . $url);
+
         $response = $this->get($url);
         $statuscode = $this->get_http_code();
         $dcoded = json_decode($response);
