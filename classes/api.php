@@ -83,7 +83,6 @@ class api extends \curl {
     public function authenticate() {
         mtrace('Calling Authenticate().');
         $authurl = get_config('tool_opensesame', 'authurl');
-        //mtrace('?????????' . $authurl . 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
 
@@ -95,11 +94,10 @@ class api extends \curl {
 
         $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
         );
-        $statuscode = $this->get_http_code();
+
         $decoded = json_decode($response);
         $token = $decoded->access_token;
         set_config('bearertoken', $token, 'tool_opensesame');
-        //mtrace('set hidden bearertoken create time stamp');
         set_config('bearertokencreatetime', time(), 'tool_opensesame');
         $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
         set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
@@ -136,42 +134,73 @@ class api extends \curl {
      * add_open_sesame_course
      * Adds an open sesame course to moodle,
      *
-     * @param $osrecord
+     * @param $osdataobject
+     * @param $token
+     * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      */
 
-    public function add_open_sesame_course($osrecord, $token) {
+    public function add_open_sesame_course($osdataobject, $token) {
         mtrace('calling add_open_sesame_course');
         global $DB;
-        $coursexist =
-                $DB->record_exists('course', ['idnumber' => $osrecord->id]);
+
+        //identify target course category
+        $coursexist = $DB->record_exists('course', ['idnumber' => $osdataobject->idopensesame]);
 
         if ($coursexist !== true) {
             $data = new \stdClass();
-            $data->fullname = $osrecord->title;
-            $data->shortname = $osrecord->title;
-            $data->idnumber = $osrecord->id;
-            $data->summary = $osrecord->descriptionHtml;
+            $data->fullname = $osdataobject->title;
+            $data->shortname = $osdataobject->title;
+            $data->idnumber = $osdataobject->idopensesame;
+            $data->summary = $osdataobject->descriptiontext;
             $data->timecreated = time();
-            $data->category = $DB->get_field('course_categories', 'id', ['name' => 'Miscellaneous']);
-            $data->summary .= ' Publisher Name: ' . $osrecord->publisherName . ' Duration: ' . $osrecord->duration;
 
+            $stringcategories = $osdataobject->oscategories;
+
+            //php compare  each array elements choose the element that has the most items in it.
+            $result = [];
+            $string = $stringcategories;
+
+            $firstdimension = explode(',', $string); // Divide by , symbol
+            foreach ($firstdimension as $temp) {
+                // Take each result of division and explode it by , symbol and save to result
+                $pos = strpos($temp, '|');
+                if ($pos !== false) {
+                    $newtemp = substr_replace($temp, '', $pos, strlen('|'));
+                    $newtemp = trim($newtemp);
+                }
+
+                $result[] = explode('|', $newtemp);
+            }
+            $targetcategory = '';
+
+            foreach ($result as $r) {
+                $maxcount = 0;
+                $items = count($r);
+                if ($items > $maxcount) {
+                    $maxcount = $items;
+                    $targetcategory = $r[$items - 1];
+                }
+            }
+
+            $data->category = $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
+            $data->summary .= ' Publisher Name: ' . $osdataobject->publishername . ' Duration: ' . $osdataobject->duration;
             $course = create_course($data);
-            //this should now be moodle courseid not osid.
             $courseid = $course->id;
-            $thumbnailurl = $osrecord->thumbnailUrl;
+            mtrace('courseid ' . $courseid);
+            $thumbnailurl = $osdataobject->thumbnailurl;
             $this->create_course_image($courseid, $thumbnailurl);
-            $scormpackagedownloadurl = $osrecord->packageDownloadUrl;
+            //mtrace('package: ' . json_encode($osdataobject));
+            $scormpackagedownloadurl = $osdataobject->packageDownloadurl;
             $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
-            $this->update_osrecord($courseid, $osrecord->id);
-            $active = $this->os_is_active($osrecord->id, $courseid);
-
+            $this->update_osdataobject($courseid, $osdataobject->idopensesame);
+            $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
             $this->set_self_enrollment($courseid, $active);
 
         }
         if ($coursexist == true) {
-            mtrace('Course: ' . $osrecord->title . ' needs updating');
+            mtrace('Course: ' . $osdataobject->title . ' needs updating');
         }
     }
 
@@ -197,21 +226,18 @@ class api extends \curl {
 
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            //$this->authenticate();
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
             $data = $dcoded->data;
-            mtrace('Response debug for Moodle category creation' . $response);
 
             foreach ($data as $osrecord) {
-                //feature/DEF-625
+
                 $this->create_oscategories($osrecord);
                 $keyexist =
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
                 if ($keyexist !== true) {
-                    //mtrace('Osrecord being created for ' . $osrecord->id);
-                    //mtrace('osrecord' . json_encode($osrecord));
+
                     $osdataobject = new \stdClass();
                     $osdataobject->idopensesame = $osrecord->id;
                     $osdataobject->provider = 'OpenSesame';
@@ -230,14 +256,10 @@ class api extends \curl {
                     $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
                     mtrace('inserting record ' . $returnid);
 
-                    $this->add_open_sesame_course($osrecord, $token);
-
+                    $this->add_open_sesame_course($osdataobject, $token);
                 }
-
             }
-
         }
-
     }
 
     /**
@@ -350,21 +372,19 @@ class api extends \curl {
         $moduleinfo->add = $add;
         $moduleinfo->cmidnumber = '';
         $moduleinfo->section = $section;
-
-        //$data stdclass with everything to add_mod_info
         add_moduleinfo($moduleinfo, $course);
     }
 
-    public function update_osrecord($courseid, $osrecordid) {
-        mtrace('calling update_osrecord');
+    public function update_osdataobject($courseid, $osdataobjectid) {
+        mtrace('calling update_osdataobject');
         global $DB;
-        $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osrecordid]);
+        $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osdataobjectid]);
     }
 
-    public function os_is_active($osrecordid, $courseid) {
+    public function os_is_active($osdataobjectid, $courseid) {
         mtrace('calling os_is_active');
         global $DB;
-        $active = $DB->get_field('tool_opensesame', 'active', ['idopensesame' => $osrecordid, 'courseid' => $courseid]);
+        $active = $DB->get_field('tool_opensesame', 'active', ['id' => $osdataobjectid, 'courseid' => $courseid]);
         return $active;
     }
 
@@ -387,29 +407,22 @@ class api extends \curl {
         $enrolplugin->update_status($instance, $newstatus);
     }
 
-    //feature/DEF-625
     public function create_oscategories($osrecord) {
         global $DB;
         $categories = $osrecord->categories;
         foreach ($categories as $key => $value) {
-            mtrace('Categories' . $key . '-' . $value);
-            //$value = "|Compliance|HIPAA"
             $values = explode('|', $value);
-            //$value
             $values = array_values(array_filter($values));
-            mtrace('Values = ' . json_encode($values));
-            //returns [Compliance, HIPAA]
+
             foreach ($values as $vkey => $vvalue) {
-                mtrace('vkey: ' . $vkey . 'vvalue: ' . $vvalue);
+
                 $catexist =
                         $DB->record_exists('course_categories', ['name' => $vvalue]);
 
                 if ($vkey === 0 && $catexist !== true) {
                     $data = new \stdClass();
-                    mtrace('vkey is ' . $vkey);
-                    mtrace('vvalue is ' . $vvalue);
                     $data->name = $vvalue;
-                    core_course_category::create($data);
+                    $category = core_course_category::create($data);
                 }
 
                 if ($vkey !== 0 && $catexist !== true) {
@@ -418,10 +431,11 @@ class api extends \curl {
                     $name = $values[$vkey - 1];
                     $parentid = $DB->get_field('course_categories', 'id', ['name' => $name]);
                     $data->parent = $parentid;
-                    core_course_category::create($data);
+                    $category = core_course_category::create($data);
                 }
             }
         }
         \context_helper::build_all_paths();
+
     }
 }
