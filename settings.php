@@ -22,6 +22,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
+global $CFG;
 
 if ($hassiteconfig) {
     //place settings category named opensesameintegration under tab courses
@@ -31,19 +32,23 @@ if ($hassiteconfig) {
     // places the link to the settingspage under the new category
     $settings = new admin_settingpage('tool_opensesame', get_string('opensesameintegration', 'tool_opensesame'));
     //creating new settings to add the the new settingspage
-    $settings->add(new admin_setting_configtext('tool_opensesame/clientid', get_string('clientid', 'tool_opensesame'),
-            get_string('clientiddesc', 'tool_opensesame'), '', PARAM_RAW));
-    $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/clientsecret',
-            get_string('clientsecret', 'tool_opensesame'),
-            get_string('clientsecretdesc', 'tool_opensesame'), ''));
+
+    if (!is_array($CFG->forced_plugin_settings['tool_opensesame'])) {
+        $settings->add(new admin_setting_configtext('tool_opensesame/clientid', get_string('clientid', 'tool_opensesame'),
+                get_string('clientiddesc', 'tool_opensesame'), '', PARAM_RAW));
+        $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/clientsecret',
+                get_string('clientsecret', 'tool_opensesame'),
+                get_string('clientsecretdesc', 'tool_opensesame'), ''));
+        $settings->add(new admin_setting_configtext('tool_opensesame/authurl', get_string('authurl', 'tool_opensesame'),
+                get_string('authurldesc', 'tool_opensesame'), 'https://auth.coursecloud.net/oauth2/aus1l01v8s55riV0C0h8/v1/token',
+                PARAM_URL));
+        $settings->add(new admin_setting_configtext('tool_opensesame/baseurl', get_string('baseurl', 'tool_opensesame'),
+                get_string('baseurldesc', 'tool_opensesame'), 'https://api.delivery.opensesame.com', PARAM_URL));
+    }
+
     $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/customerintegrationid',
             get_string('customerintegrationid', 'tool_opensesame'),
             get_string('customerintegrationiddesc', 'tool_opensesame'), ''));
-    $settings->add(new admin_setting_configtext('tool_opensesame/authurl', get_string('authurl', 'tool_opensesame'),
-            get_string('authurldesc', 'tool_opensesame'), 'https://auth.coursecloud.net/oauth2/aus1l01v8s55riV0C0h8/v1/token',
-            PARAM_URL));
-    $settings->add(new admin_setting_configtext('tool_opensesame/baseurl', get_string('baseurl', 'tool_opensesame'),
-            get_string('baseurldesc', 'tool_opensesame'), 'https://api.delivery.opensesame.com', PARAM_URL));
 
     //add to the admin settings for opensesameintegration
     $ADMIN->add('opensesameintegration', $settings);

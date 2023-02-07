@@ -52,6 +52,7 @@ class api extends \curl {
         parent::__construct($settings);
 
         $this->bearertoken = get_config('local_opensesame', 'bearertoken');
+
         $this->baseurl = get_config('local_opensesame', 'baseurl');
 
         // If the admin omitted the protocol part, add the HTTPS protocol on-the-fly.
@@ -76,15 +77,18 @@ class api extends \curl {
         if (!isset($info['http_code'])) {
             return false;
         }
-        mtrace('returning status code' . $info['http_code']);
+        mtrace('returning status code ' . $info['http_code']);
         return $info['http_code'];
     }
 
     public function authenticate() {
         mtrace('Calling Authenticate().');
         $authurl = get_config('tool_opensesame', 'authurl');
+        mtrace('Debug message: $authurl = ' . $authurl);
         $clientid = get_config('tool_opensesame', 'clientid');
+        mtrace('Debug message: $clientid = ' . $clientid);
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
+        mtrace('Debug message: $clientsecret = ' . $clientsecret);
 
         $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
@@ -149,6 +153,7 @@ class api extends \curl {
         $coursexist = $DB->record_exists('course', ['idnumber' => $osdataobject->idopensesame]);
 
         if ($coursexist !== true) {
+            mtrace('Creating Course: ' . $osdataobject->title);
             $data = new \stdClass();
             $data->fullname = $osdataobject->title;
             $data->shortname = $osdataobject->title;
@@ -200,7 +205,7 @@ class api extends \curl {
 
         }
         if ($coursexist == true) {
-            mtrace('Course: ' . $osdataobject->title . ' needs updating');
+            mtrace('Course already exist in Moodle Updating Course: ' . $osdataobject->title);
         }
     }
 
@@ -220,6 +225,7 @@ class api extends \curl {
         $this->setHeader(sprintf('Authorization: Bearer %s', $token));
         $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                 get_config('tool_opensesame', 'customerintegrationid');
+        mtrace('Debug message: $url = ' . $url);
         $response = $this->get($url);
         $statuscode = $this->get_http_code();
         $dcoded = json_decode($response);
@@ -252,10 +258,8 @@ class api extends \curl {
                     $osdataobject->publishername = $osrecord->publisherName;
                     $osdataobject->packageDownloadurl = $osrecord->packageDownloadUrl;
                     $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
-                    //mtrace('osdataobject:' . json_encode($osdataobject));
                     $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
-                    mtrace('inserting record ' . $returnid);
-
+                    mtrace('inserting Open Sesame course ' . $osrecord->title . ' metadata. tool_opensesame id: ' . $returnid);
                     $this->add_open_sesame_course($osdataobject, $token);
                 }
             }
