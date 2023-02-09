@@ -188,6 +188,7 @@ class api extends \curl {
 
             $data->category = $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
             $data->summary .= ' Publisher Name: ' . $osdataobject->publishername . ' Duration: ' . $osdataobject->duration;
+            $data->tags = ['open-sesame'];
             $course = create_course($data);
             $courseid = $course->id;
             mtrace('courseid ' . $courseid);
