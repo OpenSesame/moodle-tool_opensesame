@@ -189,6 +189,8 @@ class api extends \curl {
             $data->category = $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
             $data->summary .= ' Publisher Name: ' . $osdataobject->publishername . ' Duration: ' . $osdataobject->duration;
             $data->tags = ['open-sesame'];
+            $data->enablecompletion = 1;
+            $data->completionnotify = 1;
             $course = create_course($data);
             $courseid = $course->id;
             mtrace('courseid ' . $courseid);
@@ -338,6 +340,7 @@ class api extends \curl {
         require_once($CFG->dirroot . '/course/modlib.php');
         require_once($CFG->dirroot . '/course/format/lib.php');
         require_once($CFG->dirroot . '/mod/scorm/mod_form.php');
+        require_once($CFG->dirroot . '/completion/criteria/completion_criteria.php');
 
         //get course
         $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
@@ -374,6 +377,10 @@ class api extends \curl {
         $moduleinfo->add = $add;
         $moduleinfo->cmidnumber = '';
         $moduleinfo->section = $section;
+        $moduleinfo->displayattemptstatus = 1;
+        $moduleinfo->completionstatusrequired = COMPLETION_CRITERIA_TYPE_ACTIVITY;
+        $moduleinfo->completion = COMPLETION_CRITERIA_TYPE_DATE;
+        $moduleinfo->completionview = 1;
         add_moduleinfo($moduleinfo, $course);
     }
 
