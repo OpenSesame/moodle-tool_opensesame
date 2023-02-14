@@ -41,5 +41,7 @@ $string['apiauthtoken'] = 'API Authorization token';
 $string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integration';
 $string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
 $string['apitokenempty'] = 'TOKEN of OpenSesame API is not configured correctly.';
+$string['statuscode400'] =
+        '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
 $string['opensesamesync'] = 'OpenSesame Course Sync';
 $string['cachedef_bearertokencreatetime'] = 'The time the bearer token was first created.';
