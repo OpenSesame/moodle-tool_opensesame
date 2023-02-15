@@ -204,7 +204,7 @@ class api extends \curl {
         mtrace('courseid ' . $courseid);
         $thumbnailurl = $osdataobject->thumbnailurl;
         $this->create_course_image($courseid, $thumbnailurl);
-        $scormpackagedownloadurl = $osdataobject->packageDownloadurl;
+        $scormpackagedownloadurl = $osdataobject->packagedownloadurl;
         $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
         $this->update_osdataobject($courseid, $osdataobject->idopensesame);
         $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
@@ -264,8 +264,9 @@ class api extends \curl {
                 $osdataobject->languages = $osrecord->languages[0];
                 $osdataobject->oscategories = implode(', ', $osrecord->categories);
                 $osdataobject->publishername = $osrecord->publisherName;
-                $osdataobject->packageDownloadurl = $osrecord->packageDownloadUrl;
+                $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
                 $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+                mtrace('debuge packagedownloadurl not going into tool_opensesame table Osdataobject: ' . json_encode($osdataobject) . 'Osrecord: ' . json_encode($osrecord));
                 if ($keyexist !== true) {
                     $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
                     mtrace('inserting Open Sesame course ' . $osrecord->title . ' metadata. tool_opensesame id: ' . $returnid);
