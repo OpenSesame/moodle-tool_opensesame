@@ -100,7 +100,6 @@ class api extends \curl {
         set_config('bearertokencreatetime', time(), 'tool_opensesame');
         $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
         set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-        //mtrace('This token:' . $this->get_auth_token());
         return $this->get_auth_token();
     }
 
@@ -122,13 +121,15 @@ class api extends \curl {
         if ($token === '' || $now >= $expiretime) {
             mtrace('Token either does not exist or is expired. Token is being created');
             $token = $this->authenticate();
-            //mtrace('get authtoken ' . $token);
             return $token;
 
         } else if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
-            $this->get_open_sesame_course_list($token);
-            //mtrace('get good authtoken ' . $token);
+            //define url for the next function
+            $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
+                    get_config('tool_opensesame', 'customerintegrationid') . '&limit=10';
+            $this->get_open_sesame_course_list($token, $url);
+
             return $token;
         }
     }
@@ -203,13 +204,21 @@ class api extends \curl {
         mtrace('courseid ' . $courseid);
         $thumbnailurl = $osdataobject->thumbnailurl;
         $this->create_course_image($courseid, $thumbnailurl);
-        //mtrace('package: ' . json_encode($osdataobject));
         $scormpackagedownloadurl = $osdataobject->packageDownloadurl;
         $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
         $this->update_osdataobject($courseid, $osdataobject->idopensesame);
         $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
         $this->set_self_enrollment($courseid, $active);
 
+    }
+
+    public function determineurl(&$paging) {
+        foreach ($paging as $key => $url) {
+            if ($key == 'next' && !empty($url)) {
+                mtrace($key . ' page url' . $url);
+                return $url;
+            }
+        }
     }
 
     /**
@@ -221,14 +230,10 @@ class api extends \curl {
      * add_open_sesame_course
      */
 
-    public function get_open_sesame_course_list($token) {
+    public function get_open_sesame_course_list($token, $url) {
         global $DB;
         //Integrator issues request with access token
-        //mtrace('Calling get_open_sesame_course list token' . $token);
         $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
-        $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                get_config('tool_opensesame', 'customerintegrationid');
-
         $response = $this->get($url);
         $statuscode = $this->get_http_code();
         $dcoded = json_decode($response);
@@ -239,9 +244,11 @@ class api extends \curl {
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+            $paging = $dcoded->paging;
             $data = $dcoded->data;
 
-            foreach ($data as $osrecord) {
+            foreach ($data as $key => $osrecord) {
+
                 $this->create_oscategories($osrecord);
                 $keyexist =
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
@@ -265,6 +272,12 @@ class api extends \curl {
                 }
                 $this->add_open_sesame_course($osdataobject, $token);
             }
+            $nexturl = $this->determineurl($paging);
+            mtrace('nexturl: ' . $nexturl);
+            if ($nexturl) {
+                $this->get_open_sesame_course_list($token, $nexturl);
+            }
+
         }
     }
 
@@ -277,7 +290,6 @@ class api extends \curl {
     public function create_course_image($courseid, $thumbnailurl) {
         mtrace('Calling create_course_image');
         $context = context_course::instance($courseid);
-
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
                 'component' => 'course', // Your component name.
@@ -365,10 +377,8 @@ class api extends \curl {
         //found a course module scorm for this course update the activity
         if ($cmid && $cmid !== null) {
             $update = $cmid;
-            mtrace('$update: ' . $update);
             // Check the course module exists.
             $cm = get_coursemodule_from_id('', $update, 0, false, MUST_EXIST);
-            mtrace('cmid_cm: ' . json_encode($cm));
             // Check the course exists.
             $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
