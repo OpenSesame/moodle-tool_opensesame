@@ -318,7 +318,7 @@ class api extends \curl {
         $headers = $this->header;
 
         $filename = 'scorm_' . $courseid . '.zip';
-        $path = $CFG->tempdir . '/zip/' . $filename;
+        $path = $CFG->tempdir . '/filestorage/' . $filename;
         //Download to temp directory
         download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
         //create a file from temporary folder in the user file draft area
