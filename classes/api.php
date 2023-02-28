@@ -49,9 +49,9 @@ class api extends \curl {
     public function __construct($settings = array()) {
         parent::__construct($settings);
 
-        $this->bearertoken = get_config('local_opensesame', 'bearertoken');
+        $this->bearertoken = get_config('tool_opensesame', 'bearertoken');
 
-        $this->baseurl = get_config('local_opensesame', 'baseurl');
+        $this->baseurl = get_config('tool_opensesame', 'baseurl');
 
         // If the admin omitted the protocol part, add the HTTPS protocol on-the-fly.
         if (!preg_match('/^https?:\/\//', $this->baseurl)) {
@@ -59,7 +59,7 @@ class api extends \curl {
         }
 
         if (empty($this->baseurl)) {
-            throw new \moodle_exception('apiurlempty', 'local_opensesame');
+            throw new \moodle_exception('apiurlempty', 'tool_opensesame');
         }
 
     }
@@ -240,7 +240,7 @@ class api extends \curl {
 
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            throw new \moodle_exception('statuscode400', 'local_opensesame');
+            throw new \moodle_exception('statuscode400', 'tool_opensesame');
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
@@ -395,7 +395,7 @@ class api extends \curl {
             $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, '0', $sectionreturn, $update,
                     $cm->instance, $cm->id);
 
-            mtrace('preparing course scorm mod ');
+            mtrace('preparing course scorm mod');
             //below returns an array of $cm , $moduleinfo
             update_moduleinfo($cm, $moduleinfo, $course);
 
@@ -417,7 +417,7 @@ class api extends \curl {
             $data->sr = $sectionreturn;
             $data->add = $add;
             $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, $add, $section);
-            $moduleinfo = add_moduleinfo($moduleinfo, $course);
+            $moduleinfoi = add_moduleinfo($moduleinfo, $course);
             mtrace('added course module ');
         }
 
@@ -438,13 +438,19 @@ class api extends \curl {
      */
     public function get_default_modinfo($courseid, $draftitemid, $module, $add = '0', int $section = 0, $update = null, $instance
     = null, $coursemodule = null) {
+        global $CFG;
         $moduleinfo = new \stdClass();
         $moduleinfo->name = 'scorm_' . $courseid;
         $moduleinfo->introeditor = ['text' => '',
                 'format' => '1', 'itemid' => ''];
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
-        $moduleinfo->scormtype = 'local';
+        require_once($CFG->dirroot . '/mod/scorm/lib.php');
+        //change scorm type depending on setting in config  file default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
+        //get_config('tool_opensesame', 'allowedtypes');
+        //$moduleinfo->scormtype = SCORM_TYPE_LOCAL;
+        $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
+        mtrace('Scormtype:  ' . $moduleinfo->scormtype);
         $moduleinfo->packagefile = $draftitemid;
         $moduleinfo->updatefreq = 0;
         $moduleinfo->popup = 0;

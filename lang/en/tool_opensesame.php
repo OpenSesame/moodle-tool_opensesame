@@ -22,26 +22,31 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'OpenSesame Integration';
-$string['opensesamecat'] = 'OpenSesame';
-$string['opensesameintegration'] = 'Integration Settings';
+$string['allowedtypes'] = 'Allowed types';
+$string['allowedtypes_desc'] = 'Which scorm type should appear in OpenSesame Course API Integration.';
+$string['authurl'] = 'Authorization API URL';
+$string['authurldesc'] = 'Authorization API URL for OpenSesame Integration';
+$string['apiauthtoken'] = 'API Authorization token';
+$string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integration';
+$string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
+$string['apitokenempty'] = 'TOKEN of OpenSesame API is not configured correctly.';
+$string['baseurl'] = 'Base API URL';
+$string['baseurldesc'] = 'Base API URL for OpenSesame Integration';
+$string['bearertoken'] = 'Bearer Token';
+$string['bearertokendesc'] = 'API Authorization Token generated for OpenSesame Integration';
+$string['cachedef_bearertokencreatetime'] = 'The time the bearer token was first created.';
 $string['clientid'] = 'Client Id';
 $string['clientiddesc'] = 'Client Id for OpenSesame Integration';
 $string['clientsecret'] = 'Client Secret';
 $string['clientsecretdesc'] = 'Client Secret for OpenSesame Integration';
 $string['customerintegrationid'] = 'Customer Integration Id';
 $string['customerintegrationiddesc'] = 'Customer Integration Id for OpenSesame Integration';
-$string['authurl'] = 'Authorization API URL';
-$string['authurldesc'] = 'Authorization API URL for OpenSesame Integration';
-$string['baseurl'] = 'Base API URL';
-$string['baseurldesc'] = 'Base API URL for OpenSesame Integration';
-$string['bearertoken'] = 'Bearer Token';
-$string['bearertokendesc'] = 'API Authorization Token generated for OpenSesame Integration';
-$string['apiauthtoken'] = 'API Authorization token';
-$string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integration';
-$string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
-$string['apitokenempty'] = 'TOKEN of OpenSesame API is not configured correctly.';
+$string['localandaiccurl'] = 'Local and AICC URL';
+$string['onlylocal'] = 'Local only';
+$string['onlyaiccurl'] = 'AICC URL only';
+$string['opensesamesync'] = 'OpenSesame Course Sync';
+$string['opensesamecat'] = 'OpenSesame';
+$string['opensesameintegration'] = 'Integration Settings';
+$string['pluginname'] = 'OpenSesame Integration';
 $string['statuscode400'] =
         '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
-$string['opensesamesync'] = 'OpenSesame Course Sync';
-$string['cachedef_bearertokencreatetime'] = 'The time the bearer token was first created.';
