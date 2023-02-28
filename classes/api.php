@@ -213,7 +213,7 @@ class api extends \curl {
             $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
         }
         if ($allowedtype == SCORM_TYPE_AICCURL){
-            $this->get_open_sesame_scorm_aicclaunchurl($token, $aicclaunchurl, $courseid);
+            $this->get_open_sesame_scorm_package($token, $aicclaunchurl, $courseid);
         }
 
         $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
@@ -324,49 +324,6 @@ class api extends \curl {
         $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
 
         $url = $scormpackagedownloadurl . '?standard=scorm';
-
-        $headers = $this->header;
-
-        $filename = 'scorm_' . $courseid . '.zip';
-        $path = $CFG->tempdir . '/filestorage/' . $filename;
-        //Download to temp directory
-        download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
-        //create a file from temporary folder in the user file draft area
-        $context = context_course::instance($courseid);
-
-        $fs = get_file_storage();
-        $fileinfo = [
-                'contextid' => $context->id,   // ID of the context.
-                'component' => 'mod_scorm', // Your component name.
-                'filearea' => 'package',       // Usually = table name.
-                'itemid' => 0,              // Usually = ID of row in table.
-                'filepath' => '/',            // Any path beginning and ending in /.
-                'filename' => $filename,   // Any filename.
-        ];
-        //clear file area
-        $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
-        // Create a new file scorm.zip package inside of course.
-        $fs->create_file_from_pathname($fileinfo, $path);
-
-        //create a new user draft file from mod_scorm package
-        // Get an unused draft itemid which will be used
-        $draftitemid = file_get_submitted_draft_itemid('packagefile');
-        // Copy the existing files which were previously uploaded into the draft area
-        file_prepare_draft_area(
-                $draftitemid, $context->id, 'mod_scorm', 'package', 0);
-        $modinfo = get_fast_modinfo($courseid);
-
-        $this->create_course_scorm_mod($courseid, $draftitemid);
-
-    }
-    public function get_open_sesame_scorm_aicclaunchurl($token, $scormaicclaunchurl, $courseid = null) {
-        mtrace('calling get_open_sesame_scorm_package');
-        global $CFG, $USER;
-        require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
-        //Integrator issues request with access token
-        $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
-
-        $url = $scormaicclaunchurl;
 
         $headers = $this->header;
 
