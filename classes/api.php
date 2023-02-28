@@ -151,6 +151,7 @@ class api extends \curl {
 
         mtrace('Creating Course: ' . $osdataobject->title);
         $data = new \stdClass();
+
         $data->fullname = $osdataobject->title;
         $data->shortname = $osdataobject->title;
         $data->idnumber = $osdataobject->idopensesame;
@@ -202,11 +203,19 @@ class api extends \curl {
         }
         $courseid = $course->id;
         mtrace('courseid ' . $courseid);
+        $this->update_osdataobject($courseid, $osdataobject->idopensesame);
+        $aicclaunchurl = $this->get_aicc_url($courseid);
         $thumbnailurl = $osdataobject->thumbnailurl;
         $this->create_course_image($courseid, $thumbnailurl);
         $scormpackagedownloadurl = $osdataobject->packagedownloadurl;
-        $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
-        $this->update_osdataobject($courseid, $osdataobject->idopensesame);
+        $allowedtype = get_config('tool_opensesame', 'allowedtypes');
+        if($allowedtype == SCORM_TYPE_LOCAL){
+            $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
+        }
+        if ($allowedtype == SCORM_TYPE_AICCURL){
+            $this->get_open_sesame_scorm_aicclaunchurl($token, $aicclaunchurl, $courseid);
+        }
+
         $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
         $this->set_self_enrollment($courseid, $active);
 
@@ -266,7 +275,7 @@ class api extends \curl {
                 $osdataobject->publishername = $osrecord->publisherName;
                 $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
                 $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
-                mtrace('debuge packagedownloadurl not going into tool_opensesame table Osdataobject: ' . json_encode($osdataobject) . 'Osrecord: ' . json_encode($osrecord));
+
                 if ($keyexist !== true) {
                     $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
                     mtrace('inserting Open Sesame course ' . $osrecord->title . ' metadata. tool_opensesame id: ' . $returnid);
@@ -315,6 +324,49 @@ class api extends \curl {
         $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
 
         $url = $scormpackagedownloadurl . '?standard=scorm';
+
+        $headers = $this->header;
+
+        $filename = 'scorm_' . $courseid . '.zip';
+        $path = $CFG->tempdir . '/filestorage/' . $filename;
+        //Download to temp directory
+        download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
+        //create a file from temporary folder in the user file draft area
+        $context = context_course::instance($courseid);
+
+        $fs = get_file_storage();
+        $fileinfo = [
+                'contextid' => $context->id,   // ID of the context.
+                'component' => 'mod_scorm', // Your component name.
+                'filearea' => 'package',       // Usually = table name.
+                'itemid' => 0,              // Usually = ID of row in table.
+                'filepath' => '/',            // Any path beginning and ending in /.
+                'filename' => $filename,   // Any filename.
+        ];
+        //clear file area
+        $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
+        // Create a new file scorm.zip package inside of course.
+        $fs->create_file_from_pathname($fileinfo, $path);
+
+        //create a new user draft file from mod_scorm package
+        // Get an unused draft itemid which will be used
+        $draftitemid = file_get_submitted_draft_itemid('packagefile');
+        // Copy the existing files which were previously uploaded into the draft area
+        file_prepare_draft_area(
+                $draftitemid, $context->id, 'mod_scorm', 'package', 0);
+        $modinfo = get_fast_modinfo($courseid);
+
+        $this->create_course_scorm_mod($courseid, $draftitemid);
+
+    }
+    public function get_open_sesame_scorm_aicclaunchurl($token, $scormaicclaunchurl, $courseid = null) {
+        mtrace('calling get_open_sesame_scorm_package');
+        global $CFG, $USER;
+        require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
+        //Integrator issues request with access token
+        $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
+
+        $url = $scormaicclaunchurl;
 
         $headers = $this->header;
 
@@ -417,7 +469,7 @@ class api extends \curl {
             $data->sr = $sectionreturn;
             $data->add = $add;
             $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, $add, $section);
-            $moduleinfoi = add_moduleinfo($moduleinfo, $course);
+            add_moduleinfo($moduleinfo, $course);
             mtrace('added course module ');
         }
 
@@ -448,14 +500,11 @@ class api extends \curl {
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
         //change scorm type depending on setting in config  file default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
-        //get_config('tool_opensesame', 'allowedtypes');
-        //$moduleinfo->scormtype = SCORM_TYPE_LOCAL;
-        //$moduleinfo->scormtype is required
+
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
-        mtrace('Scormtype:  ' . $moduleinfo->scormtype);
-        if($moduleinfo->scormtyp === SCORM_TYPE_AICCUR ){
-            $moduleinfo_packageurl = '';
-            //you need to create a sudo package here
+
+        if($moduleinfo->scormtype === SCORM_TYPE_AICCURL ){
+            $moduleinfo->packageurl = $this->get_aicc_url($courseid);
 
         }
         $moduleinfo->packagefile = $draftitemid;
@@ -469,7 +518,6 @@ class api extends \curl {
         $moduleinfo->modulename = $module->name;
         $moduleinfo->visible = $module->visible;
         $moduleinfo->add = $add;
-        //$moduleinfo->cmidnumber = $courseid;
         $moduleinfo->coursemodule = $coursemodule;
         $moduleinfo->cmidnumber = null;
         $moduleinfo->section = $section;
@@ -494,6 +542,13 @@ class api extends \curl {
         return $active;
     }
 
+    public function get_aicc_url($courseid){
+        mtrace('calling get_aicc_url');
+        global $DB;
+        $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
+        mtrace('$courseid: ' . $courseid . ' $url: ' . $url);
+        return $url;
+    }
     public function set_self_enrollment($courseid, $active) {
         mtrace('calling set_self_enrollment');
         global $DB;
