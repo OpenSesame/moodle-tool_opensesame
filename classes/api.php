@@ -440,6 +440,7 @@ class api extends \curl {
     = null, $coursemodule = null) {
         global $CFG;
         $moduleinfo = new \stdClass();
+        //$moduleinfo->name is required
         $moduleinfo->name = 'scorm_' . $courseid;
         $moduleinfo->introeditor = ['text' => '',
                 'format' => '1', 'itemid' => ''];
@@ -449,10 +450,17 @@ class api extends \curl {
         //change scorm type depending on setting in config  file default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
         //get_config('tool_opensesame', 'allowedtypes');
         //$moduleinfo->scormtype = SCORM_TYPE_LOCAL;
+        //$moduleinfo->scormtype is required
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
         mtrace('Scormtype:  ' . $moduleinfo->scormtype);
+        if($moduleinfo->scormtyp === SCORM_TYPE_AICCUR ){
+            $moduleinfo_packageurl = '';
+            //you need to create a sudo package here
+
+        }
         $moduleinfo->packagefile = $draftitemid;
-        $moduleinfo->updatefreq = 0;
+        //update frequency is daily;
+        $moduleinfo->updatefreq = 2;
         $moduleinfo->popup = 0;
         $moduleinfo->width = 100;
         $moduleinfo->height = 500;
