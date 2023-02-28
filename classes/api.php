@@ -28,8 +28,6 @@ namespace tool_opensesame;
 use context_course;
 use core_course_category;
 
-//require_once("$CFG->libdir/filelib.php");
-
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
@@ -51,9 +49,9 @@ class api extends \curl {
     public function __construct($settings = array()) {
         parent::__construct($settings);
 
-        $this->bearertoken = get_config('local_opensesame', 'bearertoken');
+        $this->bearertoken = get_config('tool_opensesame', 'bearertoken');
 
-        $this->baseurl = get_config('local_opensesame', 'baseurl');
+        $this->baseurl = get_config('tool_opensesame', 'baseurl');
 
         // If the admin omitted the protocol part, add the HTTPS protocol on-the-fly.
         if (!preg_match('/^https?:\/\//', $this->baseurl)) {
@@ -61,7 +59,7 @@ class api extends \curl {
         }
 
         if (empty($this->baseurl)) {
-            throw new \moodle_exception('apiurlempty', 'local_opensesame');
+            throw new \moodle_exception('apiurlempty', 'tool_opensesame');
         }
 
     }
@@ -124,9 +122,14 @@ class api extends \curl {
             mtrace('Token either does not exist or is expired. Token is being created');
             $token = $this->authenticate();
             return $token;
+
         } else if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
-            $this->get_open_sesame_course_list($token);
+            //define url for the next function
+            $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
+                    get_config('tool_opensesame', 'customerintegrationid') . '&limit=10';
+            $this->get_open_sesame_course_list($token, $url);
+
             return $token;
         }
     }
@@ -146,66 +149,84 @@ class api extends \curl {
         mtrace('calling add_open_sesame_course');
         global $DB;
 
-        //identify target course category
+        mtrace('Creating Course: ' . $osdataobject->title);
+        $data = new \stdClass();
+
+        $data->fullname = $osdataobject->title;
+        $data->shortname = $osdataobject->title;
+        $data->idnumber = $osdataobject->idopensesame;
+        $data->summary = $osdataobject->descriptiontext;
+        $data->timecreated = time();
+
+        $stringcategories = $osdataobject->oscategories;
+
+        //php compare  each array elements choose the element that has the most items in it.
+        $result = [];
+        $string = $stringcategories;
+
+        $firstdimension = explode(',', $string); // Divide by , symbol
+        foreach ($firstdimension as $temp) {
+            // Take each result of division and explode it by , symbol and save to result
+            $pos = strpos($temp, '|');
+            if ($pos !== false) {
+                $newtemp = substr_replace($temp, '', $pos, strlen('|'));
+                $newtemp = trim($newtemp);
+            }
+
+            $result[] = explode('|', $newtemp);
+        }
+        $targetcategory = '';
+
+        foreach ($result as $r) {
+            $maxcount = 0;
+            $items = count($r);
+            if ($items > $maxcount) {
+                $maxcount = $items;
+                $targetcategory = $r[$items - 1];
+            }
+        }
+
+        $data->category = $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
+        $data->summary .= ' Publisher Name: ' . $osdataobject->publishername . ' Duration: ' . $osdataobject->duration;
+        $data->tags = ['open-sesame'];
+        $data->enablecompletion = 1;
+        $data->completionnotify = 1;
         $coursexist = $DB->record_exists('course', ['idnumber' => $osdataobject->idopensesame]);
-
         if ($coursexist !== true) {
-            mtrace('Creating Course: ' . $osdataobject->title);
-            $data = new \stdClass();
-            $data->fullname = $osdataobject->title;
-            $data->shortname = $osdataobject->title;
-            $data->idnumber = $osdataobject->idopensesame;
-            $data->summary = $osdataobject->descriptiontext;
-            $data->timecreated = time();
-
-            $stringcategories = $osdataobject->oscategories;
-
-            //php compare  each array elements choose the element that has the most items in it.
-            $result = [];
-            $string = $stringcategories;
-
-            $firstdimension = explode(',', $string); // Divide by , symbol
-            foreach ($firstdimension as $temp) {
-                // Take each result of division and explode it by , symbol and save to result
-                $pos = strpos($temp, '|');
-                if ($pos !== false) {
-                    $newtemp = substr_replace($temp, '', $pos, strlen('|'));
-                    $newtemp = trim($newtemp);
-                }
-
-                $result[] = explode('|', $newtemp);
-            }
-            $targetcategory = '';
-
-            foreach ($result as $r) {
-                $maxcount = 0;
-                $items = count($r);
-                if ($items > $maxcount) {
-                    $maxcount = $items;
-                    $targetcategory = $r[$items - 1];
-                }
-            }
-
-            $data->category = $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
-            $data->summary .= ' Publisher Name: ' . $osdataobject->publishername . ' Duration: ' . $osdataobject->duration;
-            $data->tags = ['open-sesame'];
-            $data->enablecompletion = 1;
-            $data->completionnotify = 1;
             $course = create_course($data);
-            $courseid = $course->id;
-            mtrace('courseid ' . $courseid);
-            $thumbnailurl = $osdataobject->thumbnailurl;
-            $this->create_course_image($courseid, $thumbnailurl);
-            //mtrace('package: ' . json_encode($osdataobject));
-            $scormpackagedownloadurl = $osdataobject->packageDownloadurl;
-            $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
-            $this->update_osdataobject($courseid, $osdataobject->idopensesame);
-            $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
-            $this->set_self_enrollment($courseid, $active);
-
         }
         if ($coursexist == true) {
             mtrace('Course already exist in Moodle Updating Course: ' . $osdataobject->title);
+            $course = $DB->get_record('course', array('idnumber' => $osdataobject->idopensesame), '*', MUST_EXIST);
+            $data->id = $course->id;
+            update_course($data);
+        }
+        $courseid = $course->id;
+        mtrace('courseid ' . $courseid);
+        $this->update_osdataobject($courseid, $osdataobject->idopensesame);
+        $aicclaunchurl = $this->get_aicc_url($courseid);
+        $thumbnailurl = $osdataobject->thumbnailurl;
+        $this->create_course_image($courseid, $thumbnailurl);
+        $scormpackagedownloadurl = $osdataobject->packagedownloadurl;
+        $allowedtype = get_config('tool_opensesame', 'allowedtypes');
+        if($allowedtype == SCORM_TYPE_LOCAL){
+            $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
+        }
+        if ($allowedtype == SCORM_TYPE_AICCURL){
+            $this->get_open_sesame_scorm_aicclaunchurl($token, $aicclaunchurl, $courseid);
+        }
+
+        $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
+        $this->set_self_enrollment($courseid, $active);
+
+    }
+
+    public function determineurl(&$paging) {
+        foreach ($paging as $key => $url) {
+            if ($key == 'next' && !empty($url)) {
+                mtrace($key . ' page url' . $url);
+                return $url;
+            }
         }
     }
 
@@ -218,51 +239,55 @@ class api extends \curl {
      * add_open_sesame_course
      */
 
-    public function get_open_sesame_course_list($token) {
+    public function get_open_sesame_course_list($token, $url) {
         global $DB;
         //Integrator issues request with access token
-        mtrace('Calling get_open_sesame_course list');
-        $this->setHeader(sprintf('Authorization: Bearer %s', $token));
-        $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                get_config('tool_opensesame', 'customerintegrationid');
-
+        $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
         $response = $this->get($url);
         $statuscode = $this->get_http_code();
         $dcoded = json_decode($response);
 
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+            throw new \moodle_exception('statuscode400', 'tool_opensesame');
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+            $paging = $dcoded->paging;
             $data = $dcoded->data;
 
-            foreach ($data as $osrecord) {
+            foreach ($data as $key => $osrecord) {
 
                 $this->create_oscategories($osrecord);
                 $keyexist =
                         $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
-                if ($keyexist !== true) {
+                $osdataobject = new \stdClass();
+                $osdataobject->idopensesame = $osrecord->id;
+                $osdataobject->provider = 'OpenSesame';
+                $osdataobject->active = $osrecord->active;
+                $osdataobject->title = $osrecord->title;
+                $osdataobject->descriptiontext =
+                        $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
+                $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
+                $osdataobject->duration = $osrecord->duration;
+                $osdataobject->languages = $osrecord->languages[0];
+                $osdataobject->oscategories = implode(', ', $osrecord->categories);
+                $osdataobject->publishername = $osrecord->publisherName;
+                $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
+                $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
 
-                    $osdataobject = new \stdClass();
-                    $osdataobject->idopensesame = $osrecord->id;
-                    $osdataobject->provider = 'OpenSesame';
-                    $osdataobject->active = $osrecord->active;
-                    $osdataobject->title = $osrecord->title;
-                    $osdataobject->descriptiontext =
-                            $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
-                    $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
-                    $osdataobject->duration = $osrecord->duration;
-                    $osdataobject->languages = $osrecord->languages[0];
-                    $osdataobject->oscategories = implode(', ', $osrecord->categories);
-                    $osdataobject->publishername = $osrecord->publisherName;
-                    $osdataobject->packageDownloadurl = $osrecord->packageDownloadUrl;
-                    $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+                if ($keyexist !== true) {
                     $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
                     mtrace('inserting Open Sesame course ' . $osrecord->title . ' metadata. tool_opensesame id: ' . $returnid);
-                    $this->add_open_sesame_course($osdataobject, $token);
                 }
+                $this->add_open_sesame_course($osdataobject, $token);
             }
+            $nexturl = $this->determineurl($paging);
+            mtrace('nexturl: ' . $nexturl);
+            if ($nexturl) {
+                $this->get_open_sesame_course_list($token, $nexturl);
+            }
+
         }
     }
 
@@ -275,7 +300,6 @@ class api extends \curl {
     public function create_course_image($courseid, $thumbnailurl) {
         mtrace('Calling create_course_image');
         $context = context_course::instance($courseid);
-
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
                 'component' => 'course', // Your component name.
@@ -286,7 +310,8 @@ class api extends \curl {
         ];
         //create course image
         $fs = get_file_storage();
-
+        //make sure there is not an image file to prevent an image file conflict
+        $fs->delete_area_files($context->id, 'course', 'overviewfiles', 0);
         // Create a new file containing the text 'hello world'.
         $fs->create_file_from_url($fileinfo, $thumbnailurl);
     }
@@ -296,15 +321,14 @@ class api extends \curl {
         global $CFG, $USER;
         require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
         //Integrator issues request with access token
-
-        $this->setHeader(['Content-Type: application/json', sprintf('Authorization: Bearer %s', $token)]);
+        $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
 
         $url = $scormpackagedownloadurl . '?standard=scorm';
 
         $headers = $this->header;
 
         $filename = 'scorm_' . $courseid . '.zip';
-        $path = $CFG->tempdir . '/zip/' . $filename;
+        $path = $CFG->tempdir . '/filestorage/' . $filename;
         //Download to temp directory
         download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
         //create a file from temporary folder in the user file draft area
@@ -319,21 +343,70 @@ class api extends \curl {
                 'filepath' => '/',            // Any path beginning and ending in /.
                 'filename' => $filename,   // Any filename.
         ];
-
+        //clear file area
+        $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
         // Create a new file scorm.zip package inside of course.
-        $storedfile = $fs->create_file_from_pathname($fileinfo, $path);
+        $fs->create_file_from_pathname($fileinfo, $path);
+
         //create a new user draft file from mod_scorm package
         // Get an unused draft itemid which will be used
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
-        // Copy the existing files which were previously uploaded
-        // into the draft area
+        // Copy the existing files which were previously uploaded into the draft area
         file_prepare_draft_area(
                 $draftitemid, $context->id, 'mod_scorm', 'package', 0);
+        $modinfo = get_fast_modinfo($courseid);
+
+        $this->create_course_scorm_mod($courseid, $draftitemid);
+
+    }
+    public function get_open_sesame_scorm_aicclaunchurl($token, $scormaicclaunchurl, $courseid = null) {
+        mtrace('calling get_open_sesame_scorm_package');
+        global $CFG, $USER;
+        require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
+        //Integrator issues request with access token
+        $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
+
+        $url = $scormaicclaunchurl;
+
+        $headers = $this->header;
+
+        $filename = 'scorm_' . $courseid . '.zip';
+        $path = $CFG->tempdir . '/filestorage/' . $filename;
+        //Download to temp directory
+        download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
+        //create a file from temporary folder in the user file draft area
+        $context = context_course::instance($courseid);
+
+        $fs = get_file_storage();
+        $fileinfo = [
+                'contextid' => $context->id,   // ID of the context.
+                'component' => 'mod_scorm', // Your component name.
+                'filearea' => 'package',       // Usually = table name.
+                'itemid' => 0,              // Usually = ID of row in table.
+                'filepath' => '/',            // Any path beginning and ending in /.
+                'filename' => $filename,   // Any filename.
+        ];
+        //clear file area
+        $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
+        // Create a new file scorm.zip package inside of course.
+        $fs->create_file_from_pathname($fileinfo, $path);
+
+        //create a new user draft file from mod_scorm package
+        // Get an unused draft itemid which will be used
+        $draftitemid = file_get_submitted_draft_itemid('packagefile');
+        // Copy the existing files which were previously uploaded into the draft area
+        file_prepare_draft_area(
+                $draftitemid, $context->id, 'mod_scorm', 'package', 0);
+        $modinfo = get_fast_modinfo($courseid);
 
         $this->create_course_scorm_mod($courseid, $draftitemid);
 
     }
 
+    /**
+     * @throws \moodle_exception
+     * @throws \dml_exception
+     */
     public function create_course_scorm_mod($courseid, $draftitemid) {
         mtrace('calling create_course_scorm_mod');
         global $CFG, $DB;
@@ -343,30 +416,100 @@ class api extends \curl {
         require_once($CFG->dirroot . '/completion/criteria/completion_criteria.php');
 
         //get course
-        $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-        //create top course section
-        $section = 0;
-        $sectionreturn = 0;
-        $add = 'scorm';
-        $courseformat = course_get_format($course);
-        $maxsections = $courseformat->get_max_sections();
-        if ($section > $maxsections) {
-            print_error('maxsectionslimit', 'moodle', '', $maxsections);
-        }
-        list($module, $context, $cw, $cm, $data) = prepare_new_moduleinfo_data($course, $add, $section);
-        $data->return = 0;
-        $data->sr = $sectionreturn;
-        $data->add = $add;
+        $course = $DB->get_record('course', ['id' => $courseid]);
+        //check course for modules
 
+        $modscorm = 19;
+
+        $cmid = $DB->get_field(
+                $table = 'course_modules',
+                'id',
+                ['course' => $courseid, 'module' => $modscorm],
+                $strictness = IGNORE_MISSING
+        );
+        //found a course module scorm for this course update the activity
+        if ($cmid && $cmid !== null) {
+            $update = $cmid;
+            // Check the course module exists.
+            $cm = get_coursemodule_from_id('', $update, 0, false, MUST_EXIST);
+            // Check the course exists.
+            $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+
+            $return = 0;
+            $sectionreturn = 0;
+
+            list($cm, $context, $module, $data, $cw) = get_moduleinfo_data($cm, $course);
+
+            $data->return = $return;
+            $data->sr = $sectionreturn;
+            $data->update = $update;
+
+            $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, '0', $sectionreturn, $update,
+                    $cm->instance, $cm->id);
+
+            mtrace('preparing course scorm mod');
+            //below returns an array of $cm , $moduleinfo
+            update_moduleinfo($cm, $moduleinfo, $course);
+
+        }
+        //only add a course module if none exist
+        if (!$cmid) {
+            //create top course section
+            $section = 0;
+            $sectionreturn = 0;
+            $add = 'scorm';
+            $courseformat = course_get_format($course);
+
+            $maxsections = $courseformat->get_max_sections();
+            if ($section > $maxsections) {
+                print_error('maxsectionslimit', 'moodle', '', $maxsections);
+            }
+            list($module, $context, $cw, $cm, $data) = prepare_new_moduleinfo_data($course, $add, $section);
+            $data->return = 0;
+            $data->sr = $sectionreturn;
+            $data->add = $add;
+            $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, $add, $section);
+            add_moduleinfo($moduleinfo, $course);
+            mtrace('added course module ');
+        }
+
+    }
+
+    /**
+     * @param $courseid
+     * @param $draftitemid
+     * @param $module
+     * @param $add
+     * updating this value should be = '0' when creating new mod this value should be = 'scorm'
+     * @param $section
+     * @param $update
+     * @param  $instance
+     * @param $coursemodule
+     * updating this value should be = $cmid when creating a new mod this value should be = NULL
+     * @return \stdClass
+     */
+    public function get_default_modinfo($courseid, $draftitemid, $module, $add = '0', int $section = 0, $update = null, $instance
+    = null, $coursemodule = null) {
+        global $CFG;
         $moduleinfo = new \stdClass();
+        //$moduleinfo->name is required
         $moduleinfo->name = 'scorm_' . $courseid;
         $moduleinfo->introeditor = ['text' => '',
                 'format' => '1', 'itemid' => ''];
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
-        $moduleinfo->scormtype = 'local';
+        require_once($CFG->dirroot . '/mod/scorm/lib.php');
+        //change scorm type depending on setting in config  file default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
+
+        $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
+
+        if($moduleinfo->scormtype === SCORM_TYPE_AICCURL ){
+            $moduleinfo->packageurl = $this->get_aicc_url($courseid);
+
+        }
         $moduleinfo->packagefile = $draftitemid;
-        $moduleinfo->updatefreq = 0;
+        //update frequency is daily;
+        $moduleinfo->updatefreq = 2;
         $moduleinfo->popup = 0;
         $moduleinfo->width = 100;
         $moduleinfo->height = 500;
@@ -375,13 +518,15 @@ class api extends \curl {
         $moduleinfo->modulename = $module->name;
         $moduleinfo->visible = $module->visible;
         $moduleinfo->add = $add;
-        $moduleinfo->cmidnumber = '';
+        $moduleinfo->coursemodule = $coursemodule;
+        $moduleinfo->cmidnumber = null;
         $moduleinfo->section = $section;
         $moduleinfo->displayattemptstatus = 1;
         $moduleinfo->completionstatusrequired = COMPLETION_CRITERIA_TYPE_ACTIVITY;
         $moduleinfo->completion = COMPLETION_CRITERIA_TYPE_DATE;
         $moduleinfo->completionview = 1;
-        add_moduleinfo($moduleinfo, $course);
+        $moduleinfo->instance = $instance;
+        return $moduleinfo;
     }
 
     public function update_osdataobject($courseid, $osdataobjectid) {
@@ -397,6 +542,13 @@ class api extends \curl {
         return $active;
     }
 
+    public function get_aicc_url($courseid){
+        mtrace('calling get_aicc_url');
+        global $DB;
+        $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
+        mtrace('$courseid: ' . $courseid . ' $url: ' . $url);
+        return $url;
+    }
     public function set_self_enrollment($courseid, $active) {
         mtrace('calling set_self_enrollment');
         global $DB;
@@ -405,12 +557,10 @@ class api extends \curl {
         $enrolplugin = enrol_get_plugin($instance->enrol);
 
         if ($active) {
-            //$DB->set_field('enrol', 'status', 0, ['courseid' => $courseid, 'enrol' => 'self']);
             $newstatus = 0;
 
         }
         if (!$active) {
-            //$DB->set_field('enrol', 'status', 1, ['courseid' => $courseid, 'enrol' => 'self']);
             $newstatus = 1;
         }
         $enrolplugin->update_status($instance, $newstatus);

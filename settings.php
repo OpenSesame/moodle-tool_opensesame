@@ -31,7 +31,7 @@ if ($hassiteconfig) {
     );
     // places the link to the settingspage under the new category
     $settings = new admin_settingpage('tool_opensesame', get_string('opensesameintegration', 'tool_opensesame'));
-    //creating new settings to add the the new settingspage
+    //creating new settings to add the new settingspage
 
     if (!is_array($CFG->forced_plugin_settings['tool_opensesame'])) {
         $settings->add(new admin_setting_configtext('tool_opensesame/clientid', get_string('clientid', 'tool_opensesame'),
@@ -49,6 +49,22 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/customerintegrationid',
             get_string('customerintegrationid', 'tool_opensesame'),
             get_string('customerintegrationiddesc', 'tool_opensesame'), ''));
+
+    // add scorm type select
+    // Types allowed.
+    require_once($CFG->dirroot . '/mod/scorm/lib.php');
+    $options = array(
+            //SCORM_TYPE_LOCAL = 'local'
+            //SCORM_TYPE_AICCURL = 'aiccurl'
+            //'both' => new lang_string('localandaiccurl', 'tool_opensesame'),
+            SCORM_TYPE_LOCAL => new lang_string('onlylocal', 'tool_opensesame'),
+            SCORM_TYPE_AICCURL => new lang_string('onlyaiccurl', 'tool_opensesame')
+    );
+    $name = get_string('allowedtypes', 'tool_opensesame');
+    $desc = get_string('allowedtypes_desc', 'tool_opensesame');
+    //$default = 'aiccurl';
+    $default = SCORM_TYPE_LOCAL;
+    $settings->add(new admin_setting_configselect('tool_opensesame/allowedtypes', $name, $desc, $default, $options));
 
     //add to the admin settings for opensesameintegration
     $ADMIN->add('opensesameintegration', $settings);
