@@ -52,6 +52,7 @@ if ($hassiteconfig) {
 
     // add scorm type select
     // Types allowed.
+    //DEF-730 BEGINNING
     require_once($CFG->dirroot . '/mod/scorm/lib.php');
     $options = array(
             //SCORM_TYPE_LOCAL = 'local'
@@ -62,10 +63,9 @@ if ($hassiteconfig) {
     );
     $name = get_string('allowedtypes', 'tool_opensesame');
     $desc = get_string('allowedtypes_desc', 'tool_opensesame');
-    //$default = 'aiccurl';
     $default = SCORM_TYPE_LOCAL;
     $settings->add(new admin_setting_configselect('tool_opensesame/allowedtypes', $name, $desc, $default, $options));
-
+    //DEF-730 END
     //add to the admin settings for opensesameintegration
     $ADMIN->add('opensesameintegration', $settings);
 }
