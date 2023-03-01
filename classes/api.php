@@ -33,7 +33,7 @@ require_once($CFG->dirroot . '/lib/filelib.php');
 /**
  * The api class.
  *
- * The api objects prepares a scheduled task to run once every 24/h importing Open-Sesame Courses.
+ * Prepares a scheduled task to run every 24/h importing Open-Sesame Courses.
  *
  * @copyright 2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -114,7 +114,7 @@ class api extends \curl {
     }
 
     /**
-     * get_auth_token Gets auth token, validates token has not expired, if it has, creates a new one.
+     * get_auth_token validates token not expired, if expired, creates a new one.
      *
      * @return false|mixed|object|string|null $token
      * @throws \dml_exception
@@ -229,14 +229,13 @@ class api extends \curl {
 
     }
 
-
     /**
      * Defines the next page url in api.
      *
      * @param $paging
-     * @return false|string|void
+     * @return false|void
      */
-    public function determineurl(&$paging) {
+    public function determineurl(&$paging){
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
@@ -527,7 +526,7 @@ class api extends \curl {
     }
 
     /**
-     * update tool_opensesame Establishes a relationship tool_opensesame with moodle table course.
+     * Establishes a relationship tool_opensesame with moodle table course.
      *
      * @param $courseid
      * @param $osdataobjectid
