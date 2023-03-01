@@ -31,7 +31,14 @@ use core_course_category;
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot . '/lib/filelib.php');
-
+/**
+ * The api class.
+ *
+ * The api objects provide a means to prepare a scheduled task to run at the minimal of once every 24 hours to import Open-Sesame Courses.
+ *
+ * @copyright 2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class api extends \curl {
 
     /** @var string the api token */
@@ -108,14 +115,11 @@ class api extends \curl {
     }
 
     /**
-     * get_auth_token: Getting the auth token
-     * This method would validate that the token has not expired,
-     *  and if it has, then creates a new one
+     * get_auth_token: Getting the auth token, This method would validate that the token has not expired, and if it has, then creates a new one.
      *
      * @return false|mixed|object|string|null $token
      * @throws \dml_exception
      */
-
     public function get_auth_token() {
         mtrace('get_auth_token called');
         $token = get_config('tool_opensesame', 'bearertoken');
@@ -148,7 +152,6 @@ class api extends \curl {
      * @throws \file_exception
      * @throws \moodle_exception
      */
-
     public function add_open_sesame_course($osdataobject, $token) {
         mtrace('calling add_open_sesame_course');
         global $DB;
@@ -247,7 +250,6 @@ class api extends \curl {
      * Gets a list of courses and processes them using
      * add_open_sesame_course
      */
-
     public function get_open_sesame_course_list($token, $url) {
         global $DB;
         // Integrator issues request with access token.
@@ -337,7 +339,6 @@ class api extends \curl {
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-
     public function get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid = null) {
         mtrace('calling get_open_sesame_scorm_package');
         global $CFG, $USER;
