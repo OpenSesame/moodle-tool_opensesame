@@ -164,7 +164,7 @@ class api extends \curl {
         $result = [];
         $string = $stringcategories;
 
-        $firstdimension = explode(',', $string); // Divide by , symbol
+        $firstdimension = explode(',', $string); // Divide by , symbol.
         foreach ($firstdimension as $temp) {
             // Take each result of division and explode it by , symbol and save to result.
             $pos = strpos($temp, '|');
@@ -349,7 +349,7 @@ class api extends \curl {
         $fs->create_file_from_pathname($fileinfo, $path);
 
         // Create a new user draft file from mod_scorm package.
-        // Get an unused draft itemid which will be used
+        // Get an unused draft itemid which will be used.
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area(
@@ -409,7 +409,7 @@ class api extends \curl {
             update_moduleinfo($cm, $moduleinfo, $course);
 
         }
-        // Only add a course module if none exist
+        // Only add a course module if none exist.
         if (!$cmid) {
             // Create top course section.
             $section = 0;
@@ -419,7 +419,7 @@ class api extends \curl {
 
             $maxsections = $courseformat->get_max_sections();
             if ($section > $maxsections) {
-                print_error('maxsectionslimit', 'moodle', '', $maxsections);
+                throw new \moodle_exception('maxsectionslimit', 'moodle', '', $maxsections);
             }
             list($module, $context, $cw, $cm, $data) = prepare_new_moduleinfo_data($course, $add, $section);
             $data->return = 0;
@@ -456,11 +456,11 @@ class api extends \curl {
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
-        // Change scorm type depending on setting in config  file default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
+        // Change scorm type depending on setting default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
 
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
 
-        if($moduleinfo->scormtype === SCORM_TYPE_AICCURL ){
+        if ($moduleinfo->scormtype === SCORM_TYPE_AICCURL ) {
             $moduleinfo->packageurl = $this->get_aicc_url($courseid);
 
         }
@@ -499,7 +499,7 @@ class api extends \curl {
         return $active;
     }
 
-    public function get_aicc_url($courseid){
+    public function get_aicc_url($courseid) {
         mtrace('calling get_aicc_url');
         global $DB;
         $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
