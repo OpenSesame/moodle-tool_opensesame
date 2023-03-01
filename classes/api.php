@@ -242,7 +242,10 @@ class api extends \curl {
                 mtrace($key . ' page url' . $url);
                 /** @var string $url */
                 return $url;
-            } else {return false;}
+            } else {
+                return false;
+            }
+            return false;
         }
     }
 
