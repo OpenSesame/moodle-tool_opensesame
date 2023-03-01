@@ -143,16 +143,16 @@ class api extends \curl {
     }
 
     /**
-     * add_open_sesame_course
-     * Adds an open sesame course to moodle,
-     *
+     * * add_open_sesame_course Adds an open sesame course to moodle.
      * @param $osdataobject
      * @param $token
+     * @return void
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
+     * @throws \stored_file_creation_exception
      */
-    public function add_open_sesame_course($osdataobject, $token) {
+    public function add_open_sesame_course($osdataobject, $token): void {
         mtrace('calling add_open_sesame_course');
         global $DB;
 
@@ -228,6 +228,7 @@ class api extends \curl {
 
     }
 
+
     /**
      * Defines the next page url in api.
      * @param $paging
@@ -246,9 +247,14 @@ class api extends \curl {
      * get_open_sesame_course_list
      *
      * @param $token
+     * @param $url
      * Does not validate the token, the token should be valid
      * Gets a list of courses and processes them using
      * add_open_sesame_course
+     * @throws \dml_exception
+     * @throws \file_exception
+     * @throws \moodle_exception
+     * @throws \stored_file_creation_exception
      */
     public function get_open_sesame_course_list($token, $url) {
         global $DB;
@@ -309,7 +315,7 @@ class api extends \curl {
      * @return void
      * @throws \file_exception
      */
-    public function create_course_image($courseid, $thumbnailurl) {
+    public function create_course_image($courseid, $thumbnailurl): void {
         mtrace('Calling create_course_image');
         $context = context_course::instance($courseid);
         $fileinfo = [
@@ -475,7 +481,7 @@ class api extends \curl {
      * @throws \dml_exception
      */
     public function get_default_modinfo($courseid, $draftitemid, $module, $add = '0', int $section = 0, $update = null, $instance
-    = null, $coursemodule = null) {
+    = null, $coursemodule = null): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
 
@@ -523,7 +529,7 @@ class api extends \curl {
      * @return void
      * @throws \dml_exception
      */
-    public function update_osdataobject($courseid, $osdataobjectid) {
+    public function update_osdataobject($courseid, $osdataobjectid): void {
         mtrace('calling update_osdataobject');
         global $DB;
         $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osdataobjectid]);
