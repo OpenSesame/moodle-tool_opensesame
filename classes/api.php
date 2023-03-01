@@ -144,15 +144,16 @@ class api extends \curl {
 
     /**
      * * add_open_sesame_course Adds an open sesame course to moodle.
-     * @param $osdataobject
-     * @param $token
+     *
+     * @param object $osdataobject
+     * @param string $token
      * @return void
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function add_open_sesame_course($osdataobject, $token): void {
+    public function add_open_sesame_course(object $osdataobject, string $token): void {
         mtrace('calling add_open_sesame_course');
         global $DB;
 
@@ -231,15 +232,17 @@ class api extends \curl {
 
     /**
      * Defines the next page url in api.
+     *
      * @param $paging
-     * @return void
+     * @return false|string|void
      */
     public function determineurl(&$paging) {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
+                /** @var string $url */
                 return $url;
-            }
+            } else {return false;}
         }
     }
 
