@@ -18,7 +18,7 @@
  * API for OpenSesame
  *
  * @package     tool_opensesame
- * @category    classes
+ * @api    classes
  * @copyright   2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -78,8 +78,12 @@ class api extends \curl {
         mtrace('returning status code ' . $info['http_code']);
         return $info['http_code'];
     }
-
-    public function authenticate() {
+    /**
+     * Get authenticate  API Credentialing.
+     *
+     * @return token if authenticated.
+     */
+    public function authenticate(): token {
         mtrace('Authenticating.');
         $authurl = get_config('tool_opensesame', 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');
@@ -221,6 +225,11 @@ class api extends \curl {
 
     }
 
+    /**
+     * Defines the next page url in api.
+     * @param $paging
+     * @return void
+     */
     public function determineurl(&$paging) {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
@@ -292,6 +301,7 @@ class api extends \curl {
     }
 
     /**
+     *  Creates a course image based on the thumbnail url.
      * @param $courseid
      * @param $thumbnailurl
      * @return void
@@ -315,6 +325,18 @@ class api extends \curl {
         // Create a new file containing the text 'hello world'.
         $fs->create_file_from_url($fileinfo, $thumbnailurl);
     }
+
+    /**
+     * Creates package in Moodle file system to support scorm creation
+     * @param $token
+     * @param $scormpackagedownloadurl
+     * @param $courseid
+     * @return void
+     * @throws \dml_exception
+     * @throws \file_exception
+     * @throws \moodle_exception
+     * @throws \stored_file_creation_exception
+     */
 
     public function get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid = null) {
         mtrace('calling get_open_sesame_scorm_package');
@@ -361,10 +383,14 @@ class api extends \curl {
     }
 
     /**
+     * Creates the moduleinfo to create scorm module.
+     *
+     * @param $courseid
+     * @param $draftitemid
      * @throws \moodle_exception
      * @throws \dml_exception
      */
-    public function create_course_scorm_mod($courseid, $draftitemid) {
+    public function create_course_scorm_mod($courseid, $draftitemid): void {
         mtrace('calling create_course_scorm_mod');
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
@@ -433,17 +459,19 @@ class api extends \curl {
     }
 
     /**
+     * Stores the default moduleinfo.
      * @param $courseid
      * @param $draftitemid
      * @param $module
-     * @param $add
+     * @param string $add
      * updating this value should be = '0' when creating new mod this value should be = 'scorm'
-     * @param $section
-     * @param $update
-     * @param  $instance
-     * @param $coursemodule
+     * @param int $section
+     * @param null $update
+     * @param null $instance
+     * @param null $coursemodule
      * updating this value should be = $cmid when creating a new mod this value should be = NULL
      * @return \stdClass
+     * @throws \dml_exception
      */
     public function get_default_modinfo($courseid, $draftitemid, $module, $add = '0', int $section = 0, $update = null, $instance
     = null, $coursemodule = null) {
@@ -486,12 +514,27 @@ class api extends \curl {
         return $moduleinfo;
     }
 
+    /**
+     * update the tool_opensesame table with the courseid after course is created. Establishes a relationship tool_opensesame any other moodle table that includes the courseid.
+     *
+     * @param $courseid
+     * @param $osdataobjectid
+     * @return void
+     * @throws \dml_exception
+     */
     public function update_osdataobject($courseid, $osdataobjectid) {
         mtrace('calling update_osdataobject');
         global $DB;
         $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osdataobjectid]);
     }
 
+    /**
+     * Determines if the Open-Sesame Course is Active based on API flag.
+     * @param $osdataobjectid
+     * @param $courseid
+     * @return false|mixed
+     * @throws \dml_exception
+     */
     public function os_is_active($osdataobjectid, $courseid) {
         mtrace('calling os_is_active');
         global $DB;
@@ -499,6 +542,12 @@ class api extends \curl {
         return $active;
     }
 
+    /**
+     * AICC launch Url for Scorm Activity: TODO: modify with proper credentialing
+     * @param $courseid
+     * @return false|mixed
+     * @throws \dml_exception
+     */
     public function get_aicc_url($courseid) {
         mtrace('calling get_aicc_url');
         global $DB;
@@ -506,7 +555,15 @@ class api extends \curl {
         mtrace('$courseid: ' . $courseid . ' $url: ' . $url);
         return $url;
     }
-    public function set_self_enrollment($courseid, $active) {
+
+    /**
+     * Sets the enrollment methods for each Open-Sesame course
+     * @param $courseid
+     * @param $active
+     * @return void
+     * @throws \dml_exception
+     */
+    public function set_self_enrollment($courseid, $active): void {
         mtrace('calling set_self_enrollment');
         global $DB;
         // Get enrollment plugin.
@@ -523,6 +580,14 @@ class api extends \curl {
         $enrolplugin->update_status($instance, $newstatus);
     }
 
+    /**
+     * Creates categories based on Open-Sesame API
+     *
+     * @param $osrecord
+     * @return void
+     * @throws \dml_exception
+     * @throws \moodle_exception
+     */
     public function create_oscategories($osrecord) {
         global $DB;
         $categories = $osrecord->categories;

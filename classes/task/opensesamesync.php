@@ -23,8 +23,8 @@ require_once($CFG->dirroot . '/lib/filelib.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
- * Simple task class responsible for integrating with OpenSesame every 24 hours. Disclaimer:
- * Task does not sync with Open sesame yet, it serves as a placeholder
+ * Simple task class responsible for integrating with OpenSesame every 24 hours. Disclaimer: Task does not sync with Open sesame yet, it serves as a placeholder.
+ *
  *
  * @since      3.9
  * @package    tool_opensesame
@@ -44,11 +44,14 @@ class opensesamesync extends \core\task\scheduled_task {
     }
 
     /**
+     * Scheduled task to initiate Open Sesame API.
      * @param $testing
      * @return bool
+     * @throws \dml_exception
      */
+
     public function execute($testing = null) {
-        global $DB;
+
         mtrace("Opensesame task just started.");
 
         /*
