@@ -18,7 +18,6 @@
  * API for OpenSesame
  *
  * @package     tool_opensesame
- * @api    classes
  * @copyright   2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -142,8 +141,9 @@ class api extends \curl {
         }
     }
 
+
     /**
-     * * add_open_sesame_course Adds an open sesame course to moodle.
+     * add_open_sesame_course Adds an open sesame course to moodle.
      *
      * @param object $osdataobject
      * @param string $token

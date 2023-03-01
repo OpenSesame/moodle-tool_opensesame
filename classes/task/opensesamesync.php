@@ -49,8 +49,7 @@ class opensesamesync extends \core\task\scheduled_task {
      * @return bool
      * @throws \dml_exception
      */
-
-    public function execute($testing = null) {
+    public function execute($testing = null): bool {
 
         mtrace("Opensesame task just started.");
 
