@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -25,13 +27,13 @@ defined('MOODLE_INTERNAL') || die;
 global $CFG;
 
 if ($hassiteconfig) {
-    //place settings category named opensesameintegration under tab courses
+    // Place settings category named opensesameintegration under tab courses.
     $ADMIN->add('courses',
             new admin_category('opensesameintegration', new lang_string('opensesamecat', 'tool_opensesame')),
     );
-    // places the link to the settingspage under the new category
+    // Places the link to the settingspage under the new category.
     $settings = new admin_settingpage('tool_opensesame', get_string('opensesameintegration', 'tool_opensesame'));
-    //creating new settings to add the new settingspage
+    // Creating new settings to add the new settingspage.
 
     if (!is_array($CFG->forced_plugin_settings['tool_opensesame'])) {
         $settings->add(new admin_setting_configtext('tool_opensesame/clientid', get_string('clientid', 'tool_opensesame'),
@@ -50,14 +52,12 @@ if ($hassiteconfig) {
             get_string('customerintegrationid', 'tool_opensesame'),
             get_string('customerintegrationiddesc', 'tool_opensesame'), ''));
 
-    // add scorm type select
+    // Add scorm type select.
     // Types allowed.
-    //DEF-730 BEGINNING
+
     require_once($CFG->dirroot . '/mod/scorm/lib.php');
     $options = array(
-            //SCORM_TYPE_LOCAL = 'local'
-            //SCORM_TYPE_AICCURL = 'aiccurl'
-            //'both' => new lang_string('localandaiccurl', 'tool_opensesame'),
+
             SCORM_TYPE_LOCAL => new lang_string('onlylocal', 'tool_opensesame'),
             SCORM_TYPE_AICCURL => new lang_string('onlyaiccurl', 'tool_opensesame')
     );
@@ -65,7 +65,7 @@ if ($hassiteconfig) {
     $desc = get_string('allowedtypes_desc', 'tool_opensesame');
     $default = SCORM_TYPE_LOCAL;
     $settings->add(new admin_setting_configselect('tool_opensesame/allowedtypes', $name, $desc, $default, $options));
-    //DEF-730 END
-    //add to the admin settings for opensesameintegration
+
+    // Add to the admin settings for opensesameintegration.
     $ADMIN->add('opensesameintegration', $settings);
 }
