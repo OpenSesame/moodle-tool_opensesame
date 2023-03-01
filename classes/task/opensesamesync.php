@@ -23,7 +23,7 @@ require_once($CFG->dirroot . '/lib/filelib.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
- * Simple task class responsible for integrating with OpenSesame every 24 hours. Disclaimer: Task does not sync with Open sesame yet, it serves as a placeholder.
+ * Scheduled task class responsible for integrating with OpenSesame every 24 hours.
  *
  *
  * @since      3.9
