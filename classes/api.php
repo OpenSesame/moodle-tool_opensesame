@@ -235,7 +235,7 @@ class api extends \curl {
      * @param $paging
      * @return false|void
      */
-    public function determineurl(&$paging){
+    public function determineurl(&$paging) {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
