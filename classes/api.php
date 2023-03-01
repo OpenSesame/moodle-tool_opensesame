@@ -233,9 +233,9 @@ class api extends \curl {
      * Defines the next page url in api.
      *
      * @param $paging
-     * @return false|void
+     * @return bool
      */
-    public function determineurl(&$paging) {
+    public function determineurl(&$paging): bool {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
@@ -243,24 +243,24 @@ class api extends \curl {
             } else {
                 return false;
             }
-            return false;
         }
+        return false;
     }
 
     /**
      * get_open_sesame_course_list
-     *
-     * @param $token
-     * @param $url
      * Does not validate the token, the token should be valid
      * Gets a list of courses and processes them using
      * add_open_sesame_course
+     * @param string $token
+     * @param string $url
+     * @returns void
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_open_sesame_course_list($token, $url) {
+    public function get_open_sesame_course_list(string $token, string $url): void {
         global $DB;
         // Integrator issues request with access token.
         $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
@@ -312,8 +312,9 @@ class api extends \curl {
         }
     }
 
+
     /**
-     *  Creates a course image based on the thumbnail url.
+     * Creates a course image based on the thumbnail url.
      * @param $courseid
      * @param $thumbnailurl
      * @return void
@@ -398,9 +399,11 @@ class api extends \curl {
      *
      * @param $courseid
      * @param $draftitemid
-     * @throws \moodle_exception
+     * @throws \coding_exception
      * @throws \dml_exception
+     * @throws \moodle_exception
      */
+
     public function create_course_scorm_mod($courseid, $draftitemid): void {
         mtrace('calling create_course_scorm_mod');
         global $CFG, $DB;
