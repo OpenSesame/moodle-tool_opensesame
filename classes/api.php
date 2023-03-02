@@ -252,7 +252,7 @@ class api extends \curl {
      *
      * @param string $token
      * @param string $url
-     * @returns bool
+     * @return bool
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
@@ -397,17 +397,17 @@ class api extends \curl {
 
     }
 
-
     /**
      * Creates the moduleinfo to create scorm module.
      *
-     * @param $courseid
-     * @param $draftitemid
+     * @param int $courseid
+     * @param int $draftitemid
+     * @return void
      * @throws \coding_exception
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_course_scorm_mod($courseid, $draftitemid): void {
+    public function create_course_scorm_mod(int $courseid, int $draftitemid): void {
         mtrace('calling create_course_scorm_mod');
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
@@ -448,7 +448,7 @@ class api extends \curl {
                     $cm->instance, $cm->id);
 
             mtrace('preparing course scorm mod');
-            // Below returns an array of $cm , $moduleinfo.
+            // Below return an array of $cm , $moduleinfo.
             update_moduleinfo($cm, $moduleinfo, $course);
 
         }
@@ -469,7 +469,7 @@ class api extends \curl {
             $data->sr = $sectionreturn;
             $data->add = $add;
             $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, $add, $section);
-            add_moduleinfo($moduleinfo, $course);
+            $mod = add_moduleinfo($moduleinfo, $course);
             mtrace('added course module ');
         }
 
@@ -478,18 +478,18 @@ class api extends \curl {
     /**
      * Stores the default moduleinfo.
      *
-     * @param $courseid
-     * @param $draftitemid
-     * @param $module
+     * @param int $courseid
+     * @param int $draftitemid
+     * @param int $module
      * @param string $add updating this value should be = '0' when creating new mod this value should be = 'scorm'
      * @param int $section
-     * @param string|null $update
-     * @param null $instance
-     * @param int|null $coursemodule updating this value should be = $cmid when creating a new mod this value should be = NULL
+     * @param null|int $update
+     * @param int|null $instance
+     * @param null|int $coursemodule  = $cmid when creating a new mod this value should be = NULL
      * @return \stdClass
      * @throws \dml_exception
      */
-    public function get_default_modinfo($courseid, $draftitemid, $module, string $add = '0', int $section = 0, string $update = null, $instance
+    public function get_default_modinfo(int $courseid, int $draftitemid, int $module, string $add = '0', int $section = 0, int $update = null, int $instance
     = null, int $coursemodule = null): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
@@ -505,7 +505,6 @@ class api extends \curl {
 
         if ($moduleinfo->scormtype === SCORM_TYPE_AICCURL ) {
             $moduleinfo->packageurl = $this->get_aicc_url($courseid);
-
         }
         $moduleinfo->packagefile = $draftitemid;
         // Update frequency is daily.
