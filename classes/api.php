@@ -233,7 +233,7 @@ class api extends \curl {
      * Defines the next page url in api.
      *
      * @param string $paging
-     * @return bool
+     * @return bool|mixed
      */
     public function determineurl(string &$paging): bool {
         foreach ($paging as $key => $url) {
