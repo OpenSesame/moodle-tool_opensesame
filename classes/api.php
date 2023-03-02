@@ -232,10 +232,10 @@ class api extends \curl {
     /**
      * Defines the next page url in api.
      *
-     * @param $paging
+     * @param string $paging
      * @return bool
      */
-    public function determineurl(&$paging): bool {
+    public function determineurl(string &$paging): bool {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
@@ -248,10 +248,8 @@ class api extends \curl {
     }
 
     /**
-     * get_open_sesame_course_list
-     * Does not validate the token, the token should be valid
-     * Gets a list of courses and processes them using
-     * add_open_sesame_course
+     * get_open_sesame_course_list no token validation. Process courses with add_open_sesame_course.
+     *
      * @param string $token
      * @param string $url
      * @returns void
@@ -394,6 +392,7 @@ class api extends \curl {
 
     }
 
+
     /**
      * Creates the moduleinfo to create scorm module.
      *
@@ -403,7 +402,6 @@ class api extends \curl {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-
     public function create_course_scorm_mod($courseid, $draftitemid): void {
         mtrace('calling create_course_scorm_mod');
         global $CFG, $DB;
