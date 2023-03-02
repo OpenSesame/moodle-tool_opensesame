@@ -474,20 +474,19 @@ class api extends \curl {
 
     /**
      * Stores the default moduleinfo.
+     *
      * @param $courseid
      * @param $draftitemid
      * @param $module
-     * @param string $add
-     * updating this value should be = '0' when creating new mod this value should be = 'scorm'
+     * @param string $add updating this value should be = '0' when creating new mod this value should be = 'scorm'
      * @param int $section
      * @param null $update
      * @param null $instance
-     * @param null $coursemodule
-     * updating this value should be = $cmid when creating a new mod this value should be = NULL
+     * @param null $coursemodule updating this value should be = $cmid when creating a new mod this value should be = NULL
      * @return \stdClass
      * @throws \dml_exception
      */
-    public function get_default_modinfo($courseid, $draftitemid, $module, $add = '0', int $section = 0, $update = null, $instance
+    public function get_default_modinfo($courseid, $draftitemid, $module, string $add = '0', int $section = 0, $update = null, $instance
     = null, $coursemodule = null): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
@@ -531,12 +530,12 @@ class api extends \curl {
     /**
      * Establishes a relationship tool_opensesame with moodle table course.
      *
-     * @param $courseid
-     * @param $osdataobjectid
+     * @param int $courseid
+     * @param int $osdataobjectid
      * @return void
      * @throws \dml_exception
      */
-    public function update_osdataobject($courseid, $osdataobjectid): void {
+    public function update_osdataobject(int $courseid, int $osdataobjectid): void {
         mtrace('calling update_osdataobject');
         global $DB;
         $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osdataobjectid]);
@@ -544,12 +543,13 @@ class api extends \curl {
 
     /**
      * Determines if the Open-Sesame Course is Active based on API flag.
-     * @param $osdataobjectid
-     * @param $courseid
+     *
+     * @param int $osdataobjectid
+     * @param int $courseid
      * @return false|mixed
      * @throws \dml_exception
      */
-    public function os_is_active($osdataobjectid, $courseid) {
+    public function os_is_active(int $osdataobjectid, int $courseid) {
         mtrace('calling os_is_active');
         global $DB;
         $active = $DB->get_field('tool_opensesame', 'active', ['id' => $osdataobjectid, 'courseid' => $courseid]);
@@ -558,32 +558,32 @@ class api extends \curl {
 
     /**
      * AICC launch Url for Scorm Activity: TODO: modify with proper credentialing
-     * @param $courseid
+     *
+     * @param int $courseid
      * @return false|mixed
      * @throws \dml_exception
      */
-    public function get_aicc_url($courseid) {
+    public function get_aicc_url(int $courseid) {
         mtrace('calling get_aicc_url');
         global $DB;
-        $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
+        $url = $DB->get_field('tool_open sesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
         mtrace('$courseid: ' . $courseid . ' $url: ' . $url);
         return $url;
     }
 
     /**
      * Sets the enrollment methods for each Open-Sesame course
-     * @param $courseid
-     * @param $active
+     *
+     * @param int $courseid
+     * @param bool $active
      * @return void
      * @throws \dml_exception
      */
-    public function set_self_enrollment($courseid, $active): void {
+    public function set_self_enrollment(int $courseid, bool $active): void {
         mtrace('calling set_self_enrollment');
         global $DB;
         // Get enrollment plugin.
         $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
-        $enrolplugin = enrol_get_plugin($instance->enrol);
-
         if ($active) {
             $newstatus = 0;
 
@@ -591,18 +591,18 @@ class api extends \curl {
         if (!$active) {
             $newstatus = 1;
         }
-        $enrolplugin->update_status($instance, $newstatus);
+        enrol_get_plugin($instance->enrol)->update_status($instance, $newstatus);
     }
 
     /**
      * Creates categories based on Open-Sesame API
      *
-     * @param $osrecord
+     * @param object $osrecord
      * @return void
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_oscategories($osrecord) {
+    public function create_oscategories(object $osrecord): void {
         global $DB;
         $categories = $osrecord->categories;
         foreach ($categories as $key => $value) {
