@@ -45,6 +45,7 @@ class opensesamesync extends \core\task\scheduled_task {
 
     /**
      * Scheduled task to initiate Open Sesame API.
+     *
      * @param $testing
      * @return bool
      * @throws \dml_exception
@@ -53,15 +54,8 @@ class opensesamesync extends \core\task\scheduled_task {
 
         mtrace("Opensesame task just started.");
 
-        /*
-         * When the task runs
-         * If the token does not exist, it is created
-         * If the token exists and has not expired, no auth process takes place
-         * If the token exists, and it has expired, it is created
-         *
-         * */
         $api = new api;
-        $token = $api->get_auth_token();
+        $api->get_auth_token();
 
         mtrace('opensesame just finished.');
         return true;

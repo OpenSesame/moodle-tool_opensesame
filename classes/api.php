@@ -252,13 +252,13 @@ class api extends \curl {
      *
      * @param string $token
      * @param string $url
-     * @returns void
+     * @returns bool
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_open_sesame_course_list(string $token, string $url): void {
+    public function get_open_sesame_course_list(string $token, string $url): bool {
         global $DB;
         // Integrator issues request with access token.
         $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
@@ -269,6 +269,7 @@ class api extends \curl {
         if ($statuscode === 400) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
             throw new \moodle_exception('statuscode400', 'tool_opensesame');
+            return false;
         }
         if ($statuscode === 200) {
             mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
@@ -306,7 +307,9 @@ class api extends \curl {
             if ($nexturl) {
                 $this->get_open_sesame_course_list($token, $nexturl);
             }
-
+            return true;
+        } else {
+            return false;
         }
     }
 
