@@ -46,7 +46,7 @@ class opensesamesync extends \core\task\scheduled_task {
     /**
      * Scheduled task to initiate Open Sesame API.
      *
-     * @param $testing
+     * @param null $testing
      * @return bool
      * @throws \dml_exception
      */
