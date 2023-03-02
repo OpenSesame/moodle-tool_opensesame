@@ -313,12 +313,13 @@ class api extends \curl {
 
     /**
      * Creates a course image based on the thumbnail url.
-     * @param $courseid
-     * @param $thumbnailurl
+     *
+     * @param int $courseid
+     * @param string $thumbnailurl
      * @return void
      * @throws \file_exception
      */
-    public function create_course_image($courseid, $thumbnailurl): void {
+    public function create_course_image(int $courseid, string $thumbnailurl): void {
         mtrace('Calling create_course_image');
         $context = context_course::instance($courseid);
         $fileinfo = [
@@ -339,16 +340,17 @@ class api extends \curl {
 
     /**
      * Creates package in Moodle file system to support scorm creation
-     * @param $token
-     * @param $scormpackagedownloadurl
-     * @param $courseid
+     *
+     * @param string $token
+     * @param string $scormpackagedownloadurl
+     * @param int|null $courseid
      * @return void
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid = null) {
+    public function get_open_sesame_scorm_package(string $token, string $scormpackagedownloadurl, int $courseid = null): void {
         mtrace('calling get_open_sesame_scorm_package');
         global $CFG, $USER;
         require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
@@ -478,14 +480,14 @@ class api extends \curl {
      * @param $module
      * @param string $add updating this value should be = '0' when creating new mod this value should be = 'scorm'
      * @param int $section
-     * @param null $update
+     * @param string|null $update
      * @param null $instance
-     * @param null $coursemodule updating this value should be = $cmid when creating a new mod this value should be = NULL
+     * @param int|null $coursemodule updating this value should be = $cmid when creating a new mod this value should be = NULL
      * @return \stdClass
      * @throws \dml_exception
      */
-    public function get_default_modinfo($courseid, $draftitemid, $module, string $add = '0', int $section = 0, $update = null, $instance
-    = null, $coursemodule = null): \stdClass {
+    public function get_default_modinfo($courseid, $draftitemid, $module, string $add = '0', int $section = 0, string $update = null, $instance
+    = null, int $coursemodule = null): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
 
@@ -495,7 +497,6 @@ class api extends \curl {
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
-        // Change scorm type depending on setting default is SCORM_TYPE_LOCAL alternative option is SCORM_TYPE_AICCURL.
 
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
 
