@@ -72,46 +72,57 @@ pipelines:
     - parallel:
         steps:
           - step:
+              <<: *base
               name: PHP Lint
               script:
                 - moodle-plugin-ci phplint
           - step:
+              <<: *base
               name: PHP CPD
               script:
                 - moodle-plugin-ci phpcpd
           - step:
+              <<: *base
               name: PHP MD
               script:
                 - moodle-plugin-ci phpmd
           - step:
+              <<: *base
               name: Code checker
               script:
                 - moodle-plugin-ci codechecker
           - step:
+              <<: *base
               name: Validate
               script:
                 - moodle-plugin-ci validate
           - step:
+              <<: *base
               name: Savepoints
               script:
                 - moodle-plugin-ci savepoints
           - step:
+              <<: *base
               name: Mustache
               script:
                 - moodle-plugin-ci mustache
           - step:
+              <<: *base
               name: Grunt
               script:
                 - moodle-plugin-ci grunt
           - step:
+              <<: *base
               name: PHP Doc
               script:
                 - moodle-plugin-ci phpdoc
           - step:
+              <<: *base
               name: PHP Unit
               script:
                 - moodle-plugin-ci phpunit
           - step:
+              <<: *base
               name: Behat
               script:
                 - moodle-plugin-ci behat
