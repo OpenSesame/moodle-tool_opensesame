@@ -53,22 +53,11 @@ definitions:
       image: mariadb:10.5
       variables:
         MARIADB_ROOT_PASSWORD: test
-    # mysql:
-    #   image: mysql:5.7
-    #   variables:
-    #     MYSQL_ROOT_PASSWORD: test
-    # postgres:
-    #   image: postgres:10
-    #   variables:
-    #     POSTGRES_USER: root
-    #     POSTGRES_PASSWORD: test
   caches:
     npm: $HOME/.npm
 
 pipelines:
   default:
-    - step:
-        <<: *base
     - parallel:
         steps:
           - step:
@@ -149,49 +138,3 @@ pipelines:
                 - *baseInst
                 - *baseBehat
                 - moodle-plugin-ci behat
-    # - step:
-    #     <<: *base
-    #     image: moodlehq/moodle-php-apache:7.4
-    #     name: "Moodle, PHP 7.4 and MySQL 5.7"
-    #     script:
-    #       - export DB='mysqli'
-    #       - *baseInstallDeps
-    #       - *baseInst
-    #       # - *baseBehat
-    #       - moodle-plugin-ci phplint
-    #       - moodle-plugin-ci phpcpd
-    #       - moodle-plugin-ci phpmd
-    #       - moodle-plugin-ci codechecker
-    #       - moodle-plugin-ci validate
-    #       - moodle-plugin-ci savepoints
-    #       - moodle-plugin-ci mustache
-    #       - moodle-plugin-ci grunt
-    #       - moodle-plugin-ci phpdoc
-    #       - moodle-plugin-ci phpunit
-    #       # - moodle-plugin-ci behat
-    #     services:
-    #       - mysql
-    #       - docker
-    # - step:
-    #     <<: *base
-    #     image: moodlehq/moodle-php-apache:8.0
-    #     name: "Moodle, PHP 8.0 and PostgreSQL 10"
-    #     script:
-    #       - export DB='pgsql'
-    #       - *baseInstallDeps
-    #       - *baseInst
-    #       # - *baseBehat
-    #       - moodle-plugin-ci phplint
-    #       - moodle-plugin-ci phpcpd
-    #       - moodle-plugin-ci phpmd
-    #       - moodle-plugin-ci codechecker
-    #       - moodle-plugin-ci validate
-    #       - moodle-plugin-ci savepoints
-    #       - moodle-plugin-ci mustache
-    #       - moodle-plugin-ci grunt
-    #       - moodle-plugin-ci phpdoc
-    #       - moodle-plugin-ci phpunit
-    #       # - moodle-plugin-ci behat
-    #     services:
-    #       - postgres
-    #       - docker
