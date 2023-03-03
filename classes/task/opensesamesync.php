@@ -18,12 +18,13 @@ namespace tool_opensesame\task;
 use context_course;
 use tool_opensesame\api;
 
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/lib/filelib.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
 /**
- * Simple task class responsible for integrating with OpenSesame every 24 hours. Disclaimer:
- * Task does not sync with Open sesame yet, it serves as a placeholder
+ * Scheduled task integrating with OpenSesame API every 24 hours.
+ *
  *
  * @since      3.9
  * @package    tool_opensesame
@@ -43,23 +44,19 @@ class opensesamesync extends \core\task\scheduled_task {
     }
 
     /**
-     * @param $testing
+     * Scheduled task to initiate Open Sesame API.
+     *
+     * @param null $testing
      * @return bool
+     * @throws \dml_exception
      */
-    public function execute($testing = null) {
-        global $DB;
+    public function execute($testing = null): bool {
+
         mtrace("Opensesame task just started.");
 
-        /*
-         * When the task runs
-         * If the token does not exist, it is created
-         * If the token exists and has not expired, no auth process takes place
-         * If the token exists, and it has expired, it is created
-         *
-         * */
         $api = new api;
-        $token = $api->get_auth_token();
-        //$api->get_open_sesame_course_list($token);
+        $api->get_auth_token();
+
         mtrace('opensesame just finished.');
         return true;
     }
