@@ -22,18 +22,18 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// List of tasks.
+defined('MOODLE_INTERNAL') || die();
+
 $tasks = [
-    // First task configuration.
-        [
-                'classname' => 'tool_opensesame\task\opensesamesync',
-                'blocking' => 0,
-                'minute' => '*',
-                'hour' => 'R',
-                'day' => '*',
-                'dayofweek' => '*',
-                'month' => '*'
-        ],
-    // Second task configuration.
+
+    [
+        'classname' => 'tool_opensesame\task\opensesamesync',
+        'blocking' => 0,
+        'minute' => '*',
+        'hour' => 'R',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ],
 
 ];
