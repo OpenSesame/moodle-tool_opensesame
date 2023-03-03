@@ -71,17 +71,50 @@ pipelines:
         <<: *base
     - parallel:
         steps:
-          - moodle-plugin-ci phplint
-          - moodle-plugin-ci phpcpd
-          - moodle-plugin-ci phpmd
-          - moodle-plugin-ci codechecker
-          - moodle-plugin-ci validate
-          - moodle-plugin-ci savepoints
-          - moodle-plugin-ci mustache
-          - moodle-plugin-ci grunt
-          - moodle-plugin-ci phpdoc
-          - moodle-plugin-ci phpunit
-          - moodle-plugin-ci behat
+          - step:
+              name: PHP Lint
+              script:
+                - moodle-plugin-ci phplint
+          - step:
+              name: PHP CPD
+              script:
+                - moodle-plugin-ci phpcpd
+          - step:
+              name: PHP MD
+              script:
+                - moodle-plugin-ci phpmd
+          - step:
+              name: Code checker
+              script:
+                - moodle-plugin-ci codechecker
+          - step:
+              name: Validate
+              script:
+                - moodle-plugin-ci validate
+          - step:
+              name: Savepoints
+              script:
+                - moodle-plugin-ci savepoints
+          - step:
+              name: Mustache
+              script:
+                - moodle-plugin-ci mustache
+          - step:
+              name: Grunt
+              script:
+                - moodle-plugin-ci grunt
+          - step:
+              name: PHP Doc
+              script:
+                - moodle-plugin-ci phpdoc
+          - step:
+              name: PHP Unit
+              script:
+                - moodle-plugin-ci phpunit
+          - step:
+              name: Behat
+              script:
+                - moodle-plugin-ci behat
     # - step:
     #     <<: *base
     #     image: moodlehq/moodle-php-apache:7.4
