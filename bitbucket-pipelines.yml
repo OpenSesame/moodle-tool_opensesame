@@ -29,10 +29,10 @@ definitions:
   instscript: &baseInst
     moodle-plugin-ci install --no-ansi -n --db-type="$DB" --db-user="$DB_USER" --db-pass="$DB_PWD"
     --branch="$MOODLE_BRANCH" --db-host="127.0.0.1"
-  # behatscript: &baseBehat
-  #   docker run -d -p 4444:4444 --shm-size=1g -v "$BITBUCKET_CLONE_DIR/moodle:$BITBUCKET_CLONE_DIR/moodle"
-  #   "selenium/standalone-firefox:3" &&
-  #   { php -S 0.0.0.0:8000 -t "$BITBUCKET_CLONE_DIR/moodle" > /dev/null 2>&1 & } ; sleep 10 ;
+  behatscript: &baseBehat
+    docker run -d -p 4444:4444 --shm-size=1g -v "$BITBUCKET_CLONE_DIR/moodle:$BITBUCKET_CLONE_DIR/moodle"
+    "selenium/standalone-firefox:3" &&
+    { php -S 0.0.0.0:8000 -t "$BITBUCKET_CLONE_DIR/moodle" > /dev/null 2>&1 & } ; sleep 10 ;
   steps:
     - step: &base
         image: moodlehq/moodle-php-apache:7.3
@@ -44,18 +44,7 @@ definitions:
         script:
           - *baseInstallDeps
           - *baseInst
-          # - *baseBehat
-          - moodle-plugin-ci phplint
-          - moodle-plugin-ci phpcpd
-          - moodle-plugin-ci phpmd
-          - moodle-plugin-ci codechecker
-          - moodle-plugin-ci validate
-          - moodle-plugin-ci savepoints
-          - moodle-plugin-ci mustache
-          - moodle-plugin-ci grunt
-          - moodle-plugin-ci phpdoc
-          - moodle-plugin-ci phpunit
-          # - moodle-plugin-ci behat
+          - *baseBehat
         services:
           - mariadb
           - docker
@@ -78,7 +67,21 @@ definitions:
 
 pipelines:
   default:
-    - step: *base
+    - step:
+        <<: *base
+    - parallel:
+        steps:
+          - moodle-plugin-ci phplint
+          - moodle-plugin-ci phpcpd
+          - moodle-plugin-ci phpmd
+          - moodle-plugin-ci codechecker
+          - moodle-plugin-ci validate
+          - moodle-plugin-ci savepoints
+          - moodle-plugin-ci mustache
+          - moodle-plugin-ci grunt
+          - moodle-plugin-ci phpdoc
+          - moodle-plugin-ci phpunit
+          - moodle-plugin-ci behat
     # - step:
     #     <<: *base
     #     image: moodlehq/moodle-php-apache:7.4
