@@ -212,7 +212,6 @@ class api extends \curl {
         $courseid = $course->id;
         mtrace('courseid ' . $courseid);
         $this->update_osdataobject($courseid, $osdataobject->idopensesame);
-        $aicclaunchurl = $this->get_aicc_url($courseid);
         $thumbnailurl = $osdataobject->thumbnailurl;
         $this->create_course_image($courseid, $thumbnailurl);
         $scormpackagedownloadurl = $osdataobject->packagedownloadurl;
@@ -221,9 +220,11 @@ class api extends \curl {
             $this->get_open_sesame_scorm_package($token, $scormpackagedownloadurl, $courseid);
         }
         if ($allowedtype == SCORM_TYPE_AICCURL) {
+            $aicclaunchurl = $this->get_aicc_url($courseid);
             $this->get_open_sesame_scorm_package($token, $aicclaunchurl, $courseid);
         }
-
+        mtrace('$courseid is type: ' . gettype($courseid));
+        mtrace('$osdataobject->idopensesame is type: ' . gettype($osdataobject->idopensesame));
         $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
         $this->set_self_enrollment($courseid, $active);
 
@@ -232,10 +233,10 @@ class api extends \curl {
     /**
      * Defines the next page url in api.
      *
-     * @param string $paging
+     * @param object $paging
      * @return bool|mixed
      */
-    public function determineurl(string &$paging): bool {
+    public function determineurl(object &$paging): bool {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
@@ -444,8 +445,7 @@ class api extends \curl {
             $data->sr = $sectionreturn;
             $data->update = $update;
 
-            $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, '0', $sectionreturn, $update,
-                    $cm->instance, $cm->id);
+            $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, '0', $sectionreturn, $update, $cm->instance, $cm->id);
 
             mtrace('preparing course scorm mod');
             // Below return an array of $cm , $moduleinfo.
@@ -480,16 +480,16 @@ class api extends \curl {
      *
      * @param int $courseid
      * @param int $draftitemid
-     * @param int $module
+     * @param object $module
      * @param string $add updating this value should be = '0' when creating new mod this value should be = 'scorm'
      * @param int $section
      * @param null|int $update
-     * @param int|null $instance
+     * @param string|null $instance
      * @param null|int $coursemodule  = $cmid when creating a new mod this value should be = NULL
      * @return \stdClass
      * @throws \dml_exception
      */
-    public function get_default_modinfo(int $courseid, int $draftitemid, int $module, string $add = '0', int $section = 0, int $update = null, int $instance
+    public function get_default_modinfo(int $courseid, int $draftitemid, object $module, string $add = '0', int $section = 0, int $update = null, string $instance
     = null, int $coursemodule = null): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
@@ -532,11 +532,11 @@ class api extends \curl {
      * Establishes a relationship tool_opensesame with moodle table course.
      *
      * @param int $courseid
-     * @param int $osdataobjectid
+     * @param string $osdataobjectid
      * @return void
      * @throws \dml_exception
      */
-    public function update_osdataobject(int $courseid, int $osdataobjectid): void {
+    public function update_osdataobject(int $courseid, string $osdataobjectid): void {
         mtrace('calling update_osdataobject');
         global $DB;
         $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osdataobjectid]);
@@ -545,12 +545,12 @@ class api extends \curl {
     /**
      * Determines if the Open-Sesame Course is Active based on API flag.
      *
-     * @param int $osdataobjectid
+     * @param string $osdataobjectid
      * @param int $courseid
      * @return false|mixed
      * @throws \dml_exception
      */
-    public function os_is_active(int $osdataobjectid, int $courseid) {
+    public function os_is_active(string $osdataobjectid, int $courseid) {
         mtrace('calling os_is_active');
         global $DB;
         $active = $DB->get_field('tool_opensesame', 'active', ['id' => $osdataobjectid, 'courseid' => $courseid]);
