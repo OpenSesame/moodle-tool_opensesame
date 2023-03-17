@@ -39,9 +39,9 @@ require_once($CFG->dirroot . '/lib/filelib.php');
  * @copyright 2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class Opensesameapi extends \curl
-{
-    
+class Opensesameapi extends \curl {
+
+
     /** @var string the api baseurl */
     private $baseurl;
 
@@ -52,8 +52,7 @@ class Opensesameapi extends \curl
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function __construct($settings = array())
-    {
+    public function __construct($settings = array()) {
         parent::__construct($settings);
 
         $this->bearertoken = get_config('tool_opensesame', 'bearertoken');
@@ -66,7 +65,7 @@ class Opensesameapi extends \curl
         }
 
         if (empty($this->baseurl)) {
-            throw new \moodle_exception('apiurlempty', 'tool_opensesame');
+             throw new \moodle_exception('apiurlempty', 'tool_opensesame');
         }
 
     }
@@ -76,8 +75,7 @@ class Opensesameapi extends \curl
      *
      * @return int|boolean status code or false if not available.
      */
-    public function get_http_code()
-    {
+    public function get_http_code() {
         mtrace('Calling get_http_code.');
         $info = $this->get_info();
         if (!isset($info['http_code'])) {
@@ -86,13 +84,14 @@ class Opensesameapi extends \curl
         mtrace('returning status code ' . $info['http_code']);
         return $info['http_code'];
     }
+
     /**
      * Get authenticate  API Credentialing.
      *
      * @return token if authenticated.
+     * @throws \dml_exception
      */
-    public function authenticate(): token
-    {
+    public function authenticate(): token {
         mtrace('Authenticating.');
         $authurl = get_config('tool_opensesame', 'authurl');
         $clientid = get_config('tool_opensesame', 'clientid');
@@ -122,8 +121,7 @@ class Opensesameapi extends \curl
      * @return false|mixed|object|string|null $token
      * @throws \dml_exception
      */
-    public function get_auth_token()
-    {
+    public function get_auth_token() {
         mtrace('get_auth_token called');
         $token = get_config('tool_opensesame', 'bearertoken');
         $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
@@ -132,7 +130,7 @@ class Opensesameapi extends \curl
         if ($token === '' || $now >= $expiretime) {
             mtrace('Token either does not exist or is expired. Token is being created');
             return  $this->authenticate();
-        } elseif ($token !== '' && $now <= $expiretime) {
+        } else if ($token !== '' && $now <= $expiretime) {
             mtrace('Token is valid.');
             // Define url for the next function.
             $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
@@ -155,8 +153,7 @@ class Opensesameapi extends \curl
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function add_open_sesame_course(object $osdataobject, string $token): void
-    {
+    public function add_open_sesame_course(object $osdataobject, string $token): void {
         mtrace('calling add_open_sesame_course');
         global $DB;
 
@@ -238,8 +235,7 @@ class Opensesameapi extends \curl
      * @param object $paging
      * @return bool|mixed
      */
-    public function determineurl(object &$paging): bool
-    {
+    public function determineurl(object &$paging): bool {
         foreach ($paging as $key => $url) {
             if ($key == 'next' && !empty($url)) {
                 mtrace($key . ' page url' . $url);
@@ -262,8 +258,7 @@ class Opensesameapi extends \curl
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_open_sesame_course_list(string $token, string $url): bool
-    {
+    public function get_open_sesame_course_list(string $token, string $url): bool {
         global $DB;
         // Integrator issues request with access token.
         $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
@@ -326,8 +321,7 @@ class Opensesameapi extends \curl
      * @return void
      * @throws \file_exception
      */
-    public function create_course_image(int $courseid, string $thumbnailurl): void
-    {
+    public function create_course_image(int $courseid, string $thumbnailurl): void {
         mtrace('Calling create_course_image');
         $context = context_course::instance($courseid);
         $fileinfo = [
@@ -358,8 +352,7 @@ class Opensesameapi extends \curl
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_os_scorm_package(string $token, string $scormpackagedownloadurl, int $courseid = null): void
-    {
+    public function get_os_scorm_package(string $token, string $scormpackagedownloadurl, int $courseid = null): void {
         mtrace('calling get_os_scorm_package');
         global $CFG, $USER;
         require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
@@ -412,8 +405,7 @@ class Opensesameapi extends \curl
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_course_scorm_mod(int $courseid, int $draftitemid): void
-    {
+    public function create_course_scorm_mod(int $courseid, int $draftitemid): void {
         mtrace('calling create_course_scorm_mod');
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
@@ -537,8 +529,7 @@ class Opensesameapi extends \curl
      * @return void
      * @throws \dml_exception
      */
-    public function update_osdataobject(int $courseid, string $osdataobjectid): void
-    {
+    public function update_osdataobject(int $courseid, string $osdataobjectid): void {
         mtrace('calling update_osdataobject');
         global $DB;
         $DB->set_field('tool_opensesame', 'courseid', $courseid, ['idopensesame' => $osdataobjectid]);
@@ -552,8 +543,7 @@ class Opensesameapi extends \curl
      * @return false|mixed
      * @throws \dml_exception
      */
-    public function os_is_active(string $osdataobjectid, int $courseid)
-    {
+    public function os_is_active(string $osdataobjectid, int $courseid) {
         mtrace('calling os_is_active');
         global $DB;
         return $DB->get_field('tool_opensesame', 'active', ['id' => $osdataobjectid, 'courseid' => $courseid]);
@@ -566,8 +556,7 @@ class Opensesameapi extends \curl
      * @return false|mixed
      * @throws \dml_exception
      */
-    public function get_aicc_url(int $courseid)
-    {
+    public function get_aicc_url(int $courseid) {
         mtrace('calling get_aicc_url');
         global $DB;
         $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
@@ -583,8 +572,7 @@ class Opensesameapi extends \curl
      * @return void
      * @throws \dml_exception
      */
-    public function set_self_enrollment(int $courseid, bool $active): void
-    {
+    public function set_self_enrollment(int $courseid, bool $active): void {
         mtrace('calling set_self_enrollment');
         global $DB;
         // Get enrollment plugin.
@@ -607,8 +595,7 @@ class Opensesameapi extends \curl
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_oscategories(object $osrecord): void
-    {
+    public function create_oscategories(object $osrecord): void {
         global $DB;
         $categories = $osrecord->categories;
         foreach ($categories as $value) {
