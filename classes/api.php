@@ -473,16 +473,16 @@ class Opensesameapi extends \curl {
      *
      * @param int $courseid
      * @param int $draftitemid
-     * @param object $module
+     * @param object $mod
      * @param string $add updating this value should be = '0' when creating new mod this value should be = 'scorm'
      * @param int $section
-     * @param null|int $update
+     * @param null|int $updt
      * @param string|null $instance
      * @param null|int $cm  = $cmid when creating a new mod this value should be = NULL
      * @return \stdClass
      * @throws \dml_exception
      */
-    public function get_default_modinfo(int $courseid, int $draftitemid, object $module, string $add = '0', int $section = 0, int $update = null, string $instance = null, int $cm = null
+    public function get_default_modinfo(int $courseid, int $draftitemid, object $mod, string $add = '0', int $section = 0, int $updt = null, string $instance = null, int $cm = null
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
@@ -506,9 +506,9 @@ class Opensesameapi extends \curl {
         $moduleinfo->width = 100;
         $moduleinfo->height = 500;
         $moduleinfo->course = $courseid;
-        $moduleinfo->module = $module->id;
-        $moduleinfo->modulename = $module->name;
-        $moduleinfo->visible = $module->visible;
+        $moduleinfo->module = $mod->id;
+        $moduleinfo->modulename = $mod->name;
+        $moduleinfo->visible = $mod->visible;
         $moduleinfo->add = $add;
         $moduleinfo->coursemodule = $cm;
         $moduleinfo->cmidnumber = null;
