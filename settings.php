@@ -66,6 +66,11 @@ if ($hassiteconfig) {
     $default = SCORM_TYPE_LOCAL;
     $settings->add(new admin_setting_configselect('tool_opensesame/allowedtypes', $name, $desc, $default, $options));
 
+    // Add to the admin settings for opensesameintegration.
+    $ADMIN->add('opensesameintegration', $settings);
 
+    // Add external page to manage OpenSesame AICC Link Configurations.
+    $ADMIN->add('server', new admin_externalpage('aicc_config', new lang_string('pluginname', 'tool_opensesame'),
+            "$CFG->wwwroot/$CFG->admin/tool/opensesame/aicc_config.php"));
 }
 
