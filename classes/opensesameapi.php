@@ -39,7 +39,7 @@ require_once($CFG->dirroot . '/lib/filelib.php');
  * @copyright 2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class Opensesameapi extends \curl {
+class opensesameapi extends \curl {
 
 
     /** @var string the api baseurl */

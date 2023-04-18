@@ -66,6 +66,6 @@ if ($hassiteconfig) {
     $default = SCORM_TYPE_LOCAL;
     $settings->add(new admin_setting_configselect('tool_opensesame/allowedtypes', $name, $desc, $default, $options));
 
-    // Add to the admin settings for opensesameintegration.
-    $ADMIN->add('opensesameintegration', $settings);
+
 }
+
