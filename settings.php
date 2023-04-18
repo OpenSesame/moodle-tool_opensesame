@@ -70,7 +70,7 @@ if ($hassiteconfig) {
     $ADMIN->add('opensesameintegration', $settings);
 
     // Add external page to manage OpenSesame AICC Link Configurations.
-    $ADMIN->add('server', new admin_externalpage('aicc_config', new lang_string('pluginname', 'tool_opensesame'),
+    $ADMIN->add('opensesameintegration', new admin_externalpage('aicc_config', new lang_string('aicc', 'tool_opensesame'),
             "$CFG->wwwroot/$CFG->admin/tool/opensesame/aicc_config.php"));
 }
 

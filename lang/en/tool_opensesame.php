@@ -21,7 +21,7 @@
  * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+$string['aicc'] = 'AICC configurations';
 $string['allowedtypes'] = 'Allowed types';
 $string['allowedtypes_desc'] = 'Which scorm type should appear in OpenSesame Course API Integration.';
 $string['authurl'] = 'Authorization API URL';
