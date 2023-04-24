@@ -16,13 +16,16 @@
 
 /**
  * AICC auto configuration tool.
- * @author    Guy Thomas <citricity@gmail.com>
- * @copyright Copyright (c) 2017 Open LMS (https://www.openlms.net)
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     tool_opensesame
+ * @copyright   2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace tool_opensesame;
 
+/**
+ * auto_config class
+ */
 class auto_config {
     /**
      * AICC configuration.
@@ -34,7 +37,7 @@ class auto_config {
     /**
      * Enable AICC.
      */
-    private function enable_aicc() {
+    private function enable_aicc(): void {
         global $CFG;
         $allowedtypes = get_config('tool_opensesame', 'allowedtypes');
         if ($allowedtypes === 'aiccurl') {
