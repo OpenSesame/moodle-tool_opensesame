@@ -23,8 +23,6 @@
 
 namespace tool_opensesame;
 
-defined('MOODLE_INTERNAL') || die();
-
 class auto_config {
     /**
      * AICC configuration.
@@ -39,7 +37,7 @@ class auto_config {
     private function enable_aicc() {
         global $CFG;
         $allowedtypes = get_config('tool_opensesame', 'allowedtypes');
-        if($allowedtypes === 'aiccurl'){
+        if ($allowedtypes === 'aiccurl') {
             set_config('aicchacpkeepsessiondata', 1, 'scorm');
             set_config('aicchacptimeout', 30, 'scorm');
             set_config('aiccuserid', 1, 'scorm');

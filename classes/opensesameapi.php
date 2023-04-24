@@ -482,7 +482,8 @@ class opensesameapi extends \curl {
      * @return \stdClass
      * @throws \dml_exception
      */
-    public function get_default_modinfo(int $courseid, int $draftitemid, object $mod, string $add = '0', int $section = 0, int $updt = null, string $instance = null, int $cm = null
+    public function get_default_modinfo(int $courseid, int $draftitemid, object $mod, string $add = '0', int $section = 0,
+                                        int $updt = null, string $instance = null, int $cm = null
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
