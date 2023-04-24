@@ -21,11 +21,16 @@
  * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 $string['aicc'] = 'AICC configurations';
 $string['allowedtypes'] = 'Allowed types';
 $string['allowedtypes_desc'] = 'Which scorm type should appear in OpenSesame Course API Integration.';
 $string['authurl'] = 'Authorization API URL';
 $string['authurldesc'] = 'Authorization API URL for OpenSesame Integration';
+$string['autoconfigure'] = 'Auto configure AICC Configuration';
+$string['autoconfiguredesc'] = 'Automatically  AICC Configuration required by the Opensesame API.';
+$string['autoconfigureconfirmation'] = 'Automatically enable aicc configurations that are required by the opensesame API. The following actions will be carried out: <ul><li>enable AICC protocol support</li></ul>';
+$string['autoconfigsuccess'] = 'Success - the Opensesame API required AICC configurations has been automatically configured.';
 $string['apiauthtoken'] = 'API Authorization token';
 $string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integration';
 $string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
