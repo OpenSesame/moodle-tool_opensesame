@@ -16,7 +16,8 @@ This plugin should be located and named as:
 
 Open the settings for the OpenSesame admin tool:
 
-Site Administration > Courses > OpenSesame
+Site Admininistration > Plugins > Admin Tools > OpenSesame > Integration Settings/AICC Configurations
+
 
 The Customer Integration Id and Allowed Types (scorm type) are located under integration settings. The Client Id, Client Secret, Authorization URL, and Base URL are all fields that should be placed as forced settings in the Moodle site config.php file. However, if these settings are not located in the config.php file they will appear in the Integration Setting location as well. These fields should be populated with values provided to you by an
 OpenSesame representative.
