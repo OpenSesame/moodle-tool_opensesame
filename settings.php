@@ -27,8 +27,9 @@ defined('MOODLE_INTERNAL') || die;
 global $CFG;
 
 if ($hassiteconfig) {
+
     // Place settings category named opensesameintegration under tab courses.
-    $ADMIN->add('courses',
+    $ADMIN->add('tools',
             new admin_category('opensesameintegration', new lang_string('opensesamecat', 'tool_opensesame')),
     );
     // Places the link to the settingspage under the new category.
