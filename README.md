@@ -1,8 +1,11 @@
 # OpenSesame Connector
 
-The OpenSesame Connector (tool_opensesame) configures communication between
-Moodle and OpenSesame. It also contains all of the main settings required to integrate with OpenSesame content. OpenSesame is a course integration tool providing the
-ability to automatically create and configure Opensesame courses within Moodle.
+The OpenSesame Connector (tool_opensesame) is a course integration tool providing the
+ability to automatically create and configure Opensesame courses within Moodle. It also contains all of the main settings required to integrate with OpenSesame content.
+
+## Getting Access to OpenSesame content
+
+The OpenSesame Connector tool requires you already have an account with OpenSesame. If you need to create an account, navigate [here](https://www.opensesame.com/site/why-opensesame).
 
 ## Installation
 
@@ -52,18 +55,16 @@ The scheduled task is named "OpenSesame Course Sync" and can be found within:
    Plugins overview
 3. Look for the removed plugins and click on uninstall-link for the plugin.
 
-## License for OpenSesame admin tool
+## License for OpenSesame Connector
 
-This file is part of Moodle - http://moodle.org/
-
-Moodle is free software: you can redistribute it and/or modify
+This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Moodle is distributed in the hope that it will be useful,
+This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+MERCHANTABILITY, NON-INFRINGEMENT, or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
