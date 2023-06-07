@@ -31,6 +31,7 @@ defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
 require_once($CFG->dirroot . '/lib/filelib.php');
+require_once($CFG->dirroot . '/mod/scorm/lib.php');
 /**
  * The api class.
  *
@@ -215,10 +216,14 @@ class opensesameapi extends \curl {
         $this->create_course_image($courseid, $thumbnailurl);
         $scormpackagedownloadurl = $osdataobject->packagedownloadurl;
         $allowedtype = get_config('tool_opensesame', 'allowedtypes');
+
         if ($allowedtype == SCORM_TYPE_LOCAL) {
             $this->get_os_scorm_package($token, $scormpackagedownloadurl, $courseid);
         }
         if ($allowedtype == SCORM_TYPE_AICCURL) {
+            // Ensure that Admin settings are set to support AICC Launch Urls.
+            $config = new auto_config;
+            $config->configure();
             $aicclaunchurl = $this->get_aicc_url($courseid);
             $this->get_os_scorm_package($token, $aicclaunchurl, $courseid);
         }
@@ -432,7 +437,7 @@ class opensesameapi extends \curl {
             $return = 0;
             $sr = 0;
 
-            list($cm, $context, $module, $data, $cw) = get_moduleinfo_data($cm, $course);
+            [$cm, $context, $module, $data, $cw] = get_moduleinfo_data($cm, $course);
 
             $data->return = $return;
             $data->sr = $sr;
@@ -457,7 +462,7 @@ class opensesameapi extends \curl {
             if ($section > $maxsections) {
                 throw new \moodle_exception('maxsectionslimit', 'moodle', '', $maxsections);
             }
-            list($module, $context, $cw, $cm, $data) = prepare_new_moduleinfo_data($course, $add, $section);
+            [$module, $context, $cw, $cm, $data] = prepare_new_moduleinfo_data($course, $add, $section);
             $data->return = 0;
             $data->sr = $sr;
             $data->add = $add;
