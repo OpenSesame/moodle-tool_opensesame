@@ -1,4 +1,5 @@
 # Start of the yml file
+
 image:
   name: '271411534863.dkr.ecr.us-east-2.amazonaws.com/moodleusdev:latest'
   aws:
