@@ -24,8 +24,6 @@
 
 namespace tool_opensesame\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for tool_opensesame implementing null_provider.
  *
