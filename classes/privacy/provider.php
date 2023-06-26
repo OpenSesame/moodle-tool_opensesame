@@ -27,6 +27,7 @@ namespace tool_opensesame\privacy;
 /**
  * Privacy Subsystem for tool_opensesame implementing null_provider.
  *
+ * @package    tool_opensesame
  * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
