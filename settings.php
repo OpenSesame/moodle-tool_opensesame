@@ -79,7 +79,7 @@ if ($hassiteconfig) {
             $config->allowedtypes === 'aiccurl') {
         // Add external page to manage OpenSesame AICC Link Configurations.
         $ADMIN->add('opensesameintegration', new admin_externalpage('aicc_config', new lang_string('aicc', 'tool_opensesame'),
-                "$CFG->wwwroot/$CFG->admin/tool/opensesame/autoconfigaicc.php"));
+                new moodle_url('admin/tool/opensesame/autoconfigaicc.php')));
     }
 
     // Add to the admin settings for opensesameintegration.

@@ -56,5 +56,5 @@ $string['opensesamecat'] = 'Opensesame';
 $string['opensesameintegration'] = 'Integration settings';
 $string['pluginname'] = 'OpenSesame integration';
 $string['privacy:metadata'] = 'The Opensesame API integration plugin does not store any personal data.';
-$string['statuscode400'] =
-        '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
+$string['statuscode400'] = '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
+
