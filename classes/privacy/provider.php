@@ -13,14 +13,33 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Version details.
+ * Privacy Subsystem implementation for tool_oauth2.
+ *
+ * @package    tool_opensesame
+ * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace tool_opensesame\privacy;
+
+/**
+ * Privacy Subsystem for tool_opensesame implementing null_provider.
  *
  * @package    tool_opensesame
  * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
-$plugin->version = 2023062900; // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires = 2020061500; // Requires this Moodle version. 3.9.
-$plugin->component = 'tool_opensesame'; // Full name of the plugin (used for diagnostics).
+class provider implements \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
+}

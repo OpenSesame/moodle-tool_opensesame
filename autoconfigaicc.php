@@ -42,6 +42,7 @@ echo $OUTPUT->heading(get_string('autoconfigure', 'tool_opensesame'));
 
 if ($action === 'confirm' || $action === 'view') {
     if ($action === 'confirm') {
+        require_sesskey();
         $ac = new auto_config();
         $ac->configure();
     }
