@@ -89,15 +89,17 @@ class opensesameapi extends \curl {
     /**
      * Get authenticate  API Credentialing.
      *
-     * @return token if authenticated.
      * @throws \dml_exception
      */
-    public function authenticate(): token {
+
+    public function authenticate() {
         mtrace('Authenticating.');
         $authurl = get_config('tool_opensesame', 'authurl');
+        mtrace('$authurl = ' . $authurl);
         $clientid = get_config('tool_opensesame', 'clientid');
+        mtrace( ' $clientid = ' . $clientid);
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
-
+        mtrace('$clientsecret = ' . $clientsecret);
         $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
                 'Accept: application/json',
@@ -106,9 +108,12 @@ class opensesameapi extends \curl {
 
         $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
         );
+        //mtrace('$response' . $respone);
 
         $decoded = json_decode($response);
+        mtrace('$decoded = ' . json_encode($decoded));
         $token = $decoded->access_token;
+        //mtrace( 'token' . $token);
         set_config('bearertoken', $token, 'tool_opensesame');
         set_config('bearertokencreatetime', time(), 'tool_opensesame');
         $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
@@ -128,12 +133,21 @@ class opensesameapi extends \curl {
         $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
         $now = time();
 
-        if ($token === '' || $now >= $expiretime) {
-            mtrace('Token either does not exist or is expired. Token is being created');
-            return  $this->authenticate();
-        } else if ($token !== '' && $now <= $expiretime) {
-            mtrace('Token is valid.');
+        if (!$token) {
+            mtrace('Token is missing');
+        }
+        if (!$expiretime) {
+            mtrace('Authtication has not started');
+        }
+        if ($expiretime && $now >= $expiretime) {
+            mtrace('Token is expired.');
+            return $this->authenticate();
+        }
+        if ($expiretime && $now > $expiretime) {
             // Define url for the next function.
+            if ($token) {
+                mtrace('Token is valid. Continuing.');
+            }
             $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
                     get_config('tool_opensesame', 'customerintegrationid') . '&limit=10';
             $this->get_open_sesame_course_list($token, $url);
