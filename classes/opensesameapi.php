@@ -89,10 +89,10 @@ class opensesameapi extends \curl {
     /**
      * Get authenticate  API Credentialing.
      *
-     * @return mixed|boolean|string false if authentication fails string if a token is returned
+     * @return string false if authentication fails string if a token is returned
      * @throws \dml_exception
      */
-    public function authenticate(): mixed {
+    public function authenticate(): string {
         mtrace('Authenticating.');
         $authurl = get_config('tool_opensesame', 'authurl');
         if (!$authurl) {
@@ -117,7 +117,7 @@ class opensesameapi extends \curl {
         );
 
         $decoded = json_decode($response);
-        mtrace(json_encode($decoded));
+
         $token = $decoded->access_token;
         if (!$token) {
             // Retry authorization
@@ -308,8 +308,8 @@ class opensesameapi extends \curl {
             if ($statuscode === 400) {
                 mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
 
-
                 $retrycount++;
+                mtrace('Retrying OpenSesame Course List in 1 minutes');               sleep((60));
                 continue; // Retry if status code is 400.
             } else if ($statuscode === 200) {
                 mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
@@ -353,12 +353,12 @@ class opensesameapi extends \curl {
                 return true;  // Success
             } else {
                 mtrace('This request failed due to status code ' . $this->get_http_code());
-                return false; return false; // Request failed with a different status code.
-                throw new \moodle_exception('statuscodeerror','tool_opensesame','', null, 'please research status code error ' .$this->get_http_code() );
+                return false;  // Request failed with a different status code.
+                // throw new \moodle_exception('statuscodeerror','tool_opensesame','', null, 'please research status code error ' .$this->get_http_code() );
             }
         }
         mtrace('Max retry attempts reached. Request failed after ' . $maxattempts . ' attempts.');
-        throw new \moodle_exception('statuscode400', 'tool_opensesame');
+        // throw new \moodle_exception('statuscode400', 'tool_opensesame');
         return false;
     }
 
