@@ -66,7 +66,7 @@ class opensesameapi extends \curl {
         }
 
         if (empty($this->baseurl)) {
-             throw new \moodle_exception('apiurlempty', 'tool_opensesame');
+            throw new \moodle_exception('apiurlempty', 'tool_opensesame');
         }
 
     }
@@ -89,17 +89,24 @@ class opensesameapi extends \curl {
     /**
      * Get authenticate  API Credentialing.
      *
+     * @return mixed|boolean|string false if authentication fails string if a token is returned
      * @throws \dml_exception
      */
-
-    public function authenticate() {
+    public function authenticate(): mixed {
         mtrace('Authenticating.');
         $authurl = get_config('tool_opensesame', 'authurl');
-        mtrace('$authurl = ' . $authurl);
+        if (!$authurl) {
+            throw new \moodle_exception('missingauthurl', 'tool_opensesesame', '', null, 'The authurl has not been set.');
+        }
         $clientid = get_config('tool_opensesame', 'clientid');
-        mtrace( ' $clientid = ' . $clientid);
+        if (!$clientid) {
+            throw new \moodle_exception('missingclientid', 'tool_opensesame', '', null, 'The clientid has not been set');
+        }
         $clientsecret = get_config('tool_opensesame', 'clientsecret');
-        mtrace('$clientsecret = ' . $clientsecret);
+        if (!$clientsecret) {
+            throw new \moodle_exception('missingclientsecret', 'tool_opensesame', '', null, 'The clientsecret is missing');
+        }
+
         $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
                 'Accept: application/json',
@@ -108,17 +115,23 @@ class opensesameapi extends \curl {
 
         $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
         );
-        //mtrace('$response' . $respone);
 
         $decoded = json_decode($response);
-        mtrace('$decoded = ' . json_encode($decoded));
+        mtrace(json_encode($decoded));
         $token = $decoded->access_token;
-        //mtrace( 'token' . $token);
-        set_config('bearertoken', $token, 'tool_opensesame');
-        set_config('bearertokencreatetime', time(), 'tool_opensesame');
-        $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-        set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-        return $this->get_auth_token();
+        if (!$token) {
+            // Retry authorization
+            $this->authenticate();
+            mtrace('token is missing reattempting authentication process.');
+            return false;
+        } else {
+            set_config('bearertoken', $token, 'tool_opensesame');
+            set_config('bearertokencreatetime', time(), 'tool_opensesame');
+            $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
+            set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
+            return $this->get_auth_token();
+        }
+
     }
 
     /**
@@ -132,24 +145,27 @@ class opensesameapi extends \curl {
         $token = get_config('tool_opensesame', 'bearertoken');
         $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
         $now = time();
-
         if (!$token) {
-            mtrace('Token is missing');
+            mtrace('The token has not been set.');
         }
         if (!$expiretime) {
-            mtrace('Authtication has not started');
+            mtrace('The expiretime has not been set.');
         }
-        if ($expiretime && $now >= $expiretime) {
-            mtrace('Token is expired.');
-            return $this->authenticate();
+        if (($token && $expiretime) && $now >= $expiretime) {
+            mtrace('Token is Expired.');
         }
-        if ($expiretime && $now > $expiretime) {
+        if (($token && $expiretime) && $now < $expiretime) {
+            mtrace('Token is set.');
             // Define url for the next function.
-            if ($token) {
-                mtrace('Token is valid. Continuing.');
+            // Customer Integration must be set before url can be used.
+            $customerintegrationid = get_config('tool_opensesame', 'customerintegrationid');
+            if (!$customerintegrationid) {
+                mtrace('Customer integration is not set');
+                // Throw Moodle Exception.
+                throw new \moodle_exception('customerintegrationmissing', 'tool_opensesame', '', null, 'Configuration for the customer integration is not set.');
             }
             $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                    get_config('tool_opensesame', 'customerintegrationid') . '&limit=10';
+                    $customerintegrationid . '&limit=10';
             $this->get_open_sesame_course_list($token, $url);
 
             return $token;
@@ -279,56 +295,71 @@ class opensesameapi extends \curl {
      */
     public function get_open_sesame_course_list(string $token, string $url): bool {
         global $DB;
+        mtrace('Getting Opensesame Course List.');
         // Integrator issues request with access token.
         $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
-        $response = $this->get($url);
-        $statuscode = $this->get_http_code();
-        $dcoded = json_decode($response);
+        $maxattempts = 4;
+        $retrycount = 0;
+        while ($retrycount < $maxattempts) {
+            $response = $this->get($url);
+            $statuscode = $this->get_http_code();
+            $dcoded = json_decode($response);
 
-        if ($statuscode === 400) {
-            mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            throw new \moodle_exception('statuscode400', 'tool_opensesame');
-        }
-        if ($statuscode === 200) {
-            mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            $paging = $dcoded->paging;
-            $data = $dcoded->data;
+            if ($statuscode === 400) {
+                mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
 
-            foreach ($data as $osrecord) {
 
-                $this->create_oscategories($osrecord);
-                $keyexist =
-                        $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
-                $osdataobject = new \stdClass();
-                $osdataobject->idopensesame = $osrecord->id;
-                $osdataobject->provider = 'OpenSesame';
-                $osdataobject->active = $osrecord->active;
-                $osdataobject->title = $osrecord->title;
-                $osdataobject->descriptiontext =
-                        $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
-                $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
-                $osdataobject->duration = $osrecord->duration;
-                $osdataobject->languages = $osrecord->languages[0];
-                $osdataobject->oscategories = implode(', ', $osrecord->categories);
-                $osdataobject->publishername = $osrecord->publisherName;
-                $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
-                $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+                $retrycount++;
+                continue; // Retry if status code is 400.
+            } else if ($statuscode === 200) {
+                mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+                $paging = $dcoded->paging;
+                $data = $dcoded->data;
 
-                if ($keyexist !== true) {
-                    $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
-                    mtrace('inserting Open-Sesame course ' . $osrecord->title . ' metadata. id: ' . $returnid);
+                foreach ($data as $osrecord) {
+
+                    $this->create_oscategories($osrecord);
+                    $keyexist =
+                            $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
+                    $osdataobject = new \stdClass();
+                    $osdataobject->idopensesame = $osrecord->id;
+                    $osdataobject->provider = 'OpenSesame';
+                    $osdataobject->active = $osrecord->active;
+                    $osdataobject->title = $osrecord->title;
+                    $osdataobject->descriptiontext =
+                            $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
+                    $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
+                    $osdataobject->duration = $osrecord->duration;
+                    $osdataobject->languages = $osrecord->languages[0];
+                    $osdataobject->oscategories = implode(', ', $osrecord->categories);
+                    $osdataobject->publishername = $osrecord->publisherName;
+                    $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
+                    $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+
+                    if ($keyexist !== true) {
+                        $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
+                        mtrace('inserting Open-Sesame course ' . $osrecord->title . ' metadata. id: ' . $returnid);
+                    }
+                    $this->add_open_sesame_course($osdataobject, $token);
                 }
-                $this->add_open_sesame_course($osdataobject, $token);
+                $nexturl = $this->determineurl($paging);
+                mtrace('nexturl: ' . $nexturl);
+                if ($nexturl) {
+                    // $this->get_open_sesame_course_list($token, $nexturl);
+                    // Continue the loop with the next URL
+                    $url = $nexturl;
+                    continue;
+                }
+                return true;  // Success
+            } else {
+                mtrace('This request failed due to status code ' . $this->get_http_code());
+                return false; return false; // Request failed with a different status code.
+                throw new \moodle_exception('statuscodeerror','tool_opensesame','', null, 'please research status code error ' .$this->get_http_code() );
             }
-            $nexturl = $this->determineurl($paging);
-            mtrace('nexturl: ' . $nexturl);
-            if ($nexturl) {
-                $this->get_open_sesame_course_list($token, $nexturl);
-            }
-            return true;
-        } else {
-            return false;
         }
+        mtrace('Max retry attempts reached. Request failed after ' . $maxattempts . ' attempts.');
+        throw new \moodle_exception('statuscode400', 'tool_opensesame');
+        return false;
     }
 
 
