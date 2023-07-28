@@ -81,21 +81,6 @@ class opensesameapi extends \curl {
     }
 
     /**
-     * Get http status code
-     *
-     * @return int|boolean status code or false if not available.
-     */
-    public function get_http_code() {
-        mtrace('Calling get_http_code.');
-        $info = $this->get_info();
-        if (!isset($info['http_code'])) {
-            return false;
-        }
-        mtrace('returning status code ' . $info['http_code']);
-        return $info['http_code'];
-    }
-
-    /**
      * Get authenticate  API Credentialing.
      *
      * @return bool false if authentication fails false if access_token not set returned
@@ -125,7 +110,6 @@ class opensesameapi extends \curl {
             mtrace('Store the access token for later retrieval.');
             $this->access_token = $decoded->access_token;
             $this->courserequesturl = $this->createcourserequesturl(); // Create course request url.
-            mtrace('Store course request url.');
             return true;
         }
     }
@@ -141,6 +125,25 @@ class opensesameapi extends \curl {
         $customerintegrationid = $this->customerintegrationid;
         return "{$baseurl}/v1/content?customerIntegrationId={$customerintegrationid}&limit=10";
     }
+
+    /**
+     * Get http status code
+     *
+     * @return int|boolean status code or false if not available.
+     */
+    public function get_http_code() {
+        mtrace('Calling get_http_code.');
+        $info = $this->get_info();
+        if (!isset($info['http_code'])) {
+            return false;
+        }
+        mtrace('returning status code ' . $info['http_code']);
+        return $info['http_code'];
+    }
+
+
+
+
 
 
 
@@ -275,7 +278,7 @@ class opensesameapi extends \curl {
             mtrace('This courserequesturls '. $this->courserequesturl);
             $response = $this->get($this->courserequesturl);
             $decoded = json_decode($response);
-            mtrace('response decoded'.json_encode($decoded));
+
             $statuscode = $this->get_http_code();
 
             if ($statuscode === 400) {
@@ -319,20 +322,20 @@ class opensesameapi extends \curl {
                 $nexturl = $this->determineurl($paging);
                 mtrace('nexturl: ' . $nexturl);
                 if ($nexturl) {
-                    // $this->get_open_sesame_course_list($token, $nexturl);
-                    // Continue the loop with the next URL
+                    $this->get_open_sesame_course_list();
+                    // Continue the loop with the next URL.
                     $url = $nexturl;
                     continue;
                 }
-                return true;  // Success
+                return true;  // Success.
             } else {
                 mtrace('This request failed due to status code ' . $this->get_http_code());
                 return false;  // Request failed with a different status code.
-                throw new \moodle_exception('statuscodeerror', 'tool_opensesame', '', null, 'please research status code error ' .$this->get_http_code() );
+                throw new \moodle_exception('statuscodeerror',
+                        'tool_opensesame', '', null, 'please research status code error ' .$this->get_http_code() );
             }
         }
         mtrace('Max retry attempts reached. Request failed after ' . $maxattempts . ' attempts.');
-        // throw new \moodle_exception('statuscode400', 'tool_opensesame');
         return false;
     }
 
