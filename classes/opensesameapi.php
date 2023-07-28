@@ -89,7 +89,8 @@ class opensesameapi extends \curl {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function __construct() {
+    public function __construct(string $authurl, string $clientid, string $clientsecret,
+                                string $baseurl, string $customerintegrationid) {
         parent::__construct();
         $this->clientid = get_config('tool_opensesame', 'clientid');
         $this->clientsecret = get_config('tool_opensesame', 'clientsecret');
