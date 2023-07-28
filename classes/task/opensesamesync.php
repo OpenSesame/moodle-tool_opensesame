@@ -56,7 +56,10 @@ class opensesamesync extends \core\task\scheduled_task {
         mtrace("Opensesame task just started.");
 
         $opensesameapi = new opensesameapi;
-        $opensesameapi->get_auth_token();
+
+        if ($opensesameapi->authenticate()) {
+            $opensesameapi->get_open_sesame_course_list();
+        }
 
         mtrace('opensesame just finished.');
         return true;

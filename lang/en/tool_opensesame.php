@@ -55,3 +55,9 @@ $string['opensesameintegration'] = 'Integration Settings';
 $string['pluginname'] = 'OpenSesame Integration';
 $string['statuscode400'] =
         '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
+$string['clientid_missing'] = 'clientid missing';
+$string['clientsecret_missing'] = 'clientsecret missing';
+$string['authurl_missing'] = 'authurl missing';
+$string['baseurl_missing'] = 'baseurl missing';
+$string['customerintegrationid_missing'] = 'customerintegrationid missing';
+$string['access_token_missing'] = 'access token missing';
