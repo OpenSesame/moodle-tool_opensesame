@@ -43,32 +43,41 @@ require_once($CFG->dirroot . '/mod/scorm/lib.php');
 class opensesameapi extends \curl {
 
 
-    /** @var string the api baseurl */
-    private $baseurl;
+    protected $authurl;
+    protected $clientid;
+    protected $clientsecret;
+    protected $baseurl;
+    protected $customerintegrationid;
+    protected $accesstoken;
+    protected $courserequesturl;
 
     /**
-     * Constructor .
+     * Constructor.
      *
-     * @param array $settings additional curl settings.
+     * @param string $authurl
+     * @param string $clientid
+     * @param string $clientsecret
+     * @param string $baseurl
+     * @param string $customerintegrationid
+     *
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function __construct($settings = array()) {
-        parent::__construct($settings);
-
-        $this->bearertoken = get_config('tool_opensesame', 'bearertoken');
-
+    public function __construct() {
+        parent::__construct();
+        $this->clientid = get_config('tool_opensesame', 'clientid');
+        $this->clientsecret = get_config('tool_opensesame', 'clientsecret');
+        $this->authurl = get_config('tool_opensesame', 'authurl');
         $this->baseurl = get_config('tool_opensesame', 'baseurl');
+        $this->customerintegrationid = get_config('tool_opensesame', 'customerintegrationid');
 
-        // If the admin omitted the protocol part, add the HTTPS protocol on-the-fly.
-        if (!preg_match('/^https?:\/\//', $this->baseurl)) {
-            $this->baseurl = 'https://' . $this->baseurl;
+        // Check if each property is set and not null.
+        $properties = ['clientid', 'clientsecret', 'authurl', 'baseurl', 'customerintegrationid'];
+        foreach ($properties as $property) {
+            if (!isset($this->$property) || $this->$property === null) {
+                throw new \moodle_exception($property . '_missing', 'tool_opensesame');
+            }
         }
-
-        if (empty($this->baseurl)) {
-            throw new \moodle_exception('apiurlempty', 'tool_opensesame');
-        }
-
     }
 
     /**
@@ -89,88 +98,50 @@ class opensesameapi extends \curl {
     /**
      * Get authenticate  API Credentialing.
      *
-     * @return string false if authentication fails string if a token is returned
+     * @return bool false if authentication fails false if access_token not set returned
      * @throws \dml_exception
      */
-    public function authenticate(): string {
-        mtrace('Authenticating.');
-        $authurl = get_config('tool_opensesame', 'authurl');
-        if (!$authurl) {
-            throw new \moodle_exception('missingauthurl', 'tool_opensesesame', '', null, 'The authurl has not been set.');
-        }
-        $clientid = get_config('tool_opensesame', 'clientid');
-        if (!$clientid) {
-            throw new \moodle_exception('missingclientid', 'tool_opensesame', '', null, 'The clientid has not been set');
-        }
-        $clientsecret = get_config('tool_opensesame', 'clientsecret');
-        if (!$clientsecret) {
-            throw new \moodle_exception('missingclientsecret', 'tool_opensesame', '', null, 'The clientsecret is missing');
-        }
-
+    public function authenticate(): bool {
+        mtrace('Authenticating...');
+        $clientid = $this->clientid;
+        $clientsecret = $this->clientsecret;
         $this->setHeader([
                 'Content-Type: application/x-www-form-urlencoded',
                 'Accept: application/json',
                 sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
         ]);
-
+        $authurl = $this->authurl;
         $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
         );
 
         $decoded = json_decode($response);
-
-        $token = $decoded->access_token;
-        if (!$token) {
-            // Retry authorization
-            $this->authenticate();
-            mtrace('token is missing reattempting authentication process.');
+        if (!$decoded->access_token) {
+            mtrace('Access token is missing reattempting authentication process.');
+            if (!isset($this->access_token)) {
+                throw new \moodle_exception( 'access_token_missing', 'tool_opensesame');
+            }
             return false;
         } else {
-            set_config('bearertoken', $token, 'tool_opensesame');
-            set_config('bearertokencreatetime', time(), 'tool_opensesame');
-            $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-            set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-            return $this->get_auth_token();
+            mtrace('Store the access token for later retrieval.');
+            $this->access_token = $decoded->access_token;
+            $this->courserequesturl = $this->createcourserequesturl(); // Create course request url.
+            mtrace('Store course request url.');
+            return true;
         }
-
     }
 
     /**
-     * get_auth_token validates token not expired, if expired, creates a new one.
+     * Create the course request url.
      *
-     * @return false|mixed|object|string|null $token
-     * @throws \dml_exception
+     * @return string
      */
-    public function get_auth_token() {
-        mtrace('get_auth_token called');
-        $token = get_config('tool_opensesame', 'bearertoken');
-        $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
-        $now = time();
-        if (!$token) {
-            mtrace('The token has not been set.');
-        }
-        if (!$expiretime) {
-            mtrace('The expiretime has not been set.');
-        }
-        if (($token && $expiretime) && $now >= $expiretime) {
-            mtrace('Token is Expired.');
-        }
-        if (($token && $expiretime) && $now < $expiretime) {
-            mtrace('Token is set.');
-            // Define url for the next function.
-            // Customer Integration must be set before url can be used.
-            $customerintegrationid = get_config('tool_opensesame', 'customerintegrationid');
-            if (!$customerintegrationid) {
-                mtrace('Customer integration is not set');
-                // Throw Moodle Exception.
-                throw new \moodle_exception('customerintegrationmissing', 'tool_opensesame', '', null, 'Configuration for the customer integration is not set.');
-            }
-            $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                    $customerintegrationid . '&limit=10';
-            $this->get_open_sesame_course_list($token, $url);
-
-            return $token;
-        }
+    protected function createcourserequesturl():string {
+        mtrace('Creating course request url');
+        $baseurl = $this->baseurl;
+        $customerintegrationid = $this->customerintegrationid;
+        return "{$baseurl}/v1/content?customerIntegrationId={$customerintegrationid}&limit=10";
     }
+
 
 
     /**
@@ -285,36 +256,39 @@ class opensesameapi extends \curl {
     /**
      * get_open_sesame_course_list no token validation. Process courses with add_open_sesame_course.
      *
-     * @param string $token
-     * @param string $url
      * @return bool
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_open_sesame_course_list(string $token, string $url): bool {
+    public function get_open_sesame_course_list(): bool {
         global $DB;
         mtrace('Getting Opensesame Course List.');
         // Integrator issues request with access token.
-        $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
+        // Reset headers for a new request.
+        $this->resetHeader();
+        $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $this->access_token)]);
         $maxattempts = 4;
         $retrycount = 0;
         while ($retrycount < $maxattempts) {
-            $response = $this->get($url);
+            mtrace('This courserequesturls '. $this->courserequesturl);
+            $response = $this->get($this->courserequesturl);
+            $decoded = json_decode($response);
+            mtrace('response decoded'.json_encode($decoded));
             $statuscode = $this->get_http_code();
-            $dcoded = json_decode($response);
 
             if ($statuscode === 400) {
                 mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
 
                 $retrycount++;
-                mtrace('Retrying OpenSesame Course List in 1 minutes');               sleep((60));
+                mtrace('Retrying OpenSesame Course List in 10 seconds.');
+                sleep((10));
                 continue; // Retry if status code is 400.
             } else if ($statuscode === 200) {
                 mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-                $paging = $dcoded->paging;
-                $data = $dcoded->data;
+                $paging = $decoded->paging;
+                $data = $decoded->data;
 
                 foreach ($data as $osrecord) {
 
@@ -340,7 +314,7 @@ class opensesameapi extends \curl {
                         $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
                         mtrace('inserting Open-Sesame course ' . $osrecord->title . ' metadata. id: ' . $returnid);
                     }
-                    $this->add_open_sesame_course($osdataobject, $token);
+                    $this->add_open_sesame_course($osdataobject, $this->access_token);
                 }
                 $nexturl = $this->determineurl($paging);
                 mtrace('nexturl: ' . $nexturl);
@@ -354,7 +328,7 @@ class opensesameapi extends \curl {
             } else {
                 mtrace('This request failed due to status code ' . $this->get_http_code());
                 return false;  // Request failed with a different status code.
-                // throw new \moodle_exception('statuscodeerror','tool_opensesame','', null, 'please research status code error ' .$this->get_http_code() );
+                throw new \moodle_exception('statuscodeerror', 'tool_opensesame', '', null, 'please research status code error ' .$this->get_http_code() );
             }
         }
         mtrace('Max retry attempts reached. Request failed after ' . $maxattempts . ' attempts.');
