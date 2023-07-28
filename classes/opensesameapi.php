@@ -42,13 +42,39 @@ require_once($CFG->dirroot . '/mod/scorm/lib.php');
  */
 class opensesameapi extends \curl {
 
-
+    /**
+     * @var false|mixed|object|string|null
+     */
     protected $authurl;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
     protected $clientid;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
     protected $clientsecret;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
     protected $baseurl;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
     protected $customerintegrationid;
+
+    /**
+     * @var
+     */
     protected $accesstoken;
+
+    /**
+     * @var
+     */
     protected $courserequesturl;
 
     /**
@@ -140,12 +166,6 @@ class opensesameapi extends \curl {
         mtrace('returning status code ' . $info['http_code']);
         return $info['http_code'];
     }
-
-
-
-
-
-
 
     /**
      * add_open_sesame_course Adds an open sesame course to moodle.
@@ -339,7 +359,6 @@ class opensesameapi extends \curl {
         return false;
     }
 
-
     /**
      * Creates a course image based on the thumbnail url.
      *
@@ -385,18 +404,14 @@ class opensesameapi extends \curl {
         require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
         // Integrator issues request with access token.
         $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
-
         $url = $scormpackagedownloadurl . '?standard=scorm';
-
         $headers = $this->header;
-
         $filename = 'scorm_' . $courseid . '.zip';
         $path = $CFG->tempdir . '/filestorage/' . $filename;
         // Download to temp directory.
         download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
         // Create a file from temporary folder in the user file draft area.
         $context = context_course::instance($courseid);
-
         $fs = get_file_storage();
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
@@ -410,16 +425,13 @@ class opensesameapi extends \curl {
         $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
         // Create a new file scorm.zip package inside of course.
         $fs->create_file_from_pathname($fileinfo, $path);
-
         // Create a new user draft file from mod_scorm package.
         // Get an unused draft itemid which will be used.
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
         get_fast_modinfo($courseid);
-
         $this->create_course_scorm_mod($courseid, $draftitemid);
-
     }
 
     /**
@@ -443,7 +455,6 @@ class opensesameapi extends \curl {
         // Get course.
         $course = $DB->get_record('course', ['id' => $courseid]);
         // Check course for modules.
-
         $modscorm = 19;
         $table = 'course_modules';
         $cmid = $DB->get_field($table, 'id', ['course' => $courseid, 'module' => $modscorm], IGNORE_MISSING
@@ -455,22 +466,16 @@ class opensesameapi extends \curl {
             $cm = get_coursemodule_from_id('', $update, 0, false, MUST_EXIST);
             // Check the course exists.
             $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
             $return = 0;
             $sr = 0;
-
             [$cm, $context, $module, $data, $cw] = get_moduleinfo_data($cm, $course);
-
             $data->return = $return;
             $data->sr = $sr;
             $data->update = $update;
-
             $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, '0', $sr, $update, $cm->instance, $cm->id);
-
             mtrace('preparing course scorm mod');
             // Below return an array of $cm , $moduleinfo.
             update_moduleinfo($cm, $moduleinfo, $course);
-
         }
         // Only add a course module if none exist.
         if (!$cmid) {
@@ -479,7 +484,6 @@ class opensesameapi extends \curl {
             $sr = 0;
             $add = 'scorm';
             $courseformat = course_get_format($course);
-
             $maxsections = $courseformat->get_max_sections();
             if ($section > $maxsections) {
                 throw new \moodle_exception('maxsectionslimit', 'moodle', '', $maxsections);
@@ -492,7 +496,6 @@ class opensesameapi extends \curl {
             $mod = add_moduleinfo($moduleinfo, $course);
             mtrace('added course module ');
         }
-
     }
 
     /**
@@ -514,16 +517,13 @@ class opensesameapi extends \curl {
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
-
         $moduleinfo->name = 'scorm_' . $courseid;
         $moduleinfo->introeditor = ['text' => '',
                 'format' => '1', 'itemid' => ''];
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
-
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
-
         if ($moduleinfo->scormtype === SCORM_TYPE_AICCURL) {
             $moduleinfo->packageurl = $this->get_aicc_url($courseid);
         }
@@ -607,7 +607,6 @@ class opensesameapi extends \curl {
         $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
         if ($active) {
             $newstatus = 0;
-
         }
         if (!$active) {
             $newstatus = 1;
@@ -631,7 +630,6 @@ class opensesameapi extends \curl {
             $values = array_values(array_filter($values));
 
             foreach ($values as $vkey => $vvalue) {
-
                 $catexist =
                         $DB->record_exists('course_categories', ['name' => $vvalue]);
 
@@ -652,6 +650,5 @@ class opensesameapi extends \curl {
             }
         }
         \context_helper::build_all_paths();
-
     }
 }
