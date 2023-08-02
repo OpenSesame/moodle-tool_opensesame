@@ -266,7 +266,7 @@ class opensesameapi extends \curl {
     /**
      * get_open_sesame_course_list no token validation. Process courses with add_open_sesame_course.
      *
-     * @param $requesturl string
+     * @param  string $requesturl
      *
      * @return bool
      * @throws \dml_exception
