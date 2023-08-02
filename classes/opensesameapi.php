@@ -288,6 +288,9 @@ class opensesameapi extends \curl {
         $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $this->access_token)]);
         $maxattempts = 4;
         $retrycount = 0;
+        // Define the list of status codes for which we will retry the request.
+        $retrystatuscodes = [408, 425, 429, 500, 502, 503, 504];
+
         while ($retrycount < $maxattempts) {
             mtrace('This courserequesturls '. $this->courserequesturl);
             $response = $this->get($this->courserequesturl);
@@ -297,11 +300,13 @@ class opensesameapi extends \curl {
 
             if ($statuscode === 400) {
                 mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-
+                throw new \moodle_exception('bad_request_error', 'tool_opensesame', '', null, 'Please fix the request as it resulted in a bad request error (status code 400).');
+            } else if (in_array($statuscode, $retrystatuscodes)) {
+                mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
                 $retrycount++;
                 mtrace('Retrying OpenSesame Course List in 10 seconds.');
-                sleep((10));
-                continue; // Retry if status code is 400.
+                sleep(10);
+                continue; // Retry if status code is in the list of retry codes.
             } else if ($statuscode === 200) {
                 mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
                 $paging = $decoded->paging;
@@ -346,7 +351,7 @@ class opensesameapi extends \curl {
                 mtrace('This request failed due to status code ' . $this->get_http_code());
                 return false;  // Request failed with a different status code.
                 throw new \moodle_exception('statuscodeerror',
-                        'tool_opensesame', '', null, 'please research status code error ' .$this->get_http_code() );
+                    'tool_opensesame', '', null, 'please research status code error ' .$this->get_http_code() );
             }
         }
         mtrace('Max retry attempts reached. Request failed after ' . $maxattempts . ' attempts.');
