@@ -143,7 +143,7 @@ class opensesameapi extends \curl {
         mtrace('Creating course request url');
         $baseurl = $this->baseurl;
         $customerintegrationid = $this->customerintegrationid;
-        return "{$baseurl}/v1/content?customerIntegrationId={$customerintegrationid}&limit=10";
+        return "{$baseurl}/v1/content?customerIntegrationId={$customerintegrationid}&limit=50";
     }
 
     /**
