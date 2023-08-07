@@ -585,7 +585,7 @@ class opensesameapi extends \curl {
         mtrace('calling get_aicc_url');
         global $DB;
         $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
-        mtrace('$courseid: ' . $courseid . ' $url: ' . $url);
+
         return $url;
     }
 
