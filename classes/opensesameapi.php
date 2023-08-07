@@ -287,7 +287,7 @@ class opensesameapi extends \curl {
         $retrystatuscodes = [408, 425, 429, 500, 502, 503, 504];
 
         while ($retrycount < $maxattempts) {
-            mtrace('This courserequesturls '. $requesturl);
+
             $response = $this->get($requesturl);
             $decoded = json_decode($response);
 
