@@ -55,6 +55,12 @@ $string['opensesamesync'] = 'Opensesame course sync';
 $string['opensesamecat'] = 'Opensesame';
 $string['opensesameintegration'] = 'Integration settings';
 $string['pluginname'] = 'OpenSesame integration';
+$string['clientid_missing'] = 'clientid missing';
+$string['clientsecret_missing'] = 'clientsecret missing';
+$string['authurl_missing'] = 'authurl missing';
+$string['baseurl_missing'] = 'baseurl missing';
+$string['customerintegrationid_missing'] = 'customerintegrationid missing';
+$string['access_token_missing'] = 'access token missing';
 $string['privacy:metadata'] = 'The Opensesame API integration plugin does not store any personal data.';
 $string['statuscode400'] = '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
 

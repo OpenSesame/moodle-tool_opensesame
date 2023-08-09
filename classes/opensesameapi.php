@@ -42,33 +42,121 @@ require_once($CFG->dirroot . '/mod/scorm/lib.php');
  */
 class opensesameapi extends \curl {
 
-
-    /** @var string the api baseurl */
-    private $baseurl;
+    /**
+     * @var false|mixed|object|string|null
+     */
+    protected $authurl;
 
     /**
-     * Constructor .
+     * @var false|mixed|object|string|null
+     */
+    protected $clientid;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
+    protected $clientsecret;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
+    protected $baseurl;
+
+    /**
+     * @var false|mixed|object|string|null
+     */
+    protected $customerintegrationid;
+
+    /**
+     * @var
+     */
+    protected $accesstoken;
+
+    /**
+     * @var
+     */
+    protected $courserequesturl;
+
+    /**
+     * @var
+     */
+    protected $nextrequesturl;
+
+    /**
+     * @var
+     */
+    protected $authenticated;
+
+    /**
+     * Constructor.
      *
-     * @param array $settings additional curl settings.
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function __construct($settings = array()) {
-        parent::__construct($settings);
-
-        $this->bearertoken = get_config('tool_opensesame', 'bearertoken');
-
+    public function __construct() {
+        parent::__construct();
+        $this->clientid = get_config('tool_opensesame', 'clientid');
+        $this->clientsecret = get_config('tool_opensesame', 'clientsecret');
+        $this->authurl = get_config('tool_opensesame', 'authurl');
         $this->baseurl = get_config('tool_opensesame', 'baseurl');
+        $this->customerintegrationid = get_config('tool_opensesame', 'customerintegrationid');
 
-        // If the admin omitted the protocol part, add the HTTPS protocol on-the-fly.
-        if (!preg_match('/^https?:\/\//', $this->baseurl)) {
-            $this->baseurl = 'https://' . $this->baseurl;
+        // Check if each property is set and not null.
+        $properties = ['clientid', 'clientsecret', 'authurl', 'baseurl', 'customerintegrationid'];
+        foreach ($properties as $property) {
+            if (!isset($this->$property) || $this->$property === null) {
+                throw new \moodle_exception($property . '_missing', 'tool_opensesame');
+            }
         }
+    }
 
-        if (empty($this->baseurl)) {
-             throw new \moodle_exception('apiurlempty', 'tool_opensesame');
+    /**
+     * Get authenticate  API Credentialing.
+     *
+     * @return bool false if authentication fails false if access_token not set returned
+     * @throws \dml_exception
+     */
+    public function authenticate(): bool {
+        mtrace('Authenticating...');
+        $clientid = $this->clientid;
+        $clientsecret = $this->clientsecret;
+        $this->setHeader([
+                'Content-Type: application/x-www-form-urlencoded',
+                'Accept: application/json',
+                sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
+        ]);
+        $authurl = $this->authurl;
+        $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
+        );
+
+        $decoded = json_decode($response);
+        if (!$decoded->access_token) {
+            mtrace('Access token is missing reattempting authentication process.');
+            if (!isset($this->access_token)) {
+                throw new \moodle_exception( 'access_token_missing', 'tool_opensesame');
+            }
+            $this->authenticated = false;
+            return false;
+        } else {
+            mtrace('Store the access token for later retrieval.');
+            $this->access_token = $decoded->access_token;
+            $this->courserequesturl = $this->createcourserequesturl();
+            $this->get_open_sesame_course_list($this->courserequesturl);
+            $this->authenticated = true;
+            return true;
         }
+    }
 
+    /**
+     * Create the course request url. This will provide the request to the initial list.
+     *
+     * @return string
+     */
+    protected function createcourserequesturl():string {
+        mtrace('Creating course request url');
+        $baseurl = $this->baseurl;
+        $customerintegrationid = $this->customerintegrationid;
+        return "{$baseurl}/v1/content?customerIntegrationId={$customerintegrationid}&limit=50";
     }
 
     /**
@@ -85,63 +173,6 @@ class opensesameapi extends \curl {
         mtrace('returning status code ' . $info['http_code']);
         return $info['http_code'];
     }
-
-    /**
-     * Get authenticate  API Credentialing.
-     *
-     * @return token if authenticated.
-     * @throws \dml_exception
-     */
-    public function authenticate(): token {
-        mtrace('Authenticating.');
-        $authurl = get_config('tool_opensesame', 'authurl');
-        $clientid = get_config('tool_opensesame', 'clientid');
-        $clientsecret = get_config('tool_opensesame', 'clientsecret');
-
-        $this->setHeader([
-                'Content-Type: application/x-www-form-urlencoded',
-                'Accept: application/json',
-                sprintf('Authorization: Basic %s', base64_encode(sprintf('%s:%s', $clientid, $clientsecret)))
-        ]);
-
-        $response = $this->post($authurl, 'grant_type=client_credentials&scope=content'
-        );
-
-        $decoded = json_decode($response);
-        $token = $decoded->access_token;
-        set_config('bearertoken', $token, 'tool_opensesame');
-        set_config('bearertokencreatetime', time(), 'tool_opensesame');
-        $createtime = get_config('tool_opensesame', 'bearertokencreatetime');
-        set_config('bearertokenexpiretime', ($createtime + $decoded->expires_in), 'tool_opensesame');
-        return $this->get_auth_token();
-    }
-
-    /**
-     * get_auth_token validates token not expired, if expired, creates a new one.
-     *
-     * @return false|mixed|object|string|null $token
-     * @throws \dml_exception
-     */
-    public function get_auth_token() {
-        mtrace('get_auth_token called');
-        $token = get_config('tool_opensesame', 'bearertoken');
-        $expiretime = get_config('tool_opensesame', 'bearertokenexpiretime');
-        $now = time();
-
-        if ($token === '' || $now >= $expiretime) {
-            mtrace('Token either does not exist or is expired. Token is being created');
-            return  $this->authenticate();
-        } else if ($token !== '' && $now <= $expiretime) {
-            mtrace('Token is valid.');
-            // Define url for the next function.
-            $url = get_config('tool_opensesame', 'baseurl') . '/v1/content?customerIntegrationId=' .
-                    get_config('tool_opensesame', 'customerintegrationid') . '&limit=10';
-            $this->get_open_sesame_course_list($token, $url);
-
-            return $token;
-        }
-    }
-
 
     /**
      * add_open_sesame_course Adds an open sesame course to moodle.
@@ -227,96 +258,103 @@ class opensesameapi extends \curl {
             $aicclaunchurl = $this->get_aicc_url($courseid);
             $this->get_os_scorm_package($token, $aicclaunchurl, $courseid);
         }
-        mtrace('$courseid is type: ' . gettype($courseid));
-        mtrace('$osdataobject->idopensesame is type: ' . gettype($osdataobject->idopensesame));
         $active = $this->os_is_active($osdataobject->idopensesame, $courseid);
         $this->set_self_enrollment($courseid, $active);
 
     }
 
     /**
-     * Defines the next page url in api.
-     *
-     * @param object $paging
-     * @return bool|mixed
-     */
-    public function determineurl(object &$paging): bool {
-        foreach ($paging as $key => $url) {
-            if ($key == 'next' && !empty($url)) {
-                mtrace($key . ' page url' . $url);
-                return $url;
-            } else {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    /**
      * get_open_sesame_course_list no token validation. Process courses with add_open_sesame_course.
      *
-     * @param string $token
-     * @param string $url
+     * @param  string $requesturl
+     *
      * @return bool
      * @throws \dml_exception
      * @throws \file_exception
      * @throws \moodle_exception
      * @throws \stored_file_creation_exception
      */
-    public function get_open_sesame_course_list(string $token, string $url): bool {
+    public function get_open_sesame_course_list(string $requesturl): bool {
         global $DB;
+        mtrace('Getting Opensesame Course List.');
         // Integrator issues request with access token.
-        $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $token)]);
-        $response = $this->get($url);
-        $statuscode = $this->get_http_code();
-        $dcoded = json_decode($response);
+        // Reset headers for a new request.
+        $this->resetHeader();
+        $this->setHeader(['content_type: application/json', sprintf('Authorization: Bearer %s', $this->access_token)]);
+        $maxattempts = 4;
+        $retrycount = 0;
+        // Define the list of status codes for which we will retry the request.
+        $retrystatuscodes = [408, 425, 429, 500, 502, 503, 504];
 
-        if ($statuscode === 400) {
-            mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            throw new \moodle_exception('statuscode400', 'tool_opensesame');
-        }
-        if ($statuscode === 200) {
-            mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
-            $paging = $dcoded->paging;
-            $data = $dcoded->data;
+        while ($retrycount < $maxattempts) {
 
-            foreach ($data as $osrecord) {
+            $response = $this->get($requesturl);
+            $decoded = json_decode($response);
 
-                $this->create_oscategories($osrecord);
-                $keyexist =
-                        $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
-                $osdataobject = new \stdClass();
-                $osdataobject->idopensesame = $osrecord->id;
-                $osdataobject->provider = 'OpenSesame';
-                $osdataobject->active = $osrecord->active;
-                $osdataobject->title = $osrecord->title;
-                $osdataobject->descriptiontext =
-                        $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
-                $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
-                $osdataobject->duration = $osrecord->duration;
-                $osdataobject->languages = $osrecord->languages[0];
-                $osdataobject->oscategories = implode(', ', $osrecord->categories);
-                $osdataobject->publishername = $osrecord->publisherName;
-                $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
-                $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+            $statuscode = $this->get_http_code();
 
-                if ($keyexist !== true) {
-                    $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
-                    mtrace('inserting Open-Sesame course ' . $osrecord->title . ' metadata. id: ' . $returnid);
+            if ($statuscode === 400) {
+                mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+                throw new \moodle_exception('bad_request_error', 'tool_opensesame', '', null, '');
+            } else if (in_array($statuscode, $retrystatuscodes)) {
+                mtrace('OpenSesame Course list Statuscode: ' . $statuscode);
+                $retrycount++;
+                mtrace('Retrying OpenSesame Course List in 10 seconds.');
+                sleep(10);
+                continue; // Retry if status code is in the list of retry codes.
+            } else if ($statuscode === 200) {
+                mtrace('OpenSesame Course list Request was successful continuing.');
+                $paging = $decoded->paging;
+                $data = $decoded->data;
+
+                foreach ($data as $osrecord) {
+
+                    $this->create_oscategories($osrecord);
+                    $keyexist =
+                            $DB->record_exists('tool_opensesame', ['idopensesame' => $osrecord->id]);
+                    $osdataobject = new \stdClass();
+                    $osdataobject->idopensesame = $osrecord->id;
+                    $osdataobject->provider = 'OpenSesame';
+                    $osdataobject->active = $osrecord->active;
+                    $osdataobject->title = $osrecord->title;
+                    $osdataobject->descriptiontext =
+                            $osrecord->descriptionHtml ? $osrecord->descriptionText : $osrecord->descriptionHtml;
+                    $osdataobject->thumbnailurl = $osrecord->thumbnailUrl;
+                    $osdataobject->duration = $osrecord->duration;
+                    $osdataobject->languages = $osrecord->languages[0];
+                    $osdataobject->oscategories = implode(', ', $osrecord->categories);
+                    $osdataobject->publishername = $osrecord->publisherName;
+                    $osdataobject->packagedownloadurl = $osrecord->packageDownloadUrl;
+                    $osdataobject->aicclaunchurl = $osrecord->aiccLaunchUrl;
+
+                    if ($keyexist !== true) {
+                        $returnid = $DB->insert_record('tool_opensesame', $osdataobject);
+                        mtrace('inserting Open-Sesame course ' . $osrecord->title . ' metadata. id: ' . $returnid);
+                    }
+                    $this->add_open_sesame_course($osdataobject, $this->access_token);
                 }
-                $this->add_open_sesame_course($osdataobject, $token);
-            }
-            $nexturl = $this->determineurl($paging);
-            mtrace('nexturl: ' . $nexturl);
-            if ($nexturl) {
-                $this->get_open_sesame_course_list($token, $nexturl);
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
+                mtrace('first page complete checking if a next page is available');
 
+                $this->nextrequesturl = $paging->next;
+                $nexturl = $this->nextrequesturl;
+                mtrace('nexturl: ' . $nexturl);
+                if ($this->nextrequesturl) {
+                    $this->get_open_sesame_course_list($this->nextrequesturl);
+                } else {
+                    mtrace('no additional urls available');
+                }
+                return true;  // Success.
+            } else {
+                mtrace('This request failed due to '.  $requesturl .' status code ' . $this->get_http_code());
+                return false;  // Request failed with a different status code.
+                throw new \moodle_exception('statuscodeerror',
+                    'tool_opensesame', '',
+                        null, 'please research status code error ' .$this->get_http_code());
+            }
+        }
+        mtrace('Max retry attempts reached. Request failed after ' . $maxattempts . ' attempts.');
+        return false;
+    }
 
     /**
      * Creates a course image based on the thumbnail url.
@@ -363,18 +401,14 @@ class opensesameapi extends \curl {
         require_once($CFG->dirroot . '/lib/filestorage/file_storage.php');
         // Integrator issues request with access token.
         $this->setHeader([sprintf('Authorization: Bearer %s', $token)]);
-
         $url = $scormpackagedownloadurl . '?standard=scorm';
-
         $headers = $this->header;
-
         $filename = 'scorm_' . $courseid . '.zip';
         $path = $CFG->tempdir . '/filestorage/' . $filename;
         // Download to temp directory.
         download_file_content($url, $headers, null, true, 300, 20, false, $path, false);
         // Create a file from temporary folder in the user file draft area.
         $context = context_course::instance($courseid);
-
         $fs = get_file_storage();
         $fileinfo = [
                 'contextid' => $context->id,   // ID of the context.
@@ -388,16 +422,13 @@ class opensesameapi extends \curl {
         $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
         // Create a new file scorm.zip package inside of course.
         $fs->create_file_from_pathname($fileinfo, $path);
-
         // Create a new user draft file from mod_scorm package.
         // Get an unused draft itemid which will be used.
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
         get_fast_modinfo($courseid);
-
         $this->create_course_scorm_mod($courseid, $draftitemid);
-
     }
 
     /**
@@ -421,7 +452,6 @@ class opensesameapi extends \curl {
         // Get course.
         $course = $DB->get_record('course', ['id' => $courseid]);
         // Check course for modules.
-
         $modscorm = 19;
         $table = 'course_modules';
         $cmid = $DB->get_field($table, 'id', ['course' => $courseid, 'module' => $modscorm], IGNORE_MISSING
@@ -433,22 +463,16 @@ class opensesameapi extends \curl {
             $cm = get_coursemodule_from_id('', $update, 0, false, MUST_EXIST);
             // Check the course exists.
             $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
             $return = 0;
             $sr = 0;
-
             [$cm, $context, $module, $data, $cw] = get_moduleinfo_data($cm, $course);
-
             $data->return = $return;
             $data->sr = $sr;
             $data->update = $update;
-
             $moduleinfo = $this->get_default_modinfo($courseid, $draftitemid, $module, '0', $sr, $update, $cm->instance, $cm->id);
-
             mtrace('preparing course scorm mod');
             // Below return an array of $cm , $moduleinfo.
             update_moduleinfo($cm, $moduleinfo, $course);
-
         }
         // Only add a course module if none exist.
         if (!$cmid) {
@@ -457,7 +481,6 @@ class opensesameapi extends \curl {
             $sr = 0;
             $add = 'scorm';
             $courseformat = course_get_format($course);
-
             $maxsections = $courseformat->get_max_sections();
             if ($section > $maxsections) {
                 throw new \moodle_exception('maxsectionslimit', 'moodle', '', $maxsections);
@@ -470,7 +493,6 @@ class opensesameapi extends \curl {
             $mod = add_moduleinfo($moduleinfo, $course);
             mtrace('added course module ');
         }
-
     }
 
     /**
@@ -492,16 +514,13 @@ class opensesameapi extends \curl {
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
-
         $moduleinfo->name = 'scorm_' . $courseid;
         $moduleinfo->introeditor = ['text' => '',
                 'format' => '1', 'itemid' => ''];
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
-
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
-
         if ($moduleinfo->scormtype === SCORM_TYPE_AICCURL) {
             $moduleinfo->packageurl = $this->get_aicc_url($courseid);
         }
@@ -566,7 +585,7 @@ class opensesameapi extends \curl {
         mtrace('calling get_aicc_url');
         global $DB;
         $url = $DB->get_field('tool_opensesame', 'aicclaunchurl', ['courseid' => $courseid], MUST_EXIST);
-        mtrace('$courseid: ' . $courseid . ' $url: ' . $url);
+
         return $url;
     }
 
@@ -585,7 +604,6 @@ class opensesameapi extends \curl {
         $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
         if ($active) {
             $newstatus = 0;
-
         }
         if (!$active) {
             $newstatus = 1;
@@ -609,7 +627,6 @@ class opensesameapi extends \curl {
             $values = array_values(array_filter($values));
 
             foreach ($values as $vkey => $vvalue) {
-
                 $catexist =
                         $DB->record_exists('course_categories', ['name' => $vvalue]);
 
@@ -630,6 +647,5 @@ class opensesameapi extends \curl {
             }
         }
         \context_helper::build_all_paths();
-
     }
 }

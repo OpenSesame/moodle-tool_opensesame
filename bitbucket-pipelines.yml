@@ -16,14 +16,17 @@ definitions:
 pipelines:
   default:
     - step:
-        name: 'Moodle 3.11, PHP 7.4 and MariaDB 10'
+
+        name: 'Moodle 4.1, PHP 7.4 and MariaDB 10'
+
         services:
           - mariadb
         caches:
           - npm
           - composer
         script:
-          - moodle-plugin-ci install --branch='MOODLE_311_STABLE'
+
+          - moodle-plugin-ci install --branch='MOODLE_401_STABLE'
           - moodle-plugin-ci phplint
           - moodle-plugin-ci phpcpd
           - moodle-plugin-ci phpmd
