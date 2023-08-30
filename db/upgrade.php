@@ -101,6 +101,26 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         // Opensesame savepoint reached.
         upgrade_plugin_savepoint(true, 2023013100, 'tool', 'opensesame');
     }
+    if ($oldversion < 2023082900) {
+
+        // Define field status to be added to tool_opensesame.
+        $table = new xmldb_table('tool_opensesame');
+        $field = new xmldb_field('status', XMLDB_TYPE_TEXT, null, null, null, null, null, 'courseid');
+        $field_2 = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
+
+        // Conditionally launch add field status.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Conditionally launch add field timecreated.
+        if (!$dbman->field_exists($table, $field_2)) {
+            $dbman->add_field($table, $field_2);
+        }
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023082900, 'tool', 'opensesame');
+    }
 
     return true;
 }
