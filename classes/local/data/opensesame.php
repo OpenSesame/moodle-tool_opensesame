@@ -56,7 +56,7 @@ class opensesame extends base {
      *
      * @return array
      */
-    protected static function define_properties() {
+    protected static function define_properties(): array {
         return array(
                 'provider' => [
                         'type' => PARAM_TEXT,
@@ -131,10 +131,17 @@ class opensesame extends base {
         );
     }
 
-    // Custom method to retrieve courses by status
-    public static function get_courses_by_status($status) {
+    /**
+     * Retrieve courses by status.
+     *
+     * This method retrieves courses from the 'tool_opensesame' table based on their status.
+     *
+     * @param string $status The status of the courses to retrieve.
+     *
+     * @return \core\recordset\recordset|null A recordset containing the matching courses or null if none found.
+     */
+    public static function get_courses_by_status(string $status): \core\recordset\recordset {
         global $DB;
         return $DB->get_records('tool_opensesame', ['status' => $status]);
     }
-
 }
