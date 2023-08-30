@@ -588,7 +588,8 @@ class opensesameapi extends \curl {
 
         return $url;
     }
-//Todo scorm title needs to be updated to course title _ activity .
+    // TODO: scorm title needs to be updated to course title _ activity .
+
     /**
      * Sets the enrollment methods for each Open-Sesame course
      *

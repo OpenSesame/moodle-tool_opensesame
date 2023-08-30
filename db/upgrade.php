@@ -106,7 +106,7 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         // Define field status to be added to tool_opensesame.
         $table = new xmldb_table('tool_opensesame');
         $field = new xmldb_field('status', XMLDB_TYPE_TEXT, null, null, null, null, null, 'courseid');
-        $field_2 = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
+        $field2 = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
 
         // Conditionally launch add field status.
         if (!$dbman->field_exists($table, $field)) {
@@ -114,8 +114,8 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         }
 
         // Conditionally launch add field timecreated.
-        if (!$dbman->field_exists($table, $field_2)) {
-            $dbman->add_field($table, $field_2);
+        if (!$dbman->field_exists($table, $field2)) {
+            $dbman->add_field($table, $field2);
         }
 
         // Opensesame savepoint reached.
