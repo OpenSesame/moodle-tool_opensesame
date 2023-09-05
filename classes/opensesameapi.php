@@ -22,7 +22,7 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace tool_opensesame;
+namespace tool_opensesame\api;
 
 use context_course;
 use core_course_category;
