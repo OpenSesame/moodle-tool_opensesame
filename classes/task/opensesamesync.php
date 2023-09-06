@@ -16,7 +16,8 @@
 namespace tool_opensesame\task;
 
 use context_course;
-use tool_opensesame\opensesameapi;
+use tool_opensesame\api\opensesame;
+use tool_opensesame\opensesame_handler;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/lib/filelib.php');
@@ -47,18 +48,15 @@ class opensesamesync extends \core\task\scheduled_task {
     /**
      * Scheduled task to initiate Open Sesame API.
      *
-     * @param null $testing
      * @return bool
      * @throws \dml_exception
      */
-    public function execute($testing = null): bool {
+    public function execute(): bool {
 
         mtrace("Opensesame task just started.");
-
-        $opensesameapi = new opensesameapi;
-        $opensesameapi->authenticate();
+        $handler = new opensesame_handler();
+        $handler->retrieve_courses();
         mtrace('opensesame just finished.');
         return true;
     }
 }
-

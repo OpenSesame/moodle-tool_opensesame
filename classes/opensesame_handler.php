@@ -26,9 +26,9 @@
 namespace tool_opensesame;
 
 use completion_info;
-use tool_opensesame\api\opensesameapi;
 use tool_opensesame\local\data\base;
 use tool_opensesame\task\opensesamesync;
+use tool_opensesame\api\opensesame;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -131,56 +131,47 @@ class opensesame_handler {
     }
 
     /**
-     * Executes the data processing functions.
+     * The retrieve_courses function populates the opensesame table with data from the API.
      *
-     * @param altai $api Altai API object.
+     * @param opensesame $api Opensesame API object.
      * Runs the import process.
      */
-    public function run(altai $api = null) {
+    public function retrieve_courses(opensesame $api = null) {
         if (is_null($api)) {
-            $api = new altai($this->authurl, $this->username, $this->password);
+            $api = new opensesame($this->authurl, $this->clientid, $this->clientsecret, $this->customerintegrationid);
+            $course_catalog_data = $api->set_authtoken();
+            file_put_contents("debug.txt", "Inside Retrieved courses. ..$course_catalog_data. \n", FILE_APPEND);        }
+        $this->process_courses($api);
+    }
+
+    /**
+     * The create_courses function creates courses in Moodle.
+     *
+     * @param opensesame $api Opensesame API object.
+     * Runs the import process.
+     */
+    public function create_courses(opensesame $api = null) {
+        if (is_null($api)) {
+            $api = new opensesame($this->authurl, $this->username, $this->password);
         }
+        $this->set_authtoken($api);
         $this->process_events($api);
         $this->process_completions($api);
     }
-
-  
     /**
-     * Process mapping and assign values to the entity.
+     * Executes the data processing functions.
      *
-     * @param mixed $todata
-     * @param mixed $fromdata
-     * @param array $mappings
-     * @param array $transforms
-     * @return string
-     * @throws \coding_exception
+     * @param opensesame $api Opensesame API object.
+     * Runs the import process.
      */
-    private function process_mappings(&$todata, $fromdata, array $mappings, array $transforms = []) {
-        foreach ($mappings as $fromcolumn => $tocolumn) {
-            $attributelevels = explode(',', $fromcolumn);
-            $parententity = $fromdata;
-            foreach ($attributelevels as $attribute) {
-                if (is_object($parententity)) {
-                    try {
-                        $parententity = $parententity->{$attribute};
-                    } catch (\Exception $ex) {
-                        $vars = array_keys(get_object_vars($parententity));
-                        $varsstr = implode(', ', $vars);
-                        throw new \coding_exception("Could not find $attribute in $varsstr");
-                    }
-                }
-            }
-            $value = $parententity;
-            if (isset($transforms[$fromcolumn])) {
-                $transform = $transforms[$fromcolumn];
-                $value = $this->process_data_transform($value, $transform);
-            }
-            $todata->{$tocolumn} = $value;
+    public function run(opensesame $api = null) {
+        if (is_null($api)) {
+            $api = new opensesame($this->authurl, $this->username, $this->password);
         }
-        return '';
+        $this->set_authtoken($api);
+        $this->process_completions($api);
     }
 
 
-    
     
 }

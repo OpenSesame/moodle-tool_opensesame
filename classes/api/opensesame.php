@@ -40,7 +40,7 @@ require_once($CFG->dirroot . '/mod/scorm/lib.php');
  * @copyright 2023 Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class opensesameapi extends \curl {
+class opensesame extends \curl {
 
     /**
      * @var false|mixed|object|string|null
@@ -146,7 +146,96 @@ class opensesameapi extends \curl {
             return true;
         }
     }
+    /**
+     * Get a digest authentication header.
+     *
+     * @return array of authentification headers
+     * @throws \moodle_exception
+     */
+    public function get_authentication_header() {
+        $authcredentials = base64_encode(sprintf('%s:%s', $this->clientid, $this->clientsecret));
+        $header          = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Accept: application/json',
+                sprintf('Authorization: Basic %s', $authcredentials)
+        ];
+        mtrace(json_encode($header));
+        return $header;
+    }
+    /**
+     * Do a GET call.
+     *
+     * @param array $header
+     * @param array $params
+     * @return string JSON String of result.
+     * @throws \moodle_exception
+     */
+    private function get_request( $header = [], $params = []) {
+        $url = $this->authurl;
+        mtrace("Getting this: $url");
+        $this->resetHeader();
+        $header = array_merge($header, $this->get_authentication_header());
 
+        $this->setHeader($header);
+
+        $response = $this->get($url, $params);
+
+        if ($this->get_http_code() !== 200) {
+            throw new \Exception("Could not process GET HTTP request for API URL $url:" . $this->get_http_code());
+        }
+
+        return $response;
+    }
+
+    /**
+     * Do a POST call .
+     *
+     * @param string[] $header
+     * @param string $params
+     * @return string JSON String of result.
+     * @throws \moodle_exception
+     */
+    private function post_request( $header = [], $params = '') {
+        $url = $this->authurl;
+        mtrace("Posting to this: $url");
+
+        $this->resetHeader();
+        $header =  array_merge($header,$this->get_authentication_header());
+        mtrace('post request header ' . json_encode($header));
+        $this->setHeader($header);
+        mtrace('Params = ' . json_encode($params));
+        $response = $this->post($url, $params);
+
+        if ($this->get_http_code() !== 200) {
+            throw new \Exception("Could not process POST HTTP request for API URL $url:" . $this->get_http_code());
+        }
+
+        return $response;
+    }
+
+    /**
+     * Gets course_catalog data from Opensesame.
+     *
+     */
+
+    /** Set the authorization token for Opensesame */
+    public function get_authresponse() {
+
+
+        $response = $this->post_request([],
+                'grant_type=client_credentials&scope=content',
+        );
+        // Write debug information to debug.txt
+        // Get current timestamp
+        mtrace(json_encode($response));
+        return json_decode($response);
+    }
+
+    public function set_authtoken(){
+        $decoded = $this->get_authresponse();
+        mtrace('Store the access token for later retrieval.');
+        $this->accesstoken = $decoded->access_token;
+    }
     /**
      * Create the course request url. This will provide the request to the initial list.
      *
