@@ -52,7 +52,7 @@ class opensesame_course extends base {
     const STATUS_CREATED = 'created';
 
     /** @var string */
-    const STATUS_IMAGE_RETRIEVED = 'imageimported';
+    const STATUS_IMAGE_RETRIEVED = 'imageretrieved';
 
     /** @var string */
     const STATUS_IMAGE_IMPORTED = 'imageimported';
@@ -61,7 +61,7 @@ class opensesame_course extends base {
     const STATUS_SCORM_RETRIEVED = 'scormretrieved';
 
     /** @var string */
-    const STATUS_SCORM_IMPORTED = 'scormretrieved';
+    const STATUS_SCORM_IMPORTED = 'scormimported';
 
     protected static $steps = [
         self::STATUS_RETRIEVED,

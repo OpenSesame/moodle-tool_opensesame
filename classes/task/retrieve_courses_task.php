@@ -18,8 +18,6 @@ namespace tool_opensesame\task;
 use tool_opensesame\local\opensesame_handler;
 
 defined('MOODLE_INTERNAL') || die();
-require_once($CFG->dirroot . '/lib/filelib.php');
-require_once($CFG->dirroot . '/course/lib.php');
 
 /**
  * Scheduled task integrating with OpenSesame API every 24 hours.
@@ -32,7 +30,7 @@ require_once($CFG->dirroot . '/course/lib.php');
  * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class opensesamesync extends \core\task\scheduled_task {
+class retrieve_courses_task extends \core\task\scheduled_task {
 
 
     /**

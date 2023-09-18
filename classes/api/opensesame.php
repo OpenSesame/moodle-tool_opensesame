@@ -135,11 +135,13 @@ class opensesame extends \curl {
                 $response = $this->get_request($resource, $header, $params, $url);
                 if ($response !== false) {
                     break;
+                } else {
+                    sleep(3);
                 }
             } catch (\Exception $ex) {
                 $exception = $ex;
-            } finally {
                 sleep(3);
+            } finally {
                 $attempts += 1;
             }
         } while ($attempts < $maxattempts && $response === false);

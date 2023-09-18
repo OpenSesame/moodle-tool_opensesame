@@ -26,9 +26,11 @@
 
 namespace tool_opensesame\local;
 
+use core_course_category;
 use tool_opensesame\api\opensesame;
 use tool_opensesame\local\data\opensesame_course;
 use tool_opensesame\local\migration_handler;
+use tool_opensesame\task\process_course_task;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -72,6 +74,19 @@ class opensesame_handler extends migration_handler {
         'languages' => self::TRANSFORM_EXTRACT_FIRST,
     ];
 
+    /** @var array */
+    const OS_COURSE_TO_MOODLE_COURSE_MAPPINGS = [
+        'title' => ['shortname', 'fullname'],
+        'idopensesame' => 'idnumber',
+    ];
+
+    /** @var array */
+    const MOODLE_COURSE_DEFAULTS = [
+        'tags' => ['open-sesame'],
+        'enablecompletion' => 1,
+        'completionnotify' => 1,
+    ];
+
     /**
      * Open Sesame API.
      *
@@ -113,15 +128,20 @@ class opensesame_handler extends migration_handler {
         if (is_null($api)) {
             $api = $this->api;
         }
-        $this->retrieve_and_process_opensesame_courses($api);
+        $this->retrieve_and_process_queue_courses($api);
     }
 
-    private function retrieve_and_process_opensesame_courses(opensesame $api) {
+    private function retrieve_and_process_queue_courses(opensesame $api) {
         $nexturl = '';
         $pagesize = 50;
         do {
             $requestdata = $api->get_course_list($pagesize, $nexturl);
             $this->create_opensesame_entities($requestdata->data);
+            // Create categories for later use.
+            foreach ($requestdata->data as $datum) {
+                $this->create_oscategories($datum->categories);
+            }
+            // Next page.
             $nexturl = $requestdata->paging->next;
         } while (!empty($nexturl));
 
@@ -153,12 +173,169 @@ class opensesame_handler extends migration_handler {
     }
 
     /**
-     * Processes retrieved open sesame courses to queue them in adhoc tasks.
+     * Processes a single Open Sesame course until all its steps are processed.s
+     */
+    public function process_single_os_course($id): bool {
+        $oscourse = opensesame_course::get_record([
+            'id' => $id
+        ]);
+        return $this->process_and_log_entity($oscourse, $this->api);
+    }
+
+    /**
+     * Processes open sesame course entity.
      * @param opensesame_course $oscourse
      * @param opensesame $api
      * @return string Error message or empty
      */
-    protected function process_retrieved_to_queued(opensesame_course &$oscourse, opensesame $api): string {
+    public function process_retrieved_to_queued(opensesame_course &$oscourse, opensesame $api): string {
+        process_course_task::queue_task($oscourse->id);
+        return '';
+    }
+
+
+    /**
+     * Processes open sesame course entity.
+     * @param opensesame_course $oscourse
+     * @param opensesame $api
+     * @return string Error message or empty
+     */
+    public function process_queued_to_created(opensesame_course &$oscourse, opensesame $api): string {
+        global $DB;
+        $coursedata = (object) self::MOODLE_COURSE_DEFAULTS;
+        $this->process_mappings($coursedata, $oscourse, self::OS_COURSE_TO_MOODLE_COURSE_MAPPINGS);
+        // Remaining, non-mappable data.
+        $coursedata->summary = "<p>{$oscourse->descriptiontext}</p>";
+        $coursedata->summaryformat = FORMAT_HTML;
+        if (!empty($oscourse->descriptionhtml)) {
+            $coursedata->summary = $oscourse->descriptionhtml;
+        }
+        $coursedata->summary = $oscourse->descriptiontext;
+        $coursedata->summary .= "<br>Publisher Name: {$oscourse->publishername}<br>Duration: {$oscourse->duration}";
+        $coursedata->category = $this->extract_category_id_from_os_string(
+            $oscourse->oscategories
+        );
+        $courseid = $DB->get_field('course', 'id', ['idnumber' => $coursedata->idnumber]);
+        if (empty($courseid)) {
+            $course = create_course($coursedata);
+            $courseid = $course->id;
+        } else {
+            $coursedata->id = $courseid;
+            update_course($coursedata);
+        }
+        $oscourse->courseid = $courseid;
+        return '';
+    }
+
+
+    /**
+     * Processes open sesame course entity.
+     * @param opensesame_course $oscourse
+     * @param opensesame $api
+     * @return string Error message or empty
+     */
+    public function process_created_to_imageretrieved(opensesame_course &$oscourse, opensesame $api): string {
         return 'Not implemented';
+    }
+
+
+    /**
+     * Processes open sesame course entity.
+     * @param opensesame_course $oscourse
+     * @param opensesame $api
+     * @return string Error message or empty
+     */
+    public function process_imageretrieved_to_imageimported(opensesame_course &$oscourse, opensesame $api): string {
+        return 'Not implemented';
+    }
+
+
+    /**
+     * Processes open sesame course entity.
+     * @param opensesame_course $oscourse
+     * @param opensesame $api
+     * @return string Error message or empty
+     */
+    public function process_imageimported_to_scormretrieved(opensesame_course &$oscourse, opensesame $api): string {
+        return 'Not implemented';
+    }
+
+
+    /**
+     * Processes open sesame course entity.
+     * @param opensesame_course $oscourse
+     * @param opensesame $api
+     * @return string Error message or empty
+     */
+    public function process_scormretrieved_to_scormimported(opensesame_course &$oscourse, opensesame $api): string {
+        return 'Not implemented';
+    }
+
+    /**
+     * Creates Moodle categories based on Open-Sesame course categories.
+     *
+     * @param object $osrecord
+     * @return void
+     * @throws \dml_exception
+     * @throws \moodle_exception
+     */
+    public function create_oscategories(array $oscategories): void {
+        global $DB;
+
+        foreach ($oscategories as $value) {
+            $values = explode('|', $value);
+            $values = array_values(array_filter($values));
+
+            foreach ($values as $vkey => $vvalue) {
+                $catexist =
+                        $DB->record_exists('course_categories', ['name' => $vvalue]);
+
+                if ($vkey === 0 && $catexist !== true) {
+                    $data = new \stdClass();
+                    $data->name = $vvalue;
+                    core_course_category::create($data);
+                }
+
+                if ($vkey !== 0 && $catexist !== true) {
+                    $data = new \stdClass();
+                    $data->name = $vvalue;
+                    $name = $values[$vkey - 1];
+                    $parentid = $DB->get_field('course_categories', 'id', ['name' => $name]);
+                    $data->parent = $parentid;
+                    core_course_category::create($data);
+                }
+            }
+        }
+        \context_helper::build_all_paths();
+    }
+
+    private function extract_category_id_from_os_string($stringcategories) {
+        global $DB;
+        // PHP compare  each array elements choose the element that has the most items in it.
+        $result = [];
+        $string = $stringcategories;
+
+        $firstdimension = explode(',', $string); // Divide by , symbol.
+        foreach ($firstdimension as $temp) {
+            // Take each result of division and explode it by , symbol and save to result.
+            $pos = strpos($temp, '|');
+            if ($pos !== false) {
+                $newtemp = substr_replace($temp, '', $pos, strlen('|'));
+                $newtemp = trim($newtemp);
+            }
+
+            $result[] = explode('|', $newtemp);
+        }
+        $targetcategory = '';
+
+        foreach ($result as $r) {
+            $maxcount = 0;
+            $items = count($r);
+            if ($items > $maxcount) {
+                $targetcategory = $r[$items - 1];
+            }
+        }
+
+        return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
     }
 }

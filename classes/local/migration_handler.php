@@ -28,7 +28,7 @@ abstract class migration_handler {
      * @param mixed $api
      * @param array $endstatus
      */
-    public function process_and_log_entities($entities, \curl $api, $endstatus = []) {
+    protected function process_and_log_entities($entities, \curl $api, $endstatus = []) {
         foreach ($entities as $entity) {
             $this->process_and_log_entity($entity, $api, $endstatus);
         }
@@ -39,32 +39,36 @@ abstract class migration_handler {
      * @param base $entity
      * @param mixed $api
      * @param array $endstatus
+     * @return bool true if successful
      */
-    private function process_and_log_entity(base &$entity, $api, $endstatus = []): void {
+    protected function process_and_log_entity(base &$entity, $api, $endstatus = []): bool {
         $entityname = $this->get_entity_name($entity);
+        $success = true;
         if (empty($endstatus)) {
             $laststep = $entity->get_last_step();
             if ($laststep === false) {
-                return;
+                return false;
             }
             $endstatus = [$laststep => true];
         }
         try {
             $message = '';
-            while (
-                    !isset($endstatus[$entity->status])
-                    && empty($message)) {
+            while (!isset($endstatus[$entity->status])
+                   && empty($message)) {
                 $message = $this->process_step($entity, $api);
             }
 
             if (!empty($message)) {
+                $success = false;
                 mtrace("[ERROR][$entityname] Processing of $entityname with ID {$entity->id} halted/skipped: " . $message);
             }
         } catch (\Exception $ex) {
+            $success = false;
             mtrace("[ERROR][$entityname] Error processing $entityname with ID {$entity->id}");
             mtrace($ex->getMessage());
             mtrace($ex->getTraceAsString());
         }
+        return $success;
     }
 
     /**
@@ -97,7 +101,15 @@ abstract class migration_handler {
                 $transform = $transforms[$fromcolumn];
                 $value = $this->process_data_transform($value, $transform);
             }
-            $todata->{$tocolumn} = $value;
+
+            if (!is_array($tocolumn)) {
+                $todata->{$tocolumn} = $value;
+            } else {
+                foreach ($tocolumn as $column) {
+                    $todata->{$column} = $value;
+                }
+            }
+
         }
         return '';
     }

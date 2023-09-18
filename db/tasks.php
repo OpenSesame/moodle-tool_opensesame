@@ -27,15 +27,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
-
     [
-        'classname' => 'tool_opensesame\task\opensesamesync',
+        'classname' => tool_opensesame\task\retrieve_courses_task::class,
         'blocking' => 0,
-        'minute' => '*',
-        'hour' => 'R',
+        'minute' => '0',
+        'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
     ],
-
 ];
