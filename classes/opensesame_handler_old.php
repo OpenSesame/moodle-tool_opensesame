@@ -20,6 +20,7 @@
  * @package    tool_opensesame
  * @copyright  2023 Moodle US
  * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -48,7 +49,7 @@ require_once($CFG->dirroot . '/grade/querylib.php');
  * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class opensesame_handler {
+class opensesame_handler_old {
 
     /** @var array */
     const OSCOURSE_TO_MCOURSE_MAPPING = [

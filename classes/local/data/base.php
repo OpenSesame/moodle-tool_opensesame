@@ -17,7 +17,9 @@
 /**
  * A base persistence class.
  *
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @package    tool_opensesame
  */
@@ -29,18 +31,23 @@ use core\persistent;
 /**
  * A base persistence class.
  *
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @package    tool_opensesame
  * @property int $id
  * @property int $usermodified
  * @property int $timecreated
  * @property int $timemodified
+ * @property array $steps
  */
 abstract class base extends persistent {
 
     /** @var static[][] Array of static instances. */
     protected static $instances = [];
+
+    protected static $steps = [];
 
     /**
      * Get a statically cached instance of this object.
@@ -169,6 +176,7 @@ abstract class base extends persistent {
                 mtrace("[ERROR][$classname] Error saving the entity ");
                 foreach ($errors as $field => $message) {
                     mtrace("[ERROR][$classname][$field] $message");
+                    mtrace("[ERROR][$classname][$field] Value: " . $this->{$field});
                 }
             }
         }
@@ -180,5 +188,44 @@ abstract class base extends persistent {
     public function mtrace_errors_save() {
         $this->mtrace_validation_errors();
         $this->save();
+    }
+
+    /**
+     * @return array
+     */
+    public static function get_steps(): array {
+        return static::$steps;
+    }
+
+    /**
+     * @return string|bool
+     */
+    public function get_next_step(string $step): string | bool {
+        $stepindex = array_search($step, static::$steps);
+        $size = count(static::$steps);
+        if ($stepindex !== false && $stepindex < $size) {
+            return static::$steps[$stepindex + 1];
+        }
+        return false;
+    }
+
+    /**
+     * @return string|bool
+     */
+    public function get_first_step(): string | bool {
+        if (!empty(static::$steps)) {
+            return reset(static::$steps);
+        }
+        return false;
+    }
+
+    /**
+     * @return string|bool
+     */
+    public function get_last_step(): string | bool {
+        if (!empty(static::$steps)) {
+            return end(static::$steps);
+        }
+        return false;
     }
 }
