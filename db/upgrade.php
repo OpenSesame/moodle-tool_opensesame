@@ -129,7 +129,7 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
 
         $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
         // Conditionally launch add index status.
-        if (!$dbman->index_exists($table, $index)) {
+        if ($dbman->index_exists($table, $index)) {
             $dbman->drop_index($table, $index);
         }
 
