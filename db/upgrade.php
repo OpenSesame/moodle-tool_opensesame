@@ -127,6 +127,12 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
     if ($oldversion < 2023082903) {
         $DB->delete_records('tool_opensesame');
 
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+        // Conditionally launch add index status.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
         // Define key courseid (foreign) to be added to tool_opensesame.
         $table = new xmldb_table('tool_opensesame');
         $key = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
