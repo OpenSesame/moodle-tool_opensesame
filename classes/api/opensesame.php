@@ -61,6 +61,10 @@ class opensesame extends \curl {
     /**
      * Constructor.
      * @param string $apiurl
+     * @param string $clientsecret
+     * @param string $customerintegrationid
+     * @param string $baseurl
+     * @param int $retries
      * @param array $settings
      * @throws \moodle_exception
      */
@@ -125,6 +129,15 @@ class opensesame extends \curl {
         return $response;
     }
 
+    /**
+     * Executes a GET request with a specific set of retry attempts.
+     * If 200 code is not achieved, it will retry until exhausting the allowed amount.
+     * @param string $resource
+     * @param array $header
+     * @param array $params
+     * @param string $url
+     * @return string
+     */
     private function get_request_retries($resource, $header = [], $params = [], $url = '') {
         $maxattempts = $this->retries;
         $attempts = 0;
@@ -254,6 +267,7 @@ class opensesame extends \curl {
     /**
      * Downloads a scorm package and saves it in a temporary directory.
      * @param string $downloadurl
+     * @param string $filename
      * @return string
      * @throws \Exception
      */

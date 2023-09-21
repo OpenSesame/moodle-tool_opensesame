@@ -17,8 +17,6 @@ namespace tool_opensesame\task;
 
 use tool_opensesame\local\opensesame_handler;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Scheduled task integrating with OpenSesame API every 24 hours.
  *

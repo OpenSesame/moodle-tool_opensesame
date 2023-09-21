@@ -29,12 +29,6 @@
 
 namespace tool_opensesame\local\data;
 
-use core\persistent;
-use core_user;
-use lang_string;
-
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Opensesame Persistent Entity Class.
  *
@@ -77,6 +71,7 @@ class opensesame_course extends base {
     /** @var string */
     const STATUS_SCORM_IMPORTED = 'scormimported';
 
+    /** @var string[] Array of steps. */
     protected static $steps = [
         self::STATUS_RETRIEVED,
         self::STATUS_QUEUED,

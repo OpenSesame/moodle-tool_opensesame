@@ -27,7 +27,6 @@
 namespace tool_opensesame\local;
 
 use context_course;
-use context_course;
 use core_course_category;
 use tool_opensesame\api\opensesame;
 use tool_opensesame\auto_config;
@@ -133,7 +132,12 @@ class opensesame_handler extends migration_handler {
         $this->retrieve_and_process_queue_courses($api);
     }
 
-    private function retrieve_and_process_queue_courses(opensesame $api) {
+    /**
+     * Retrieves all courses from Open Sesame and queues them for individual
+     * processing by ad-hoc tasks.
+     * @param opensesame $api
+     */
+    private function retrieve_and_process_queue_courses(opensesame $api): void {
         $nexturl = '';
         $pagesize = 50;
         do {
@@ -155,8 +159,12 @@ class opensesame_handler extends migration_handler {
         ]);
     }
 
-    private function create_opensesame_entities($records) {
-        $entities = [];
+    /**
+     * Creates open sesame courses for an array of open sesame data records
+     * retrieved from their API.
+     * @param array $records
+     */
+    private function create_opensesame_entities(array $records): void {
         foreach ($records as $record) {
             $existingoscourse = opensesame_course::get_record([
                 'idopensesame' => $record->id,
@@ -169,13 +177,12 @@ class opensesame_handler extends migration_handler {
                 self::REMOTE_COURSE_TO_OS_COURSE_MAPPINGS,
                 self::REMOTE_COURSE_TRANSFORMS);
             $oscourse->mtrace_errors_save();
-            $entities[] = $oscourse;
         }
-        return $entities;
     }
 
     /**
-     * Processes a single Open Sesame course until all its steps are processed.s
+     * Processes a single Open Sesame course until all its steps are processed.
+     * @return bool true if successful.
      */
     public function process_single_os_course($id): bool {
         $oscourse = opensesame_course::get_record([
@@ -273,21 +280,19 @@ class opensesame_handler extends migration_handler {
      * @return string Error message or empty
      */
     public function process_imageimported_to_scormimported(opensesame_course &$oscourse, opensesame $api): string {
-        $downloadurl = $oscourse->packagedownloadurl;
         $courseid = $oscourse->courseid;
         $allowedtype = get_config('tool_opensesame', 'allowedtypes');
 
         if ($allowedtype == SCORM_TYPE_LOCAL) {
-            $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api);
-        }
-        if ($allowedtype == SCORM_TYPE_AICCURL) {
+            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api);
+        } else { // AICC type.
             // Ensure that Admin settings are set to support AICC Launch Urls.
             $config = new auto_config();
             $config->configure();
-            $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api);
+            $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api);
         }
 
-        return '';
+        return $message;
     }
 
     /**
@@ -299,6 +304,12 @@ class opensesame_handler extends migration_handler {
         return 'opensesame_package_' . $courseid . '.zip';
     }
 
+    /**
+     * Downloads an Open Sesame Scorm package for a given URL and associates it to a SCORM activity in a course.
+     * @param string $downloadurl
+     * @param int $courseid
+     * @param opensesame $api
+     */
     private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api) {
         // Download file.
         $filename = $this->generate_os_package_filename($courseid);
@@ -321,11 +332,10 @@ class opensesame_handler extends migration_handler {
         // Create a new user draft file from mod_scorm package.
         // Get an unused draft itemid which will be used.
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
-        mtrace('[INFO] Created draft item id: ' . $draftitemid);
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
         get_fast_modinfo($courseid);
-        $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
+        return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
     }
 
     /**
@@ -347,11 +357,6 @@ class opensesame_handler extends migration_handler {
         require_once($CFG->dirroot . '/completion/criteria/completion_criteria.php');
 
         $course = get_course($courseid);
-        // Get course.
-        // $course = $DB->get_record('course', ['id' => $courseid]);
-        // Check course for modules.
-
-        $modscorm = $DB->get_field('modules', 'id', ['name' => 'scorm']);
         $modinfo = get_fast_modinfo($course);
         $instances = $modinfo->get_instances_of('scorm');
         $cmid = null;
@@ -418,7 +423,6 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->name = 'scorm_' . $courseid;
         $moduleinfo->introeditor = ['text' => '',
             'format' => '1', 'itemid' => '0'];
-        // $moduleinfo->introeditor = [];
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
@@ -488,6 +492,7 @@ class opensesame_handler extends migration_handler {
 
     /**
      * Extracts the category id associated with the category string.
+     * @return int The category id.
      */
     private function extract_category_id_from_os_string($stringcategories) {
         global $DB;
@@ -517,20 +522,6 @@ class opensesame_handler extends migration_handler {
         }
 
         return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
-    }
-
-    /**
-     * Sets the enrollment methods for each Open-Sesame course
-     *
-     * @param int $courseid
-     * @param bool $active
-     * @return void
-     * @throws \dml_exception
-     */
-    private function set_self_enrollment(int $courseid, bool $active): void {
-        global $DB;
-        $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
-        enrol_get_plugin($instance->enrol)->update_status($instance, $active ? 1 : 0);
     }
 
     /**

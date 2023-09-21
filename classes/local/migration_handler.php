@@ -1,14 +1,49 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Generic migration handler utility class.
+ *
+ * @package    tool_opensesame
+ * @copyright  2023 Moodle US
+ * @author     David Castro <david.castro@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace tool_opensesame\local;
 
 use tool_opensesame\local\data\base;
 
+/**
+ * Generic migration handler utility class.
+ *
+ * @package    tool_opensesame
+ * @copyright  2023 Moodle US
+ * @author     David Castro <david.castro@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class migration_handler {
 
+    /** @var string Date transform. Used to convert a string to a unix timestapm. */
     const TRANSFORM_DATE = 'date';
 
+    /** @var string Comma implode transform. Converts an array to a comma separated string. */
     const TRANSFORM_COMMA_IMPLODE = 'commaimplode';
+
+    /** @var string Extract first transform. Extracts the first value from an array. */
 
     const TRANSFORM_EXTRACT_FIRST = 'extractfirst';
 
@@ -41,7 +76,7 @@ abstract class migration_handler {
      * @param array $endstatus
      * @return bool true if successful
      */
-    protected function process_and_log_entity(base &$entity, $api, $endstatus = []): bool {
+    protected function process_and_log_entity(base &$entity, $api, array $endstatus = []): bool {
         $entityname = $this->get_entity_name($entity);
         $success = true;
         if (empty($endstatus)) {

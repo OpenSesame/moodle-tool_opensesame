@@ -47,6 +47,7 @@ abstract class base extends persistent {
     /** @var static[][] Array of static instances. */
     protected static $instances = [];
 
+    /** @var string[] Array of steps. */
     protected static $steps = [];
 
     /**
@@ -172,7 +173,8 @@ abstract class base extends persistent {
     public function mtrace_validation_errors() {
         if (defined('CLI_SCRIPT')) {
             if (!empty($errors = $this->get_errors())) {
-                $classname = get_class($this);
+                $classparts = explode('\\', get_class($this));
+                $classname  = end($classparts);
                 mtrace("[ERROR][$classname] Error saving the entity ");
                 foreach ($errors as $field => $message) {
                     mtrace("[ERROR][$classname][$field] $message");
@@ -198,9 +200,11 @@ abstract class base extends persistent {
     }
 
     /**
+     * Gets the step identifier that follows a given step.
+     * @param string $step
      * @return string|bool
      */
-    public function get_next_step(string $step): string | bool {
+    public function get_next_step(string $step) {
         $stepindex = array_search($step, static::$steps);
         $size = count(static::$steps);
         if ($stepindex !== false && $stepindex < ($size - 1)) {
@@ -210,6 +214,7 @@ abstract class base extends persistent {
     }
 
     /**
+     * Gets the first step identifier.
      * @return string|bool
      */
     public function get_first_step(): string | bool {
@@ -220,6 +225,7 @@ abstract class base extends persistent {
     }
 
     /**
+     * Gets the last step identifier.
      * @return string|bool
      */
     public function get_last_step(): string | bool {
