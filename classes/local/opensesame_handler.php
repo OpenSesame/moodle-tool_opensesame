@@ -26,10 +26,11 @@
 
 namespace tool_opensesame\local;
 
+use context_course;
 use core_course_category;
 use tool_opensesame\api\opensesame;
+use tool_opensesame\auto_config;
 use tool_opensesame\local\data\opensesame_course;
-use tool_opensesame\local\migration_handler;
 use tool_opensesame\task\process_course_task;
 
 defined('MOODLE_INTERNAL') || die();
@@ -199,6 +200,9 @@ class opensesame_handler extends migration_handler {
      * @param opensesame_course $oscourse
      * @param opensesame $api
      * @return string Error message or empty
+     * @throws \coding_exception
+     * @throws \dml_exception
+     * @throws \moodle_exception
      */
     public function process_queued_to_created(opensesame_course &$oscourse, opensesame $api): string {
         global $DB;
@@ -224,6 +228,7 @@ class opensesame_handler extends migration_handler {
             update_course($coursedata);
         }
         $oscourse->courseid = $courseid;
+        $this->set_self_enrollment($courseid, $oscourse->active);
         return '';
     }
 
@@ -233,11 +238,28 @@ class opensesame_handler extends migration_handler {
      * @param opensesame_course $oscourse
      * @param opensesame $api
      * @return string Error message or empty
+     * @throws \file_exception
      */
-    public function process_created_to_imageretrieved(opensesame_course &$oscourse, opensesame $api): string {
-        return 'Not implemented';
+    public function process_created_to_imageimported(opensesame_course &$oscourse, opensesame $api): string {
+        $thumbnailurl = $oscourse->thumbnailurl;
+        $courseid = $oscourse->courseid;
+        $context = context_course::instance($courseid);
+        $fileinfo = [
+            'contextid' => $context->id,    // ID of the context.
+            'component' => 'course',        // Your component name.
+            'filearea'  => 'overviewfiles', // Usually = table name.
+            'itemid'    => 0,               // Usually = ID of row in table.
+            'filepath'  => '/',             // Any path beginning and ending in /.
+            'filename'  => 'courseimage_' . $courseid . '.jpg',   // Any filename.
+        ];
+        // Create course image.
+        $fs = get_file_storage();
+        // Make sure there is not an image file to prevent an image file conflict.
+        $fs->delete_area_files($context->id, 'course', 'overviewfiles', 0);
+        // Create a new file containing the text 'hello world'.
+        $fs->create_file_from_url($fileinfo, $thumbnailurl);
+        return '';
     }
-
 
     /**
      * Processes open sesame course entity.
@@ -245,30 +267,177 @@ class opensesame_handler extends migration_handler {
      * @param opensesame $api
      * @return string Error message or empty
      */
-    public function process_imageretrieved_to_imageimported(opensesame_course &$oscourse, opensesame $api): string {
-        return 'Not implemented';
+    public function process_imageimported_to_scormimported(opensesame_course &$oscourse, opensesame $api): string {
+        $downloadurl = $oscourse->packagedownloadurl;
+        $courseid = $oscourse->courseid;
+        $allowedtype = get_config('tool_opensesame', 'allowedtypes');
+
+        if ($allowedtype == SCORM_TYPE_LOCAL) {
+            $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api);
+        }
+        if ($allowedtype == SCORM_TYPE_AICCURL) {
+            // Ensure that Admin settings are set to support AICC Launch Urls.
+            $config = new auto_config();
+            $config->configure();
+            $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api);
+        }
+
+        return '';
     }
 
-
     /**
-     * Processes open sesame course entity.
-     * @param opensesame_course $oscourse
-     * @param opensesame $api
-     * @return string Error message or empty
+     * Generates a file name for a downloaded package.
+     * @param int $courseid
+     * @return string
      */
-    public function process_imageimported_to_scormretrieved(opensesame_course &$oscourse, opensesame $api): string {
-        return 'Not implemented';
+    private function generate_os_package_filename(int $courseid): string {
+        return 'opensesame_package_' . $courseid . '.zip';
     }
 
+    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api) {
+        // Download file.
+        $filename = $this->generate_os_package_filename($courseid);
+        $path = $api->download_scorm_package($downloadurl, $filename);
+        // Create a file from temporary folder in the user file draft area.
+        $context = context_course::instance($courseid);
+        $fs = get_file_storage();
+        $fileinfo = [
+            'contextid' => $context->id,
+            'component' => 'mod_scorm',
+            'filearea'  => 'package',
+            'itemid'    => 0,
+            'filepath'  => '/',
+            'filename'  => $filename,
+        ];
+        // Clear file area.
+        $fs->delete_area_files($context->id, 'mod_scorm', 'package', 0);
+        // Create a new file scorm.zip package inside of course.
+        $fs->create_file_from_pathname($fileinfo, $path);
+        // Create a new user draft file from mod_scorm package.
+        // Get an unused draft itemid which will be used.
+        $draftitemid = file_get_submitted_draft_itemid('packagefile');
+        mtrace('[INFO] Created draft item id: ' . $draftitemid);
+        // Copy the existing files which were previously uploaded into the draft area.
+        file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
+        get_fast_modinfo($courseid);
+        $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
+    }
 
     /**
-     * Processes open sesame course entity.
-     * @param opensesame_course $oscourse
-     * @param opensesame $api
-     * @return string Error message or empty
+     * Creates the moduleinfo to create scorm module.
+     *
+     * @param int $courseid
+     * @param int $draftitemid
+     * @param string $downloadurl
+     * @return string
+     * @throws \coding_exception
+     * @throws \dml_exception
+     * @throws \moodle_exception
      */
-    public function process_scormretrieved_to_scormimported(opensesame_course &$oscourse, opensesame $api): string {
-        return 'Not implemented';
+    public function create_course_scorm_mod(int $courseid, int $draftitemid, string $downloadurl): string {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/course/modlib.php');
+        require_once($CFG->dirroot . '/course/format/lib.php');
+        require_once($CFG->dirroot . '/mod/scorm/mod_form.php');
+        require_once($CFG->dirroot . '/completion/criteria/completion_criteria.php');
+
+        $course = get_course($courseid);
+        // Get course.
+        // $course = $DB->get_record('course', ['id' => $courseid]);
+        // Check course for modules.
+
+        $modscorm = $DB->get_field('modules', 'id', ['name' => 'scorm']);
+        $modinfo = get_fast_modinfo($course);
+        $instances = $modinfo->get_instances_of('scorm');
+        $cmid = null;
+        if (!empty($instances)) {
+            if (count($instances) > 1) {
+                return "Course with id {$courseid} has multiple scorm activities, please delete them.";
+            }
+            $cmid = $instances[0]->id;
+        }
+        // Found a course module scorm for this course update the activity.
+        if (!is_null($cmid)) {
+            // Check the course module exists.
+            $cm = get_coursemodule_from_id('', $cmid, 0, false, MUST_EXIST);
+            [$cm, $context, $module, $data, $cw] = get_moduleinfo_data($cm, $course);
+            $data->return = 0;
+            $data->sr = 0;
+            $data->update = $cmid;
+            $moduleinfo = $this->build_scorm_modinfo(
+                $downloadurl, $courseid, $draftitemid, $module, '0', 0, $cmid, $cm->instance, $cm->id);
+            update_moduleinfo($cm, $moduleinfo, $course);
+        } else {
+            // Create top course section.
+            $add = 'scorm';
+            $section = 0;
+            $courseformat = course_get_format($course);
+            $maxsections = $courseformat->get_max_sections();
+            if ($maxsections === 0) {
+                throw new \moodle_exception('maxsectionslimit', 'moodle', '', $maxsections);
+            }
+            [$module, $context, $cw, $cm, $data] = prepare_new_moduleinfo_data($course, $add, $section);
+            $data->return = 0;
+            $data->sr = 0;
+            $data->add = $add;
+            $moduleinfo = $this->build_scorm_modinfo(
+                $downloadurl, $courseid, $draftitemid, $module, $add, $section);
+            add_moduleinfo($moduleinfo, $course);
+        }
+        return '';
+    }
+
+    /**
+     * Builds the scorm module info object.
+     *
+     * @param string $downloadurl
+     * @param int $courseid
+     * @param int $draftitemid
+     * @param object $mod
+     * @param string $add updating this value should be = '0' when creating new mod this value should be = 'scorm'
+     * @param int $section
+     * @param null|int $updt
+     * @param string|null $instance
+     * @param null|int $cm = $cmid when creating a new mod this value should be = NULL
+     * @return \stdClass
+     * @throws \dml_exception
+     */
+    private function build_scorm_modinfo(string $downloadurl, int $courseid, int $draftitemid, object $mod, string $add = '0',
+                                         int $section = 0, int $updt = null, string $instance = null, int $cm = null
+    ): \stdClass {
+        global $CFG;
+        $moduleinfo = new \stdClass();
+        $moduleinfo->name = 'scorm_' . $courseid;
+        $moduleinfo->introeditor = ['text' => '',
+            'format' => '1', 'itemid' => '0'];
+        // $moduleinfo->introeditor = [];
+        $moduleinfo->showdescription = 0;
+        $moduleinfo->mform_isexpanded_id_packagehdr = 1;
+        require_once($CFG->dirroot . '/mod/scorm/lib.php');
+        $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
+        if ($moduleinfo->scormtype == SCORM_TYPE_AICCURL) {
+            $moduleinfo->packageurl = $downloadurl;
+        }
+        $moduleinfo->packagefile = $draftitemid;
+        // Update frequency is daily.
+        $moduleinfo->updatefreq = 2;
+        $moduleinfo->popup = 0;
+        $moduleinfo->width = 100;
+        $moduleinfo->height = 500;
+        $moduleinfo->course = $courseid;
+        $moduleinfo->module = $mod->id;
+        $moduleinfo->modulename = $mod->name;
+        $moduleinfo->visible = $mod->visible;
+        $moduleinfo->add = $add;
+        $moduleinfo->coursemodule = $cm;
+        $moduleinfo->cmidnumber = null;
+        $moduleinfo->section = $section;
+        $moduleinfo->displayattemptstatus = 1;
+        $moduleinfo->completionstatusrequired = COMPLETION_CRITERIA_TYPE_ACTIVITY;
+        $moduleinfo->completion = COMPLETION_CRITERIA_TYPE_DATE;
+        $moduleinfo->completionview = 1;
+        $moduleinfo->instance = $instance;
+        return $moduleinfo;
     }
 
     /**
@@ -309,6 +478,9 @@ class opensesame_handler extends migration_handler {
         \context_helper::build_all_paths();
     }
 
+    /**
+     * Extracts the category id associated with the category string.
+     */
     private function extract_category_id_from_os_string($stringcategories) {
         global $DB;
         // PHP compare  each array elements choose the element that has the most items in it.
@@ -337,5 +509,19 @@ class opensesame_handler extends migration_handler {
         }
 
         return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
+    }
+
+    /**
+     * Sets the enrollment methods for each Open-Sesame course
+     *
+     * @param int $courseid
+     * @param bool $active
+     * @return void
+     * @throws \dml_exception
+     */
+    private function set_self_enrollment(int $courseid, bool $active): void {
+        global $DB;
+        $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
+        enrol_get_plugin($instance->enrol)->update_status($instance, $active ? 1 : 0);
     }
 }

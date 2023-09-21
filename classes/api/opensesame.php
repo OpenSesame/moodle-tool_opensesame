@@ -189,7 +189,7 @@ class opensesame extends \curl {
      * @return array of authentification headers
      * @throws \moodle_exception
      */
-    public function get_authentication_header() {
+    public function get_authentication_header(): array {
         $token = $this->get_accesstoken();
         if (empty($token)) {
             return [];
@@ -249,5 +249,22 @@ class opensesame extends \curl {
         );
 
         return json_decode($response);
+    }
+
+    /**
+     * Downloads a scorm package and saves it in a temporary directory.
+     * @param string $downloadurl
+     * @return string
+     * @throws \Exception
+     */
+    public function download_scorm_package(string $downloadurl, string $filename): string {
+        $tempdir = make_request_directory();
+        $path = "{$tempdir}/{$filename}";
+        $res = download_file_content(
+            $downloadurl, $this->get_authentication_header(), null, false, 320, 20, false, $path);
+        if ($res === false) {
+            throw new \Exception("Could not download file from URL: $downloadurl");
+        }
+        return $path;
     }
 }
