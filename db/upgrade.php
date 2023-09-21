@@ -133,12 +133,6 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         // Launch add key courseid.
         $dbman->add_key($table, $key);
 
-        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
-        // Conditionally launch add index status.
-        if (!$dbman->index_exists($table, $index)) {
-            $dbman->add_index($table, $index);
-        }
-
         // Changing nullability and type of field status on table tool_opensesame to not null.
         $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'retrieved');
 
@@ -148,6 +142,12 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
         $dbman->change_field_type($table, $field);
         // Launch change of default for field status.
         $dbman->change_field_default($table, $field);
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+        // Conditionally launch add index status.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
 
         // Opensesame savepoint reached.
         upgrade_plugin_savepoint(true, 2023082903, 'tool', 'opensesame');
