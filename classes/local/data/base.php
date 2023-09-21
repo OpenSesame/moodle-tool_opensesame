@@ -193,6 +193,7 @@ abstract class base extends persistent {
     }
 
     /**
+     * Retrieves the list of steps.
      * @return array
      */
     public static function get_steps(): array {
@@ -217,7 +218,7 @@ abstract class base extends persistent {
      * Gets the first step identifier.
      * @return string|bool
      */
-    public function get_first_step(): string | bool {
+    public function get_first_step(): string {
         if (!empty(static::$steps)) {
             return reset(static::$steps);
         }

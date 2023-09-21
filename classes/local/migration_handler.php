@@ -44,7 +44,6 @@ abstract class migration_handler {
     const TRANSFORM_COMMA_IMPLODE = 'commaimplode';
 
     /** @var string Extract first transform. Extracts the first value from an array. */
-
     const TRANSFORM_EXTRACT_FIRST = 'extractfirst';
 
     /**
@@ -60,7 +59,7 @@ abstract class migration_handler {
     /**
      * Process an array of entities.
      * @param array|\Generator $entities
-     * @param mixed $api
+     * @param \curl $api
      * @param array $endstatus
      */
     protected function process_and_log_entities($entities, \curl $api, $endstatus = []) {

@@ -182,6 +182,7 @@ class opensesame_handler extends migration_handler {
 
     /**
      * Processes a single Open Sesame course until all its steps are processed.
+     * @param int $id
      * @return bool true if successful.
      */
     public function process_single_os_course($id): bool {
@@ -455,7 +456,7 @@ class opensesame_handler extends migration_handler {
     /**
      * Creates Moodle categories based on Open-Sesame course categories.
      *
-     * @param object $osrecord
+     * @param array $oscategories
      * @return void
      * @throws \dml_exception
      * @throws \moodle_exception
@@ -492,6 +493,7 @@ class opensesame_handler extends migration_handler {
 
     /**
      * Extracts the category id associated with the category string.
+     * @param string $stringcategories
      * @return int The category id.
      */
     private function extract_category_id_from_os_string($stringcategories) {
