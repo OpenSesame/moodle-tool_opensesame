@@ -60,7 +60,8 @@ class opensesame extends \curl {
 
     /**
      * Constructor.
-     * @param string $apiurl
+     * @param string $authurl
+     * @param string $clientid
      * @param string $clientsecret
      * @param string $customerintegrationid
      * @param string $baseurl

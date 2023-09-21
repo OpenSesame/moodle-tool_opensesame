@@ -218,7 +218,7 @@ abstract class base extends persistent {
      * Gets the first step identifier.
      * @return string|bool
      */
-    public function get_first_step(): string {
+    public function get_first_step() {
         if (!empty(static::$steps)) {
             return reset(static::$steps);
         }
@@ -229,7 +229,7 @@ abstract class base extends persistent {
      * Gets the last step identifier.
      * @return string|bool
      */
-    public function get_last_step(): string | bool {
+    public function get_last_step() {
         if (!empty(static::$steps)) {
             return end(static::$steps);
         }
