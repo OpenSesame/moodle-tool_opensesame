@@ -27,6 +27,7 @@
 namespace tool_opensesame\local;
 
 use context_course;
+use context_course;
 use core_course_category;
 use tool_opensesame\api\opensesame;
 use tool_opensesame\auto_config;
@@ -488,6 +489,9 @@ class opensesame_handler extends migration_handler {
     /**
      * Extracts the category id associated with the category string.
      */
+    /**
+     * Extracts the category id associated with the category string.
+     */
     private function extract_category_id_from_os_string($stringcategories) {
         global $DB;
         // PHP compare  each array elements choose the element that has the most items in it.
@@ -516,6 +520,20 @@ class opensesame_handler extends migration_handler {
         }
 
         return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
+    }
+
+    /**
+     * Sets the enrollment methods for each Open-Sesame course
+     *
+     * @param int $courseid
+     * @param bool $active
+     * @return void
+     * @throws \dml_exception
+     */
+    private function set_self_enrollment(int $courseid, bool $active): void {
+        global $DB;
+        $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
+        enrol_get_plugin($instance->enrol)->update_status($instance, $active ? 1 : 0);
     }
 
     /**
