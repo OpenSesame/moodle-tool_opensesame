@@ -125,6 +125,7 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
     }
 
     if ($oldversion < 2023082903) {
+        $DB->delete_records('tool_opensesame');
 
         // Define key courseid (foreign) to be added to tool_opensesame.
         $table = new xmldb_table('tool_opensesame');
