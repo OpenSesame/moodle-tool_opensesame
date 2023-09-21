@@ -489,9 +489,6 @@ class opensesame_handler extends migration_handler {
     /**
      * Extracts the category id associated with the category string.
      */
-    /**
-     * Extracts the category id associated with the category string.
-     */
     private function extract_category_id_from_os_string($stringcategories) {
         global $DB;
         // PHP compare  each array elements choose the element that has the most items in it.
