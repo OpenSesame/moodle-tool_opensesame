@@ -199,10 +199,17 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
     if ($oldversion < 2023082906) {
         // Define field courseid to be modified to tool_opensesame_course.
         $table = new xmldb_table('tool_opensesame_course');
+
+        $keytodrop = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $dbman->drop_key($table, $keytodrop);
+
         $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, null, null);
 
         // Launch change of nullability for field status.
         $dbman->change_field_notnull($table, $field);
+
+        $keytoadd = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $dbman->add_key($table, $keytoadd);
 
         upgrade_plugin_savepoint(true, 2023082906, 'tool', 'opensesame');
     }
