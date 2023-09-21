@@ -129,6 +129,14 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
 
         // Define key courseid (foreign) to be added to tool_opensesame.
         $table = new xmldb_table('tool_opensesame');
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch drop index status.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
         $key = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
 
         // Launch add key courseid.
@@ -146,10 +154,6 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
 
         $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
 
-        // Conditionally launch drop index status.
-        if ($dbman->index_exists($table, $index)) {
-            $dbman->drop_index($table, $index);
-        }
         // Conditionally launch add index status.
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
