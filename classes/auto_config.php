@@ -40,9 +40,8 @@ class auto_config {
      * Enable AICC.
      */
     private function enable_aicc(): void {
-        global $CFG;
         $allowedtypes = get_config('tool_opensesame', 'allowedtypes');
-        if ($allowedtypes === 'aiccurl') {
+        if ($allowedtypes == SCORM_TYPE_AICCURL) {
             set_config('aicchacpkeepsessiondata', 1, 'scorm');
             set_config('aicchacptimeout', 30, 'scorm');
             set_config('aiccuserid', 1, 'scorm');

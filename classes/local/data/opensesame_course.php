@@ -37,6 +37,26 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Opensesame Persistent Entity Class.
+ *
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    tool_opensesame
+ * @property   string $idopensesame
+ * @property   string $title
+ * @property   string $descriptiontext
+ * @property   string $descriptionhtml
+ * @property   string $thumbnailurl
+ * @property   string $duration
+ * @property   string $languages
+ * @property   string $oscategories
+ * @property   string $publishername
+ * @property   string $packagedownloadurl
+ * @property   string $aicclaunchurl
+ * @property   bool $active
+ * @property   int $courseid
+ * @property   string $status
  */
 class opensesame_course extends base {
     /** Table name for the persistent. */
@@ -52,13 +72,7 @@ class opensesame_course extends base {
     const STATUS_CREATED = 'created';
 
     /** @var string */
-    const STATUS_IMAGE_RETRIEVED = 'imageretrieved';
-
-    /** @var string */
     const STATUS_IMAGE_IMPORTED = 'imageimported';
-
-    /** @var string */
-    const STATUS_SCORM_RETRIEVED = 'scormretrieved';
 
     /** @var string */
     const STATUS_SCORM_IMPORTED = 'scormimported';
@@ -67,9 +81,7 @@ class opensesame_course extends base {
         self::STATUS_RETRIEVED,
         self::STATUS_QUEUED,
         self::STATUS_CREATED,
-        self::STATUS_IMAGE_RETRIEVED,
         self::STATUS_IMAGE_IMPORTED,
-        self::STATUS_SCORM_RETRIEVED,
         self::STATUS_SCORM_IMPORTED,
     ];
 
@@ -142,7 +154,7 @@ class opensesame_course extends base {
                 'type' => PARAM_ALPHANUMEXT,
                 'null' => NULL_NOT_ALLOWED,
                 'default' => self::STATUS_RETRIEVED,
-                'choices' => self::$steps,
+                'choices' => static::$steps,
             ],
         );
     }

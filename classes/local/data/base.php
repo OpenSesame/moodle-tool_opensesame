@@ -203,7 +203,7 @@ abstract class base extends persistent {
     public function get_next_step(string $step): string | bool {
         $stepindex = array_search($step, static::$steps);
         $size = count(static::$steps);
-        if ($stepindex !== false && $stepindex < $size) {
+        if ($stepindex !== false && $stepindex < ($size - 1)) {
             return static::$steps[$stepindex + 1];
         }
         return false;

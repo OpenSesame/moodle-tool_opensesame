@@ -49,6 +49,7 @@ abstract class migration_handler {
             if ($laststep === false) {
                 return false;
             }
+            mtrace("[INFO][$entityname] Target step: $laststep");
             $endstatus = [$laststep => true];
         }
         try {
