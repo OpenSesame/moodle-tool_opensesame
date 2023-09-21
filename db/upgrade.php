@@ -217,12 +217,27 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
     if ($oldversion < 2023082907) {
         // Define field courseid to be modified to tool_opensesame_course.
         $table = new xmldb_table('tool_opensesame_course');
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch drop index status.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
         // Changing nullability and type of field status on table tool_opensesame to not null.
         $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'retrieved');
 
         // Launch change of nullability for field status.
         $dbman->change_field_type($table, $field);
         $dbman->change_field_default($table, $field);
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch drop index status.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
 
         upgrade_plugin_savepoint(true, 2023082907, 'tool', 'opensesame');
     }
