@@ -67,8 +67,6 @@ class course_queing_test extends advanced_testcase {
 
     /**
      * Test retrieve_and_process_queue_courses.
-     *
-     * @return void
      */
     public function test_retrieve_and_process_queue_courses() {
 

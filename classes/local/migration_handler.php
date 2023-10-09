@@ -102,7 +102,7 @@ abstract class migration_handler {
             $success = false;
             mtrace("[ERROR][$entityname] Error processing $entityname with ID {$entity->id}");
             mtrace($ex->getMessage());
-            mtrace($ex->getTraceAsString()); 
+            mtrace($ex->getTraceAsString());
         }
         return $success;
     }

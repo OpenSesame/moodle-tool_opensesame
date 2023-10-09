@@ -44,7 +44,7 @@ use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
 
 /**
- * Test class for opensesame retrieve and create record and queue adhoc tasks.
+ * Test class for opensesame retrieve, create record and queue adhoc tasks.
  *
  * @package     tool_opensesame
  * @copyright   2023 Moodle
@@ -58,8 +58,6 @@ class course_generation_test extends advanced_testcase {
 
     /**
      * Test setup
-     *
-     * @return void
      */
     protected function setUp(): void {
         $this->opsmgenerator = self::getDataGenerator()->get_plugin_generator('tool_opensesame');
@@ -69,8 +67,6 @@ class course_generation_test extends advanced_testcase {
 
     /**
      * Test process_single_os_course
-     *
-     * @return void
      */
     public function test_process_single_os_course() {
 
@@ -104,9 +100,9 @@ class course_generation_test extends advanced_testcase {
             ->willReturn($scormpath);
         $opensesamehandlermock->method('process_created_to_imageimported')
             ->willReturn('');
-        
+
         $handler = $opensesamehandlermock;
-        
+
         // We use the mock class.
         $handler->run($opensesamemock);
 
@@ -125,7 +121,7 @@ class course_generation_test extends advanced_testcase {
         $opsesamecourses = $DB->get_records('tool_opensesame_course');
         $moodlecourses = $DB->get_records('course');
 
-        // All the opensesame courses + course default
+        // All the opensesame courses + course default.
         $this->assertCount($coursesnumber + 1, $moodlecourses);
 
         foreach ($opsesamecourses as $opcourse) {
