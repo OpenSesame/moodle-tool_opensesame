@@ -38,6 +38,7 @@
 namespace tool_opensesame;
 
 use advanced_testcase;
+use file_storage;
 use stdClass;
 use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
@@ -77,45 +78,51 @@ class course_generation_test extends advanced_testcase {
 
         // We create a mock of opensesame class.
         $opensesamemock = $this->createMock(opensesame::class);
+        $opensesamehandlermock = $this->getMockBuilder(opensesame_handler::class)
+            ->setConstructorArgs(
+                [
+                    'authurl',
+                    'clientid',
+                    'clientsecret',
+                    'customerintegrationid',
+                    'http://example.com/'
+                    ]
+            )
+            ->onlyMethods(['process_created_to_imageimported'])
+            ->getMock();
 
         $responsemock = new stdClass();
-        $coursesnumber = 1;
-
-        $contenturl = "http://localhost:80/admin/tool/opensesame/tests/fixtures";
+        $coursesnumber = 5;
         // Create some dummy data as the ws response.
-        $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber, $contenturl);
+        $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber);
         $responsemock->data = array_values($courselist);
         // Configure the mock to return the dummy API response data.
+        $scormpath = $CFG->dirroot . '/admin/tool/opensesame/tests/fixtures/package.zip';
         $opensesamemock->method('get_course_list')
             ->willReturn($responsemock);
-
-        $handler = new opensesame_handler(
-            'authurl',
-            'clientid',
-            'clientsecret',
-            'customerintegrationid',
-            'http://example.com/'
-        );
-
+        $opensesamemock->method('download_scorm_package')
+            ->willReturn($scormpath);
+        $opensesamehandlermock->method('process_created_to_imageimported')
+            ->willReturn('');
+        
+        $handler = $opensesamehandlermock;
+        
         // We use the mock class.
         $handler->run($opensesamemock);
 
         // Info running the task.
         $opsesamecourses = $DB->get_records('tool_opensesame_course');
-        $opsesameadhoctasks = $DB->get_records('task_adhoc', ['component' => 'tool_opensesame'], '', 'customdata');
         $moodlecourses = $DB->get_records('course');
         // There should be only 1 record on course table.
         $this->assertCount($coursesnumber, $opsesamecourses);
-        $this->assertCount($coursesnumber, $opsesameadhoctasks);
         $this->assertCount(1, $moodlecourses);
 
         foreach ($opsesamecourses as $opcourse) {
             $this->assertEquals('queued', $opcourse->status);
-            $handler->process_single_os_course($opcourse->id);
+            $handler->process_single_os_course($opcourse->id, $opensesamemock);
         }
 
         $opsesamecourses = $DB->get_records('tool_opensesame_course');
-        $opsesameadhoctasks = $DB->get_records('task_adhoc', ['component' => 'tool_opensesame'], '', 'customdata');
         $moodlecourses = $DB->get_records('course');
 
         // All the opensesame courses + course default

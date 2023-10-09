@@ -141,7 +141,6 @@ class opensesame_handler extends migration_handler {
         $page = 1;
         $pagesize = get_config('tool_opensesame', 'apicall_pagesize');
         $pagesize = $pagesize ? $pagesize : 50;
-
         do {
             $requestdata = $api->get_course_list($pagesize, $page);
 
@@ -188,7 +187,11 @@ class opensesame_handler extends migration_handler {
      * @param int $id
      * @return bool true if successful.
      */
-    public function process_single_os_course($id): bool {
+    public function process_single_os_course(int $id, opensesame $api = null): bool {
+        if (is_null($api)) {
+            $api = $this->api;
+        }
+
         $oscourse = opensesame_course::get_record([
             'id' => $id
         ]);
@@ -196,7 +199,7 @@ class opensesame_handler extends migration_handler {
             // Open sesame course has been deleted.
             return true;
         }
-        return $this->process_and_log_entity($oscourse, $this->api);
+        return $this->process_and_log_entity($oscourse, $api);
     }
 
     /**

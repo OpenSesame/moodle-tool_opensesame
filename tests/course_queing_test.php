@@ -78,7 +78,7 @@ class course_queing_test extends advanced_testcase {
         $opensesamemock = $this->createMock(opensesame::class);
 
         $responsemock = new stdClass();
-        $coursesnumber = rand(1, 5);
+        $coursesnumber = 5;
 
         // Create some dummy data as the ws response.
         $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber);

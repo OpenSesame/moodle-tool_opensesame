@@ -108,7 +108,7 @@ class opensesame extends \curl {
             $url = $this->baseurl . $resource;
         }
 
-        mtrace("Getting this: $url");
+        !PHPUNIT_TEST ?? mtrace("Getting this: $url");
         $this->resetHeader();
         $this->resetcookie();
         $this->reset_request_state_vars();
@@ -172,7 +172,7 @@ class opensesame extends \curl {
      * @throws \dml_exception
      */
     private function authenticate(): bool {
-        mtrace("Authenticating with Open Sesame");
+        !PHPUNIT_TEST ?? mtrace("Authenticating with Open Sesame");
         $clientid = $this->clientid;
         $clientsecret = $this->clientsecret;
         $this->resetHeader();
@@ -184,7 +184,7 @@ class opensesame extends \curl {
         $authurl = $this->authurl;
         $response = $this->post($authurl, 'grant_type=client_credentials&scope=content');
         if ($this->get_http_code() !== 200) {
-            mtrace($response);
+            !PHPUNIT_TEST ?? mtrace($response);
             return false;
         }
 

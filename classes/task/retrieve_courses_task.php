@@ -48,10 +48,10 @@ class retrieve_courses_task extends \core\task\scheduled_task {
      * @throws \dml_exception
      */
     public function execute(): bool {
-        mtrace("Opensesame task just started.");
+        !PHPUNIT_TEST ?? mtrace("Opensesame task just started.");
         $handler = new opensesame_handler();
         $handler->run();
-        mtrace('opensesame just finished.');
+        !PHPUNIT_TEST ?? mtrace('opensesame just finished.');
         return true;
     }
 }
