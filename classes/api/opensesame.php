@@ -245,7 +245,7 @@ class opensesame extends \curl {
     /**
      * Gets a list of courses from Open Sesame.
      * @param int $pagesize Default to 50.
-     * @param string $url When retrieving a next page.
+     * @param int $page Page for the next call.
      * @return object A Open Sesame response as a PHP Object.
      */
     public function get_course_list(int $pagesize = 50, int $page = 1): object {

@@ -35,15 +35,12 @@
  * @license     Moodle Workplace License, distribution is restricted, contact support@moodle.com
  */
 
-namespace tool_opensemsame;
-
-defined('MOODLE_INTERNAL') || die();
+namespace tool_opensesame;
 
 use advanced_testcase;
 use stdClass;
 use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
-
 
 /**
  * Test class for opensesame retrieve and create record and queue adhoc tasks.
@@ -69,27 +66,27 @@ class course_queing_test extends advanced_testcase {
     }
 
     /**
-     * Test the creation of the opensesame courses on the opensesame table and queued on adhoc tasks.
+     * Test retrieve_and_process_queue_courses.
      *
      * @return void
      */
     public function test_retrieve_and_process_queue_courses() {
-        
+
         global $DB;
 
         // We create a mock of opensesame class.
-        $opensesameMock = $this->createMock(opensesame::class);
+        $opensesamemock = $this->createMock(opensesame::class);
 
-        $responseMock = new stdClass();
-        $coursesnumber = rand(1,5);
+        $responsemock = new stdClass();
+        $coursesnumber = rand(1, 5);
 
         // Create some dummy data as the ws response.
         $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber);
-        $responseMock->data = array_values($courselist);
-        
-        // Configure the mock to return the dummy API response data
-        $opensesameMock->method('get_course_list')
-            ->willReturn($responseMock);
+        $responsemock->data = array_values($courselist);
+
+        // Configure the mock to return the dummy API response data.
+        $opensesamemock->method('get_course_list')
+            ->willReturn($responsemock);
 
         $handler = new opensesame_handler(
             'authurl',
@@ -100,7 +97,7 @@ class course_queing_test extends advanced_testcase {
         );
 
         // We use the mock class.
-        $handler->run($opensesameMock);
+        $handler->run($opensesamemock);
 
         $opsesamecourses = $DB->get_records('tool_opensesame_course');
         $opsesameadhoctasks = $DB->get_records('task_adhoc', ['component' => 'tool_opensesame'], '', 'customdata');
@@ -110,10 +107,10 @@ class course_queing_test extends advanced_testcase {
         // be the same as the number  opensesamecourse on ws response.
         $this->assertCount($coursesnumber, $opsesamecourses);
         $this->assertCount($coursesnumber, $opsesameadhoctasks);
-        // Each course must create 4 categories + Default category
+        // Each course must create 4 categories + Default category.
         $this->assertCount($coursesnumber * 4 + 1, $opcoursecategories);
 
-        foreach($opsesamecourses as $courserecords) {
+        foreach ($opsesamecourses as $courserecords) {
             $mockcourse = $courselist[$courserecords->idopensesame];
             $this->assertTrue(isset($opsesameadhoctasks['"'.$courserecords->id.'"']));
             $this->assertEquals($mockcourse->id, $courserecords->idopensesame);
@@ -123,7 +120,7 @@ class course_queing_test extends advanced_testcase {
             $this->assertEquals($mockcourse->thumbnailUrl, $courserecords->thumbnailurl);
             $this->assertEquals($mockcourse->duration, $courserecords->duration);
             $this->assertContains($courserecords->languages, $mockcourse->languages);
-            foreach($mockcourse->categories as $category) {
+            foreach ($mockcourse->categories as $category) {
                 $this->assertStringContainsString($category, $courserecords->oscategories);
             }
             $this->assertEquals($mockcourse->publisherName, $courserecords->publishername);

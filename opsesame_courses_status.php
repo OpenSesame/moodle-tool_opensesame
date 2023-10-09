@@ -39,7 +39,7 @@ $output = ''; // Final output to render.
 
 // Process actions.
 $page        = optional_param('page', 1, PARAM_INT);
-$pagesize    = optional_param('pagesize', 20, PARAM_INT);
+$pagesize    = optional_param('pagesize', 50, PARAM_INT);
 
 if ($page >= 1) {
     $page = $page - 1;

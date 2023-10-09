@@ -139,12 +139,12 @@ class opensesame_handler extends migration_handler {
      */
     private function retrieve_and_process_queue_courses(opensesame $api): void {
         $page = 1;
-        $pagesize =  get_config('tool_opensesame', 'apicall_pagesize');
+        $pagesize = get_config('tool_opensesame', 'apicall_pagesize');
         $pagesize = $pagesize ? $pagesize : 50;
 
         do {
             $requestdata = $api->get_course_list($pagesize, $page);
-            
+
             $this->create_opensesame_entities($requestdata->data);
             // Create categories for later use.
             foreach ($requestdata->data as $datum) {

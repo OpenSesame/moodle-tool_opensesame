@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Create data for unit testing
  *
@@ -29,7 +27,9 @@ class tool_opensesame_generator extends component_generator_base {
     /**
      * Create dummy data for opensesame to manage
      *
-     * @param int $numrecords
+     * @param int $numrecords Quantity of records to create
+     * @param string $url Dummy url.
+     *
      * @return array
      */
     public function generate_courselist_opensesame_ws_response($numrecords, $url = 'https://example.com') {

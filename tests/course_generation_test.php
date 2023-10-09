@@ -35,17 +35,12 @@
  * @license     Moodle Workplace License, distribution is restricted, contact support@moodle.com
  */
 
-namespace tool_opensemsame;
-
-defined('MOODLE_INTERNAL') || die();
+namespace tool_opensesame;
 
 use advanced_testcase;
-use core_reportbuilder\external\columns\add;
 use stdClass;
-use tool_opensesame\task\process_course_task;
 use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
-
 
 /**
  * Test class for opensesame retrieve and create record and queue adhoc tasks.
@@ -72,27 +67,28 @@ class course_generation_test extends advanced_testcase {
     }
 
     /**
-     * Test the creation of the opensesame courses on the opensesame table and queued on adhoc tasks.
+     * Test process_single_os_course
      *
      * @return void
      */
-    public function test_generate_courses() {
-        
+    public function test_process_single_os_course() {
+
         global $DB;
 
         // We create a mock of opensesame class.
-        $opensesameMock = $this->createMock(opensesame::class);
-        $responseMock = new stdClass();
+        $opensesamemock = $this->createMock(opensesame::class);
+        $opensesamehandlemock = $this->createMock(opensesame_handler::class);
+
+        $responsemock = new stdClass();
         $coursesnumber = 1;
-        $url = 'http://127.0.0.1/admin/tool/opensesame/tests/fixtures';
         $scormurl = $url . '/package.zip';
         // Create some dummy data as the ws response.
         $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber, $url);
-        $responseMock->data = array_values($courselist);
+        $responsemock->data = array_values($courselist);
         // Configure the mock to return the dummy API response data
-        $opensesameMock->method('get_course_list')
-            ->willReturn($responseMock);
-        $opensesameMock->method('download_scorm_package')
+        $opensesamemock->method('get_course_list')
+            ->willReturn($responsemock);
+        $opensesamemock->method('download_scorm_package')
             ->willReturn($scormurl);
 
         $handler = new opensesame_handler(
@@ -104,7 +100,7 @@ class course_generation_test extends advanced_testcase {
         );
 
         // We use the mock class.
-        $handler->run($opensesameMock);
+        $handler->run($opensesamemock);
 
         // Info running the task.
         $opsesamecourses = $DB->get_records('tool_opensesame_course');
@@ -114,8 +110,8 @@ class course_generation_test extends advanced_testcase {
         $this->assertCount($coursesnumber, $opsesamecourses);
         $this->assertCount($coursesnumber, $opsesameadhoctasks);
         $this->assertCount(1, $moodlecourses);
-        
-       
+
+
         foreach ($opsesamecourses as $opcourse) {
             $this->assertEquals('queued', $opcourse->status);
             $handler->process_single_os_course($opcourse->id);
@@ -124,11 +120,11 @@ class course_generation_test extends advanced_testcase {
         $opsesamecourses = $DB->get_records('tool_opensesame_course');
         $opsesameadhoctasks = $DB->get_records('task_adhoc', ['component' => 'tool_opensesame'], '', 'customdata');
         $moodlecourses = $DB->get_records('course');
-        
+
         // All the opensesame courses + course default
         $this->assertCount($coursesnumber + 1, $moodlecourses);
 
-        foreach($opsesamecourses as $opcourse) {
+        foreach ($opsesamecourses as $opcourse) {
             $this->assertNotEmpty($opcourse->courseid);
             $moodlecourse = $moodlecourses[$opcourse->courseid];
             $this->assertEquals($opcourse->idopensesame, $moodlecourse->idnumber);
