@@ -80,15 +80,15 @@ class course_generation_test extends advanced_testcase {
 
         $responsemock = new stdClass();
         $coursesnumber = 1;
-        $contenturl =  "http://localhost/admin/tool/opensesame/tests/fixtures";
+
+        $contenturl = "http://localhost:80/admin/tool/opensesame/tests/fixtures";
         // Create some dummy data as the ws response.
         $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber, $contenturl);
         $responsemock->data = array_values($courselist);
         // Configure the mock to return the dummy API response data.
         $opensesamemock->method('get_course_list')
             ->willReturn($responsemock);
-        
-        
+
         $handler = new opensesame_handler(
             'authurl',
             'clientid',
