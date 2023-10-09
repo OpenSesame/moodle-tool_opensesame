@@ -156,8 +156,9 @@ class opensesame_course extends base {
 
     /**
      * Return the context for rendering the course status table.
-     *  @param int $pagesize Default to 50.
-     *  @param int $page current page.
+     * @param int $page Default to 50.
+     * @param int $pagesize current page.
+     *
      * @return array
      */
     public static function export_for_mustache($page, $pagesize): array {

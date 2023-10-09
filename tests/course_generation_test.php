@@ -85,7 +85,7 @@ class course_generation_test extends advanced_testcase {
         // Create some dummy data as the ws response.
         $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber, $url);
         $responsemock->data = array_values($courselist);
-        // Configure the mock to return the dummy API response data
+        // Configure the mock to return the dummy API response data.
         $opensesamemock->method('get_course_list')
             ->willReturn($responsemock);
         $opensesamemock->method('download_scorm_package')
@@ -110,7 +110,6 @@ class course_generation_test extends advanced_testcase {
         $this->assertCount($coursesnumber, $opsesamecourses);
         $this->assertCount($coursesnumber, $opsesameadhoctasks);
         $this->assertCount(1, $moodlecourses);
-
 
         foreach ($opsesamecourses as $opcourse) {
             $this->assertEquals('queued', $opcourse->status);

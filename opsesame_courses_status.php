@@ -65,7 +65,7 @@ $templatecontext = [
     'data' => $templatedata,
     'pages' => $pages,
     'currentpage' => $currentpage,
-    'prevpage' => $currentpage - 1 ? $currentpage - 1: false,
+    'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
     'paginationurl' => $paginationurl->out(false)
 ];
