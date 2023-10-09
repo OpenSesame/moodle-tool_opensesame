@@ -186,7 +186,7 @@ class opensesame_handler extends migration_handler {
      * Processes a single Open Sesame course until all its steps are processed.
      * @param int $id
      * @param opensesame $api opensesame API object.
-     * 
+     *
      * @return bool true if successful.
      */
     public function process_single_os_course(int $id, opensesame $api = null): bool {
