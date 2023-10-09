@@ -32,7 +32,7 @@ class tool_opensesame_generator extends component_generator_base {
      *
      * @return array
      */
-    public function generate_courselist_opensesame_ws_response($numrecords, $url = 'https://example.com') {
+    public function generate_courselist_opensesame_ws_response($numrecords, $url = 'http://example.com') {
         $records = [];
         $testlangs = ['test_lang'];
 
@@ -42,14 +42,14 @@ class tool_opensesame_generator extends component_generator_base {
                 "title" => "Default Title $i",
                 "descriptionText" => "descriptiontext-$i",
                 "descriptionHtml" => "descriptionhtml-$i",
-                'imageUrl' => "$url/imageurl_$i.jpg",
-                "thumbnailUrl" => "$url/thumbnail_$i.jpg",
+                'imageUrl' => "$url/imageurl.jpg",
+                "thumbnailUrl" => "$url/thumbnail.jpg",
                 "duration" => sprintf("%02d:%02d:%02d", rand(0, 23), rand(0, 59), rand(0, 59)),
                 "languages" => $testlangs,
                 "categories" => ["|1st Parent Category_$i|1st Sub Category_$i", "|2nd Parent Category_$i|2nd Sub Category_$i"],
                 "publisherName" => "Publisher XYZ_$i",
-                "packageDownloadUrl" => "$url/package_$i.zip",
-                "aiccLaunchUrl" => "$url/aicc_$i",
+                "packageDownloadUrl" => "$url/package.zip",
+                "aiccLaunchUrl" => "$url/aicc",
                 "active" => rand(0, 1),
                 "timecreated" => time(),
                 "timemodified" => time(),

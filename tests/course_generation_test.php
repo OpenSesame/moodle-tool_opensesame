@@ -73,24 +73,22 @@ class course_generation_test extends advanced_testcase {
      */
     public function test_process_single_os_course() {
 
-        global $DB;
+        global $DB, $CFG;
 
         // We create a mock of opensesame class.
         $opensesamemock = $this->createMock(opensesame::class);
-        $opensesamehandlemock = $this->createMock(opensesame_handler::class);
 
         $responsemock = new stdClass();
         $coursesnumber = 1;
-        $scormurl = $url . '/package.zip';
+        $contenturl =  "http://localhost/admin/tool/opensesame/tests/fixtures";
         // Create some dummy data as the ws response.
-        $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber, $url);
+        $courselist = $this->opsmgenerator->generate_courselist_opensesame_ws_response($coursesnumber, $contenturl);
         $responsemock->data = array_values($courselist);
         // Configure the mock to return the dummy API response data.
         $opensesamemock->method('get_course_list')
             ->willReturn($responsemock);
-        $opensesamemock->method('download_scorm_package')
-            ->willReturn($scormurl);
-
+        
+        
         $handler = new opensesame_handler(
             'authurl',
             'clientid',
