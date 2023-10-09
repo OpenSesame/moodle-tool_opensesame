@@ -138,18 +138,21 @@ class opensesame_handler extends migration_handler {
      * @param opensesame $api
      */
     private function retrieve_and_process_queue_courses(opensesame $api): void {
-        $nexturl = '';
-        $pagesize = 50;
+        $page = 1;
+        $pagesize =  get_config('tool_opensesame', 'apicall_pagesize');
+        $pagesize = $pagesize ? $pagesize : 50;
+
         do {
-            $requestdata = $api->get_course_list($pagesize, $nexturl);
+            $requestdata = $api->get_course_list($pagesize, $page);
+            
             $this->create_opensesame_entities($requestdata->data);
             // Create categories for later use.
             foreach ($requestdata->data as $datum) {
                 $this->create_oscategories($datum->categories);
             }
             // Next page.
-            $nexturl = $requestdata->paging->next;
-        } while (!empty($nexturl));
+            $page++;
+        } while (!empty($requestdata->paging->next));
 
         // Queue all entities which don't exist.
         $this->process_and_log_entities(opensesame_course::get_recordset([
@@ -241,7 +244,6 @@ class opensesame_handler extends migration_handler {
             update_course($coursedata);
         }
         $oscourse->courseid = $courseid;
-        $this->set_self_enrollment($courseid, $oscourse->active);
         return '';
     }
 
@@ -336,6 +338,7 @@ class opensesame_handler extends migration_handler {
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
         get_fast_modinfo($courseid);
+
         return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
     }
 
@@ -475,6 +478,7 @@ class opensesame_handler extends migration_handler {
                 if ($vkey === 0 && $catexist !== true) {
                     $data = new \stdClass();
                     $data->name = $vvalue;
+                    $data->parent = get_config('tool_opensesame', 'opsesamecategory');
                     core_course_category::create($data);
                 }
 
@@ -498,45 +502,11 @@ class opensesame_handler extends migration_handler {
      */
     private function extract_category_id_from_os_string($stringcategories) {
         global $DB;
-        // PHP compare  each array elements choose the element that has the most items in it.
-        $result = [];
-        $string = $stringcategories;
 
-        $firstdimension = explode(',', $string); // Divide by , symbol.
-        foreach ($firstdimension as $temp) {
-            // Take each result of division and explode it by , symbol and save to result.
-            $pos = strpos($temp, '|');
-            if ($pos !== false) {
-                $newtemp = substr_replace($temp, '', $pos, strlen('|'));
-                $newtemp = trim($newtemp);
-            }
-
-            $result[] = explode('|', $newtemp);
-        }
-        $targetcategory = '';
-
-        foreach ($result as $r) {
-            $maxcount = 0;
-            $items = count($r);
-            if ($items > $maxcount) {
-                $targetcategory = $r[$items - 1];
-            }
-        }
+        $firstelement = explode(',', $stringcategories)[0]; // Select only first tree.
+        $treecategory = explode('|', $firstelement); // Take tree and explode it by | symbol.
+        $targetcategory = end($treecategory); // Select last grandchild category.
 
         return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
-    }
-
-    /**
-     * Sets the enrollment methods for each Open-Sesame course
-     *
-     * @param int $courseid
-     * @param bool $active
-     * @return void
-     * @throws \dml_exception
-     */
-    private function set_self_enrollment(int $courseid, bool $active): void {
-        global $DB;
-        $instance = $DB->get_record('enrol', ['courseid' => $courseid, 'enrol' => 'self']);
-        enrol_get_plugin($instance->enrol)->update_status($instance, $active ? 1 : 0);
     }
 }

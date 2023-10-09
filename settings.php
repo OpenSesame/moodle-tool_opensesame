@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_course\reportbuilder\local\entities\course_category;
+
 defined('MOODLE_INTERNAL') || die;
 global $CFG;
 
@@ -64,10 +66,28 @@ if ($hassiteconfig) {
     $default = SCORM_TYPE_AICCURL;
     $settings->add(new admin_setting_configselect('tool_opensesame/allowedtypes', $name, $desc, $default, $options));
 
+    $options = [0 => 'Top'];
+    $options += core_course_category::make_categories_list('moodle/category:manage');
+    $name = get_string('opcategory', 'tool_opensesame');
+    
+    $settings->add(new admin_setting_configselect_autocomplete('tool_opensesame/opsesamecategory',
+        get_string('opcategory', 'tool_opensesame'),
+        get_string('opcategory_desc', 'tool_opensesame'), 0, $options));
+
+    $settings->add(new admin_setting_configtext('tool_opensesame/apicall_pagesize',
+            get_string('apicall_pagesize', 'tool_opensesame'),
+            get_string('apicall_pagesize_desc', 'tool_opensesame'), 50, PARAM_INT));
+
+
     // Add external page to manage OpenSesame AICC Link Configurations.
     $ADMIN->add('opensesameintegration', new admin_externalpage('aicc_config', new lang_string('aicc', 'tool_opensesame'),
             "$CFG->wwwroot/$CFG->admin/tool/opensesame/autoconfigaicc.php"));
+    
+    // Add external page see opensesame courses status.
+    $ADMIN->add('opensesameintegration', new admin_externalpage('courses_status', new lang_string('opsecoursestatuspage', 'tool_opensesame'),
+    "$CFG->wwwroot/$CFG->admin/tool/opensesame/opsesame_courses_status.php"));
 
     // Add to the admin settings for opensesameintegration.
     $ADMIN->add('opensesameintegration', $settings);
+
 }

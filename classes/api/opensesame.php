@@ -248,10 +248,11 @@ class opensesame extends \curl {
      * @param string $url When retrieving a next page.
      * @return object A Open Sesame response as a PHP Object.
      */
-    public function get_course_list(int $pagesize = 50, string $url = ''): object {
+    public function get_course_list(int $pagesize = 50, int $page = 1): object {
         $params = [
-            'limit' => 50,
+            'limit' => $pagesize,
             'customerIntegrationId' => $this->customerintegrationid,
+            'page' => $page
         ];
 
         $header = ['Accept: application/json', 'Content-Type: application/json'];

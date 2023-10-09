@@ -153,4 +153,32 @@ class opensesame_course extends base {
             ],
         );
     }
+
+    /**
+     * Return the definition of the properties of this model.
+     *
+     * @return array
+     */
+    public static function export_for_mustache($page, $pagesize): array {
+
+        global $DB;
+
+        $limitfrom = $page * $pagesize;
+        $fields = 'id, title, oscategories, status, courseid';
+        $opcourses = array_values($DB->get_records('tool_opensesame_course', [], '', $fields, $limitfrom, $pagesize));
+
+        return $opcourses;
+    }
+
+    /**
+     * Return the definition of the properties of this model.
+     *
+     * @return int
+     */
+    public static function count_op_courses(): int {
+
+        global $DB;
+        $count = $DB->count_records('tool_opensesame_course');
+        return $count;
+    }
 }
