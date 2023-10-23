@@ -172,7 +172,7 @@ class opensesame extends \curl {
      * @throws \dml_exception
      */
     private function authenticate(): bool {
-        !PHPUNIT_TEST ?  mtrace("Authenticating with Open Sesame") : false;
+        !PHPUNIT_TEST ? mtrace("Authenticating with Open Sesame") : false;
         $clientid = $this->clientid;
         $clientsecret = $this->clientsecret;
         $this->resetHeader();
