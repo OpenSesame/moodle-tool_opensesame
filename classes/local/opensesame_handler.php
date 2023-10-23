@@ -294,9 +294,6 @@ class opensesame_handler extends migration_handler {
         if ($allowedtype == SCORM_TYPE_LOCAL) {
             $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api);
         } else { // AICC type.
-            // Ensure that Admin settings are set to support AICC Launch Urls.
-            $config = new auto_config();
-            $config->configure();
             $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api);
         }
 

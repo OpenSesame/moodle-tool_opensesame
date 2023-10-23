@@ -83,7 +83,7 @@ abstract class migration_handler {
             if ($laststep === false) {
                 return false;
             }
-            !PHPUNIT_TEST ?? mtrace("[INFO][$entityname] Target step: $laststep");
+            !PHPUNIT_TEST ? mtrace("[INFO][$entityname] Target step: $laststep") : false;
             $endstatus = [$laststep => true];
         }
         try {
@@ -95,8 +95,8 @@ abstract class migration_handler {
 
             if (!empty($message)) {
                 $success = false;
-                !PHPUNIT_TEST ??
-                mtrace("[ERROR][$entityname] Processing of $entityname with ID {$entity->id} halted/skipped: " . $message);
+                !PHPUNIT_TEST ?
+                mtrace("[ERROR][$entityname] Processing of $entityname with ID {$entity->id} halted/skipped: " . $message) : false;
             }
         } catch (\Exception $ex) {
             $success = false;
@@ -187,8 +187,8 @@ abstract class migration_handler {
         $message = "Could not find next step for $step";
         if ($nextstep !== false) {
             $method = "process_{$step}_to_{$nextstep}";
-            !PHPUNIT_TEST ?? $entityname = $this->get_entity_name($entity);
-            !PHPUNIT_TEST ?? mtrace("[INFO][$entityname][$method] $entityname ID: {$entity->id}");
+            !PHPUNIT_TEST ? $entityname = $this->get_entity_name($entity) : false;
+            !PHPUNIT_TEST ? mtrace("[INFO][$entityname][$method] $entityname ID: {$entity->id}") : false;
             $message = $this->{$method}($entity, $api);
             if (empty($message)) {
                 $entity->status = $nextstep;
