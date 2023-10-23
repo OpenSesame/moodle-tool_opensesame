@@ -108,7 +108,7 @@ class opensesame extends \curl {
             $url = $this->baseurl . $resource;
         }
 
-        !PHPUNIT_TEST ?? mtrace("Getting this: $url");
+        !PHPUNIT_TEST ? mtrace("Getting this: $url") : false;
         $this->resetHeader();
         $this->resetcookie();
         $this->reset_request_state_vars();
@@ -160,7 +160,7 @@ class opensesame extends \curl {
             }
         } while ($attempts < $maxattempts && $response === false);
 
-        if ($resource === false && !is_null($exception)) {
+        if (!is_null($exception)) {
             throw $exception;
         }
         return $response;
@@ -172,7 +172,7 @@ class opensesame extends \curl {
      * @throws \dml_exception
      */
     private function authenticate(): bool {
-        !PHPUNIT_TEST ?? mtrace("Authenticating with Open Sesame");
+        !PHPUNIT_TEST ? mtrace("Authenticating with Open Sesame") : false;
         $clientid = $this->clientid;
         $clientsecret = $this->clientsecret;
         $this->resetHeader();
@@ -184,7 +184,7 @@ class opensesame extends \curl {
         $authurl = $this->authurl;
         $response = $this->post($authurl, 'grant_type=client_credentials&scope=content');
         if ($this->get_http_code() !== 200) {
-            !PHPUNIT_TEST ?? mtrace($response);
+            !PHPUNIT_TEST ? mtrace($response) : false;
             return false;
         }
 
@@ -192,8 +192,10 @@ class opensesame extends \curl {
         if (!empty($decoded->access_token)) {
             $this->accesstoken = $decoded->access_token;
             set_config('accesstoken', $this->accesstoken, 'tool_opensesame');
+            !PHPUNIT_TEST ? mtrace('Token was retrieved successfully') : false;
             return true;
         }
+        !PHPUNIT_TEST ? mtrace('Access token could not be decoded') : false;
         return false;
     }
 
@@ -226,6 +228,7 @@ class opensesame extends \curl {
             $maxattempts = $this->retries;
             $attempts = 0;
             $authenticated = false;
+            !PHPUNIT_TEST ? mtrace('Token was not found, authentication is beginning') : false;
             do {
                 $authenticated = $this->authenticate();
                 if ($authenticated) {

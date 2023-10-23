@@ -32,11 +32,11 @@ class process_course_task extends \core\task\adhoc_task {
      */
     public function execute() {
         $oscourseid = $this->get_custom_data();
-        !PHPUNIT_TEST ?? mtrace('[INFO] Process course task started');
+        !PHPUNIT_TEST ? mtrace('[INFO] Process course task started') : false;
         $handler = null;
         $handler = new opensesame_handler();
         $success = $handler->process_single_os_course($oscourseid);
-        !PHPUNIT_TEST ?? mtrace('[INFO] Process course task finished');
+        !PHPUNIT_TEST ? mtrace('[INFO] Process course task finished') : false;
         if (!$success) {
             self::queue_task($oscourseid);
         }
