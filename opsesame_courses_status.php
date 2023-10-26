@@ -61,17 +61,22 @@ $paginationurl->params([
     'pagesize' => $pagesize,
 ]);
 $currentpage = $page + 1;
-
+$failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
+$maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
+$maxfails = !empty($maxfails) ? $maxfails : 5;
+        
 $templatecontext = [
     'data' => $templatedata,
     'pages' => $pages,
     'currentpage' => $currentpage,
     'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
-    'paginationurl' => $paginationurl->out(false)
+    'paginationurl' => $paginationurl->out(false),
+    'adhocblocked' => $failcount >= $maxfails
 ];
-if (!empty($resettasks)) {
+if (!empty($resettasks) && $failcount >= $maxfails) {
     set_config('process_course_task_fails_count', 0, 'tool_opensesame');
+    redirect(new moodle_url($baseurl), get_string('resumeadhoc', 'tool_opensesame'), null);
 }
 
 $output .= $OUTPUT->render_from_template('tool_opensesame/opensesame_courses_table', $templatecontext);

@@ -74,4 +74,6 @@ $string['apicall_pagesize'] = 'API page size';
 $string['apicall_pagesize_desc'] = 'Page size for the api call when retrieving OpenSesame courses';
 $string['max_consecutive_fails'] = 'Maximun consecutive fail task';
 $string['max_consecutive_fails_desc'] = 'If adhoc tasks fails consecutively adhoc task creation will blocked';
-$string['resetfailtasks'] = 'Reset failed tasks';
+$string['resetfailtasks'] = 'Resume adhoc queue';
+$string['resumeadhoc'] = 'The adhoc task queue for opensesame has been resumed';
+$string['adhocblocked'] = 'Adhoc task queue for opensesame courses creation has been blocked due to consecutive failed attempts';
