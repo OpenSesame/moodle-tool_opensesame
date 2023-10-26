@@ -64,7 +64,7 @@ $currentpage = $page + 1;
 $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
 $maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
 $maxfails = !empty($maxfails) ? $maxfails : 5;
-        
+
 $templatecontext = [
     'data' => $templatedata,
     'pages' => $pages,
