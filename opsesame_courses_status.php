@@ -40,6 +40,7 @@ $output = ''; // Final output to render.
 // Process actions.
 $page        = optional_param('page', 1, PARAM_INT);
 $pagesize    = optional_param('pagesize', 50, PARAM_INT);
+$resettasks    = optional_param('reset', 0, PARAM_BOOL);
 
 if ($page >= 1) {
     $page = $page - 1;
@@ -69,6 +70,9 @@ $templatecontext = [
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
     'paginationurl' => $paginationurl->out(false)
 ];
+if(!empty($resettasks)) {
+    set_config('process_course_task_fails_count', 0, 'tool_opensesame');
+}
 
 $output .= $OUTPUT->render_from_template('tool_opensesame/opensesame_courses_table', $templatecontext);
 

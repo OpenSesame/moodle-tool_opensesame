@@ -31,15 +31,45 @@ class process_course_task extends \core\task\adhoc_task {
      * Execute the task.
      */
     public function execute() {
-        $oscourseid = $this->get_custom_data();
-        !PHPUNIT_TEST ? mtrace('[INFO] Process course task started') : false;
-        $handler = null;
-        $handler = new opensesame_handler();
-        $success = $handler->process_single_os_course($oscourseid);
-        !PHPUNIT_TEST ? mtrace('[INFO] Process course task finished') : false;
-        if (!$success) {
-            self::queue_task($oscourseid);
+        global $DB;
+        $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
+        $maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
+        $maxfails = !empty($maxfails) ? $maxfails : 5;
+        if ($maxfails < $failcount) {
+            $oscourseid = $this->get_custom_data();
+            !PHPUNIT_TEST ? mtrace('[INFO] Process course task started') : false;
+            $handler = null;
+            $handler = new opensesame_handler();
+            $success = $handler->process_single_os_course($oscourseid);
+            !PHPUNIT_TEST ? mtrace('[INFO] Process course task finished') : false;
+            if ($success) {
+                // Restart count.
+                set_config('process_course_task_fails_count', 0, 'tool_opensesame');
+            } else {
+                $failcount = !empty($failcount) ? $failcount + 1 : 1;
+                set_config('process_course_task_fails_count', $failcount, 'tool_opensesame');
+                self::queue_task($oscourseid);
+                if ($failcount >= $maxfails) {
+                    !PHPUNIT_TEST ? mtrace('PURGING OPENSESAME TASKS DUE CONSECUTIVE FAILS') : false;
+                    // Let's clean adhoc task table.
+                    $adhoctasks = $DB->get_recordset('task_adhoc', ['component' => 'tool_opensesame']);
+                    foreach($adhoctasks as $adhoctask) {
+                        $DB->delete_records('task_adhoc', ['id' => $adhoctask->id]);
+                    }
+                    $adhoctasks->close();
+
+                    !PHPUNIT_TEST ? mtrace('REVERTING OPENSESAME COURSES STATUS') : false;
+                    // Return the status to retrieved so we can queue again when the issue is solved.
+                    $opsecourses = $DB->get_recordset('tool_opensesame_course', ['status' => 'queued']);
+                    foreach($opsecourses as $opsecourse) {
+                        $opsecourse->status = 'retrieved';
+                        $DB->update_record('tool_opensesame_course', $opsecourse);
+                    }
+                    $opsecourses->close();
+                }
+            }
         }
+
         return true;
     }
 
