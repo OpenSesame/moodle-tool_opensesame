@@ -214,7 +214,7 @@ class opensesame_handler extends migration_handler {
         $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
         $maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
         $maxfails = !empty($maxfails) ? $maxfails : 5;
-        if ($maxfails < $failcount) {         
+        if ($failcount < $maxfails) {
             process_course_task::queue_task($oscourse->id);
         }
         return '';

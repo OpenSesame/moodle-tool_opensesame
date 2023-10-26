@@ -70,7 +70,7 @@ $templatecontext = [
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
     'paginationurl' => $paginationurl->out(false)
 ];
-if(!empty($resettasks)) {
+if (!empty($resettasks)) {
     set_config('process_course_task_fails_count', 0, 'tool_opensesame');
 }
 

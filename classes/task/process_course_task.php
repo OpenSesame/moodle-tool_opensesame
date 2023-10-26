@@ -35,7 +35,7 @@ class process_course_task extends \core\task\adhoc_task {
         $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
         $maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
         $maxfails = !empty($maxfails) ? $maxfails : 5;
-        if ($maxfails < $failcount) {
+        if ($failcount < $maxfails) {
             $oscourseid = $this->get_custom_data();
             !PHPUNIT_TEST ? mtrace('[INFO] Process course task started') : false;
             $handler = null;
@@ -53,7 +53,7 @@ class process_course_task extends \core\task\adhoc_task {
                     !PHPUNIT_TEST ? mtrace('PURGING OPENSESAME TASKS DUE CONSECUTIVE FAILS') : false;
                     // Let's clean adhoc task table.
                     $adhoctasks = $DB->get_recordset('task_adhoc', ['component' => 'tool_opensesame']);
-                    foreach($adhoctasks as $adhoctask) {
+                    foreach ($adhoctasks as $adhoctask) {
                         $DB->delete_records('task_adhoc', ['id' => $adhoctask->id]);
                     }
                     $adhoctasks->close();
@@ -61,7 +61,7 @@ class process_course_task extends \core\task\adhoc_task {
                     !PHPUNIT_TEST ? mtrace('REVERTING OPENSESAME COURSES STATUS') : false;
                     // Return the status to retrieved so we can queue again when the issue is solved.
                     $opsecourses = $DB->get_recordset('tool_opensesame_course', ['status' => 'queued']);
-                    foreach($opsecourses as $opsecourse) {
+                    foreach ($opsecourses as $opsecourse) {
                         $opsecourse->status = 'retrieved';
                         $DB->update_record('tool_opensesame_course', $opsecourse);
                     }
