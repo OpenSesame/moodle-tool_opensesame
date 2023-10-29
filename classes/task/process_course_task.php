@@ -76,7 +76,7 @@ class process_course_task extends \core\task\adhoc_task {
     /**
      * Retrieve count of failed adhoc tasks on syncing opensesame courses.
      * @return int
-    */
+     */
     public static function get_fail_sync_count() {
         $timeout = 5;
         $locktype = 'tool_opensesame_fail_sync_count';
