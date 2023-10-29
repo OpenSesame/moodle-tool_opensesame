@@ -207,16 +207,10 @@ class opensesame_handler extends migration_handler {
     /**
      * Processes open sesame course entity.
      * @param opensesame_course $oscourse
-     * @param opensesame $api
      * @return string Error message or empty
      */
-    public function process_retrieved_to_queued(opensesame_course &$oscourse, opensesame $api): string {
-        $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
-        $maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
-        $maxfails = !empty($maxfails) ? $maxfails : 5;
-        if ($failcount < $maxfails) {
-            process_course_task::queue_task($oscourse->id);
-        }
+    public function process_retrieved_to_queued(opensesame_course &$oscourse): string {
+        process_course_task::queue_task($oscourse->id);
         return '';
     }
 

@@ -32,10 +32,7 @@ class process_course_task extends \core\task\adhoc_task {
      */
     public function execute() {
         global $DB;
-        $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
-        $maxfails = get_config('tool_opensesame', 'max_consecutive_fails');
-        $maxfails = !empty($maxfails) ? $maxfails : 5;
-        if ($failcount < $maxfails) {
+        if (!self::queue_is_blocked()) {
             $oscourseid = $this->get_custom_data();
             !PHPUNIT_TEST ? mtrace('[INFO] Process course task started') : false;
             $handler = null;
@@ -44,28 +41,19 @@ class process_course_task extends \core\task\adhoc_task {
             !PHPUNIT_TEST ? mtrace('[INFO] Process course task finished') : false;
             if ($success) {
                 // Restart count.
-                set_config('process_course_task_fails_count', 0, 'tool_opensesame');
+                self::reset_fail_sync_count();
             } else {
-                $failcount = !empty($failcount) ? $failcount + 1 : 1;
-                set_config('process_course_task_fails_count', $failcount, 'tool_opensesame');
-                self::queue_task($oscourseid);
-                if ($failcount >= $maxfails) {
-                    !PHPUNIT_TEST ? mtrace('PURGING OPENSESAME TASKS DUE CONSECUTIVE FAILS') : false;
+                $failcount = self::update_fail_sync_count();
+                if (self::queue_is_blocked($failcount)) {
+                    !PHPUNIT_TEST ? mtrace('[ERROR] Purging Opensesame sync tasks due to communication errors.') : false;
                     // Let's clean adhoc task table.
                     $adhoctasks = $DB->get_recordset('task_adhoc', ['component' => 'tool_opensesame']);
                     foreach ($adhoctasks as $adhoctask) {
                         $DB->delete_records('task_adhoc', ['id' => $adhoctask->id]);
                     }
                     $adhoctasks->close();
-
-                    !PHPUNIT_TEST ? mtrace('REVERTING OPENSESAME COURSES STATUS') : false;
-                    // Return the status to retrieved so we can queue again when the issue is solved.
-                    $opsecourses = $DB->get_recordset('tool_opensesame_course', ['status' => 'queued']);
-                    foreach ($opsecourses as $opsecourse) {
-                        $opsecourse->status = 'retrieved';
-                        $DB->update_record('tool_opensesame_course', $opsecourse);
-                    }
-                    $opsecourses->close();
+                } else {
+                    self::queue_task($oscourseid);
                 }
             }
         }
@@ -80,8 +68,75 @@ class process_course_task extends \core\task\adhoc_task {
     public static function queue_task(string $oscourseid) {
         $task = new self();
         $task->set_custom_data($oscourseid);
-        $futuretime = time() + (5 * MINSECS);
+        $futuretime = time();
         $task->set_next_run_time($futuretime);
         \core\task\manager::queue_adhoc_task($task);
+    }
+
+     /**
+     * Retrieve count of failed adhoc tasks on syncing opensesame courses.
+     * @return int
+     */
+    public static function get_fail_sync_count() {
+        $timeout = 5;
+        $locktype = 'tool_opensesame_fail_sync_count';
+        $resourse =  'sync_count';
+        $lockfactory = \core\lock\lock_config::get_lock_factory($locktype);
+        // Some task could be trying to update the count so we better try to get the lock and wait.
+        if ($lock = $lockfactory->get_lock($resourse, $timeout)) {
+            $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
+            $lock->release();
+
+        } else {
+            throw new \moodle_exception('locktimeout');
+        }
+        return $failcount;
+    }
+
+    /**
+     * Updates count of failed adhoc tasks on syncing opensesame courses.
+     * @param  bool $reset
+     * @return void
+     */
+    public static function update_fail_sync_count($reset = false) {
+        $timeout = 5;
+        $locktype = 'tool_opensesame_fail_sync_count';
+        $resourse =  'sync_count';
+        $lockfactory = \core\lock\lock_config::get_lock_factory($locktype);
+        // There could be several tasks trying to update or get the count value.
+        if ($lock = $lockfactory->get_lock($resourse, $timeout)) {
+            if ($reset) {
+                $failcount = 0;
+            } else {
+                $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
+                $failcount = !empty($failcount) ? $failcount + 1 : 1;
+            }
+            set_config('process_course_task_fails_count', $failcount, 'tool_opensesame');
+            $lock->release();
+
+        } else {
+            throw new \moodle_exception('locktimeout');
+        }
+        return $failcount;
+    }
+
+    /**
+     * Reset count of failed adhoc tasks on syncing opensesame courses.
+     * @return void
+     */
+    public static function reset_fail_sync_count() {
+        self::update_fail_sync_count(true);
+    }
+
+    /**
+     * Check out if the queue to sync opensesame courses is blocked.
+     * @param  int $failcount
+     * @return bool
+     */
+    public static function queue_is_blocked($failcount = null) {
+        $failcount = !is_null($failcount) ? $failcount : self::get_fail_sync_count();
+        $maxfails = get_config('tool_opensesame', 'coursesyncfailmax');
+        $maxfails = !empty($maxfails) ? $maxfails : 5;
+        return $failcount >= $maxfails;
     }
 }
