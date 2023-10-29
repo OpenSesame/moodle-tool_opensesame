@@ -73,14 +73,14 @@ class process_course_task extends \core\task\adhoc_task {
         \core\task\manager::queue_adhoc_task($task);
     }
 
-     /**
+    /**
      * Retrieve count of failed adhoc tasks on syncing opensesame courses.
      * @return int
-     */
+    */
     public static function get_fail_sync_count() {
         $timeout = 5;
         $locktype = 'tool_opensesame_fail_sync_count';
-        $resourse =  'sync_count';
+        $resourse = 'sync_count';
         $lockfactory = \core\lock\lock_config::get_lock_factory($locktype);
         // Some task could be trying to update the count so we better try to get the lock and wait.
         if ($lock = $lockfactory->get_lock($resourse, $timeout)) {
@@ -101,7 +101,7 @@ class process_course_task extends \core\task\adhoc_task {
     public static function update_fail_sync_count($reset = false) {
         $timeout = 5;
         $locktype = 'tool_opensesame_fail_sync_count';
-        $resourse =  'sync_count';
+        $resourse = 'sync_count';
         $lockfactory = \core\lock\lock_config::get_lock_factory($locktype);
         // There could be several tasks trying to update or get the count value.
         if ($lock = $lockfactory->get_lock($resourse, $timeout)) {
