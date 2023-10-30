@@ -23,7 +23,9 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use tool_opensesame\api\opensesame;
 use tool_opensesame\local\data\opensesame_course;
+use tool_opensesame\task\process_course_task;
 
 // Requirements.
 require_once(__DIR__ . '/../../../config.php');
@@ -40,6 +42,7 @@ $output = ''; // Final output to render.
 // Process actions.
 $page        = optional_param('page', 1, PARAM_INT);
 $pagesize    = optional_param('pagesize', 50, PARAM_INT);
+$resettasks    = optional_param('reset', 0, PARAM_BOOL);
 
 if ($page >= 1) {
     $page = $page - 1;
@@ -60,6 +63,7 @@ $paginationurl->params([
     'pagesize' => $pagesize,
 ]);
 $currentpage = $page + 1;
+$queueblocked = process_course_task::queue_is_blocked();
 
 $templatecontext = [
     'data' => $templatedata,
@@ -67,8 +71,18 @@ $templatecontext = [
     'currentpage' => $currentpage,
     'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
-    'paginationurl' => $paginationurl->out(false)
+    'paginationurl' => $paginationurl->out(false),
+    'adhocblocked' => $queueblocked
 ];
+if (!empty($resettasks) && $queueblocked) {
+    process_course_task::reset_fail_sync_count();
+    $opsecourses = $DB->get_recordset('tool_opensesame_course', ['status' => 'queued']);
+    foreach ($opsecourses as $opsecourse) {
+        process_course_task::queue_task($opsecourse->id);
+    }
+    $opsecourses->close();
+    redirect(new moodle_url($baseurl), get_string('resumeadhoc', 'tool_opensesame'), null);
+}
 
 $output .= $OUTPUT->render_from_template('tool_opensesame/opensesame_courses_table', $templatecontext);
 

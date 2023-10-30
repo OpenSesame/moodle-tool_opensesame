@@ -35,6 +35,10 @@
             ]
     }
 }}
+{{#adhocblocked}}
+    <div class="alert alert-danger" role="alert">{{#str}} adhocblocked, tool_opensesame {{/str}}</div>
+    <a class="btn btn-primary mb-2" role="button" href="?reset=1">{{#str}} resetfailtasks, tool_opensesame {{/str}}</a>
+{{/adhocblocked}}
 <table class="generaltable">
     <thead>
         <tr>
@@ -59,10 +63,14 @@
 </table>
 <nav>
     <ul class="pagination">
-        {{#prevpage}}<li class="page-item"><a class="page-link" href="{{paginationurl}}&page={{prevpage}}">{{#str}}previous{{/str}}</a></li>{{/prevpage}}
+        {{#prevpage}}
+            <li class="page-item"><a class="page-link" href="{{paginationurl}}&page={{prevpage}}">{{#str}}previous{{/str}}</a></li>
+        {{/prevpage}}
         {{#pages}}
             <li class="page-item"><a class="page-link" href="{{paginationurl}}&page={{.}}">{{.}}</a></li>
         {{/pages}}
-        {{#nextpage}}<li class="page-item"><a class="page-link" href="{{paginationurl}}&page={{nextpage}}">{{#str}}next{{/str}}</a></li>{{/nextpage}}
+        {{#nextpage}}
+            <li class="page-item"><a class="page-link" href="{{paginationurl}}&page={{nextpage}}">{{#str}}next{{/str}}</a></li>
+        {{/nextpage}}
     </ul>
 </nav>

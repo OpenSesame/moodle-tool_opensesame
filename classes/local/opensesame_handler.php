@@ -207,10 +207,9 @@ class opensesame_handler extends migration_handler {
     /**
      * Processes open sesame course entity.
      * @param opensesame_course $oscourse
-     * @param opensesame $api
      * @return string Error message or empty
      */
-    public function process_retrieved_to_queued(opensesame_course &$oscourse, opensesame $api): string {
+    public function process_retrieved_to_queued(opensesame_course &$oscourse): string {
         process_course_task::queue_task($oscourse->id);
         return '';
     }

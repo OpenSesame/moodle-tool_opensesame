@@ -78,6 +78,9 @@ if ($hassiteconfig) {
             get_string('apicall_pagesize', 'tool_opensesame'),
             get_string('apicall_pagesize_desc', 'tool_opensesame'), 50, PARAM_INT));
 
+    $settings->add(new admin_setting_configtext('tool_opensesame/coursesyncfailmax',
+        get_string('coursesyncfailmax', 'tool_opensesame'),
+        get_string('coursesyncfailmax_desc', 'tool_opensesame'), 5, PARAM_INT));
 
     // Add external page to manage OpenSesame AICC Link Configurations.
     $ADMIN->add('opensesameintegration', new admin_externalpage('aicc_config', new lang_string('aicc', 'tool_opensesame'),
