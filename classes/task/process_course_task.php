@@ -45,13 +45,7 @@ class process_course_task extends \core\task\adhoc_task {
             } else {
                 $failcount = self::update_fail_sync_count();
                 if (self::queue_is_blocked($failcount)) {
-                    !PHPUNIT_TEST ? mtrace('[ERROR] Purging Opensesame sync tasks due to communication errors.') : false;
-                    // Let's clean adhoc task table.
-                    $adhoctasks = $DB->get_recordset('task_adhoc', ['component' => 'tool_opensesame']);
-                    foreach ($adhoctasks as $adhoctask) {
-                        $DB->delete_records('task_adhoc', ['id' => $adhoctask->id]);
-                    }
-                    $adhoctasks->close();
+                    self::purge_queue();
                 } else {
                     self::queue_task($oscourseid);
                 }
@@ -138,5 +132,31 @@ class process_course_task extends \core\task\adhoc_task {
         $maxfails = get_config('tool_opensesame', 'coursesyncfailmax');
         $maxfails = !empty($maxfails) ? $maxfails : 5;
         return $failcount >= $maxfails;
+    }
+
+    /**
+     * Purge the adhoc ask table from opensesame adhoc tasks.
+     * @return bool
+     */
+    public static function purge_queue() {
+        global $DB;
+        $timeout = 5;
+        $locktype = 'tool_opensesame_fail_sync_count';
+        $resourse = 'purge_adhoc_tasks';
+        $lockfactory = \core\lock\lock_config::get_lock_factory($locktype);
+        // There could be several tasks trying purge the table so we better lock.
+        if ($lock = $lockfactory->get_lock($resourse, $timeout)) {
+            !PHPUNIT_TEST ? mtrace('[ERROR] Purging Opensesame sync tasks due to communication errors.') : false;
+            // Let's clean adhoc task table.
+            $adhoctasks = $DB->get_recordset('task_adhoc', ['component' => 'tool_opensesame']);
+            foreach ($adhoctasks as $adhoctask) {
+                $DB->delete_records('task_adhoc', ['id' => $adhoctask->id]);
+            }
+            $adhoctasks->close();
+            $lock->release();
+
+        } else {
+            throw new \moodle_exception('locktimeout');
+        }
     }
 }
