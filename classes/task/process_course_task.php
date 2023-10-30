@@ -68,7 +68,7 @@ class process_course_task extends \core\task\adhoc_task {
     public static function queue_task(string $oscourseid) {
         $task = new self();
         $task->set_custom_data($oscourseid);
-        $futuretime = time() + (5 + MINSECS);
+        $futuretime = time() + (5 * MINSECS);
         $task->set_next_run_time($futuretime);
         \core\task\manager::queue_adhoc_task($task);
     }
