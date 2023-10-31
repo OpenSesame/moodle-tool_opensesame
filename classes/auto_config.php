@@ -17,7 +17,9 @@
 /**
  * AICC auto configuration tool.
  * @package     tool_opensesame
- * @copyright   2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright   2023 Moodle
+ * @author      Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author      David Castro <david.castro@moodle.com>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -38,9 +40,8 @@ class auto_config {
      * Enable AICC.
      */
     private function enable_aicc(): void {
-        global $CFG;
         $allowedtypes = get_config('tool_opensesame', 'allowedtypes');
-        if ($allowedtypes === 'aiccurl') {
+        if ($allowedtypes == SCORM_TYPE_AICCURL) {
             set_config('aicchacpkeepsessiondata', 1, 'scorm');
             set_config('aicchacptimeout', 30, 'scorm');
             set_config('aiccuserid', 1, 'scorm');

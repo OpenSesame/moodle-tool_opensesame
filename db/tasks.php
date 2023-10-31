@@ -18,22 +18,22 @@
  * This file defines tasks performed by the tool.
  *
  * @package    tool_opensesame
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
-
     [
-        'classname' => 'tool_opensesame\task\opensesamesync',
+        'classname' => tool_opensesame\task\retrieve_courses_task::class,
         'blocking' => 0,
-        'minute' => '*',
-        'hour' => 'R',
+        'minute' => '0',
+        'hour' => '*',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
     ],
-
 ];
