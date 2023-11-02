@@ -1,35 +1,91 @@
-# Start of the yml file
+---
 image:
   name: '271411534863.dkr.ecr.us-east-2.amazonaws.com/moodleusdev:latest'
   aws:
     access-key: "$AWS_ACCESS_KEY"
     secret-key: "$AWS_SECRET_KEY"
 definitions:
+  installscript: &baseInst
+    echo "Checking out Moodle Workplace\n" ;
+    moodle-plugin-ci install --branch='MOODLE_401_STABLE' ;
+  steps:
+    - step: &base
+        name: 'Moodle 4.1, PHP 7.4 and MariaDB 10.6'
+        caches:
+          - npm
+          - composer
+          - docker
+        services:
+          - mariadb
+          - docker
   services:
     mariadb:
-      image: mariadb:10
+      image: mariadb:10.6
       variables:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
   caches:
     npm: $HOME/.npm
 pipelines:
   default:
-    - step:
-        name: 'Moodle 4.1, PHP 7.4 and MariaDB 10'
-        services:
-          - mariadb
-        caches:
-          - npm
-          - composer
-        script:
-          - moodle-plugin-ci install --branch='MOODLE_401_STABLE'
-          - moodle-plugin-ci phplint
-          - moodle-plugin-ci phpcpd
-          - moodle-plugin-ci phpmd
-          - moodle-plugin-ci codechecker
-          - moodle-plugin-ci validate
-          - moodle-plugin-ci savepoints
-          - moodle-plugin-ci mustache
-          - moodle-plugin-ci grunt
-          - moodle-plugin-ci phpdoc
-          - moodle-plugin-ci phpunit
+    - parallel:
+        steps:
+          - step:
+              <<: *base
+              name: PHP Lint
+              script:
+                - *baseInst
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *base
+              name: PHP Copy detector
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *base
+              name: PHP Mess detector
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *base
+              name: PHP Code checker
+              script:
+                - *baseInst
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *base
+              name: PHP Validate
+              script:
+                - *baseInst
+                - moodle-plugin-ci validate
+          - step:
+              <<: *base
+              name: PHP Savepoints
+              script:
+                - *baseInst
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *base
+              name: PHP Mustache
+              script:
+                - *baseInst
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *base
+              name: PHP Grunt
+              script:
+                - *baseInst
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *base
+              name: PHP Doc
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *base
+              name: PHPUnit
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpunit

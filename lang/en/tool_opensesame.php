@@ -18,7 +18,9 @@
  * Strings for component 'tool_opensesame', language 'en'
  *
  * @package    tool_opensesame
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -60,4 +62,18 @@ $string['clientsecret_missing'] = 'clientsecret missing';
 $string['authurl_missing'] = 'authurl missing';
 $string['baseurl_missing'] = 'baseurl missing';
 $string['customerintegrationid_missing'] = 'customerintegrationid missing';
-$string['access_token_missing'] = 'access token missing';
+$string['optableth:id'] = 'Id';
+$string['optableth:title'] = 'Course name';
+$string['optableth:category'] = 'Category';
+$string['optableth:status'] = 'Status';
+$string['optableth:moodleid'] = 'MoodleID';
+$string['opsecoursestatuspage'] = 'OpenSesame courses status';
+$string['opcategory'] = 'OpenSesame category';
+$string['opcategory_desc'] = 'Select parent for OpenSesame categories';
+$string['apicall_pagesize'] = 'API page size';
+$string['apicall_pagesize_desc'] = 'Page size for the api call when retrieving OpenSesame courses';
+$string['coursesyncfailmax'] = 'Maximun consecutive fail task';
+$string['coursesyncfailmax_desc'] = 'If adhoc tasks fails consecutively adhoc task creation will blocked';
+$string['resetfailtasks'] = 'Resume adhoc queue';
+$string['resumeadhoc'] = 'The adhoc task queue for opensesame has been resumed';
+$string['adhocblocked'] = 'Adhoc task queue for opensesame courses creation has been blocked due to consecutive failed attempts';

@@ -15,12 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 namespace tool_opensesame\task;
 
-use context_course;
-use tool_opensesame\opensesameapi;
-
-defined('MOODLE_INTERNAL') || die();
-require_once($CFG->dirroot . '/lib/filelib.php');
-require_once($CFG->dirroot . '/course/lib.php');
+use tool_opensesame\local\opensesame_handler;
 
 /**
  * Scheduled task integrating with OpenSesame API every 24 hours.
@@ -28,10 +23,12 @@ require_once($CFG->dirroot . '/course/lib.php');
  *
  * @since      3.9
  * @package    tool_opensesame
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class opensesamesync extends \core\task\scheduled_task {
+class retrieve_courses_task extends \core\task\scheduled_task {
 
 
     /**
@@ -47,18 +44,14 @@ class opensesamesync extends \core\task\scheduled_task {
     /**
      * Scheduled task to initiate Open Sesame API.
      *
-     * @param null $testing
      * @return bool
      * @throws \dml_exception
      */
-    public function execute($testing = null): bool {
-
-        mtrace("Opensesame task just started.");
-
-        $opensesameapi = new opensesameapi;
-        $opensesameapi->authenticate();
-        mtrace('opensesame just finished.');
+    public function execute(): bool {
+        !PHPUNIT_TEST ? mtrace("Opensesame task just started.") : false;
+        $handler = new opensesame_handler();
+        $handler->run();
+        !PHPUNIT_TEST ? mtrace('opensesame just finished.') : false;
         return true;
     }
 }
-

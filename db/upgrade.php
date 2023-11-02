@@ -18,7 +18,9 @@
  * Upgrade script for tool_opensesame.
  *
  * @package    tool_opensesame
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -100,6 +102,144 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
 
         // Opensesame savepoint reached.
         upgrade_plugin_savepoint(true, 2023013100, 'tool', 'opensesame');
+    }
+    if ($oldversion < 2023082900) {
+
+        // Define field status to be added to tool_opensesame.
+        $table = new xmldb_table('tool_opensesame');
+        $field = new xmldb_field('status', XMLDB_TYPE_TEXT, null, null, null, null, null, 'courseid');
+        $field2 = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
+
+        // Conditionally launch add field status.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Conditionally launch add field timecreated.
+        if (!$dbman->field_exists($table, $field2)) {
+            $dbman->add_field($table, $field2);
+        }
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023082900, 'tool', 'opensesame');
+    }
+
+    if ($oldversion < 2023082903) {
+        $DB->delete_records('tool_opensesame');
+
+        // Define key courseid (foreign) to be added to tool_opensesame.
+        $table = new xmldb_table('tool_opensesame');
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch drop index status.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        $key = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+
+        // Launch add key courseid.
+        $dbman->add_key($table, $key);
+
+        // Changing nullability and type of field status on table tool_opensesame to not null.
+        $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'retrieved');
+
+        // Launch change of nullability for field status.
+        $dbman->change_field_notnull($table, $field);
+        // Launch change of type for field status.
+        $dbman->change_field_type($table, $field);
+        // Launch change of default for field status.
+        $dbman->change_field_default($table, $field);
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch add index status.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023082903, 'tool', 'opensesame');
+    }
+
+    if ($oldversion < 2023082904) {
+        $DB->delete_records('tool_opensesame');
+
+        $table = new xmldb_table('tool_opensesame');
+        if ($dbman->table_exists($table)) {
+            $dbman->rename_table($table, 'tool_opensesame_course');
+        }
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023082904, 'tool', 'opensesame');
+    }
+
+    if ($oldversion < 2023082905) {
+        $table = new xmldb_table('tool_opensesame_course');
+
+        $fieldtoadd = new xmldb_field('descriptionhtml', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL);
+
+        $fieldtoremove = new xmldb_field('provider', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL);
+
+        // Conditionally launch add field descriptionhtml.
+        if (!$dbman->field_exists($table, $fieldtoadd)) {
+            $dbman->add_field($table, $fieldtoadd);
+        }
+
+        // Conditionally launch remove field provider.
+        if ($dbman->field_exists($table, $fieldtoremove)) {
+            $dbman->drop_field($table, $fieldtoremove);
+        }
+
+        // Opensesame savepoint reached.
+        upgrade_plugin_savepoint(true, 2023082905, 'tool', 'opensesame');
+    }
+
+    if ($oldversion < 2023082906) {
+        // Define field courseid to be modified to tool_opensesame_course.
+        $table = new xmldb_table('tool_opensesame_course');
+
+        $keytodrop = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $dbman->drop_key($table, $keytodrop);
+
+        $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, null, null);
+
+        // Launch change of nullability for field status.
+        $dbman->change_field_notnull($table, $field);
+
+        $keytoadd = new xmldb_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+        $dbman->add_key($table, $keytoadd);
+
+        upgrade_plugin_savepoint(true, 2023082906, 'tool', 'opensesame');
+    }
+
+    if ($oldversion < 2023082907) {
+        // Define field courseid to be modified to tool_opensesame_course.
+        $table = new xmldb_table('tool_opensesame_course');
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch drop index status.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Changing nullability and type of field status on table tool_opensesame to not null.
+        $field = new xmldb_field('status', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'retrieved');
+
+        // Launch change of nullability for field status.
+        $dbman->change_field_type($table, $field);
+        $dbman->change_field_default($table, $field);
+
+        $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        // Conditionally launch drop index status.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        upgrade_plugin_savepoint(true, 2023082907, 'tool', 'opensesame');
     }
 
     return true;
