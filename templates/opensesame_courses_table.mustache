@@ -46,7 +46,7 @@
             <th>{{#str}} optableth:title, tool_opensesame {{/str}}</th>
             <th>{{#str}} optableth:category, tool_opensesame {{/str}}</th>
             <th>{{#str}} optableth:course, tool_opensesame {{/str}}</th>
-            <th>{{#str}} optableth:status, tool_opensesame {{/str}}</th>
+            <th >{{#str}} optableth:status, tool_opensesame {{/str}}</th>
         </tr>
     </thead>
     <tbody>
@@ -55,8 +55,8 @@
             <th>{{idopensesame}}</th>
             <th>{{title}}</th>
             <th>{{oscategories}}</th>
-            <th><a href="{{courseurl}}">{{#str}} view {{/str}} {{#str}} course {{/str}} - {{courseid}}</a></th>
-            <th>{{status}}</th>
+            <th>{{#courseurl}}<a href="{{courseurl}}">{{#str}} view {{/str}} {{#str}} course {{/str}} - {{courseid}}</a>{{/courseurl}}</th>
+            <th>{{status}} <i type="button" data-toggle="tooltip" data-html="true" data-placement="bottom" class="fa-solid fa-exclamation-circle text-info" title="{{statusinfo}}"></i></th>
         </tr>
     {{/data}}
     </tbody>
