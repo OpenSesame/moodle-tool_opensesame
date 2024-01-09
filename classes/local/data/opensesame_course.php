@@ -166,9 +166,16 @@ class opensesame_course extends base {
         global $DB;
 
         $limitfrom = $page * $pagesize;
-        $fields = 'id, title, oscategories, status, courseid';
+        $fields = 'idopensesame, title, oscategories, courseid, status';
         $opcourses = array_values($DB->get_records('tool_opensesame_course', [], '', $fields, $limitfrom, $pagesize));
 
+        foreach ($opcourses as $key => $opcourse) {
+            if (!empty($opcourse->courseid)) {
+                $courseurl = new \moodle_url('/course/view.php', ['id' => $opcourse->courseid]);
+            }
+            $opcourses[$key]->courseurl = $courseurl ?? null;
+            $opcourses[$key]->status = get_string($opcourse->status, 'tool_opensesame');
+        }
         return $opcourses;
     }
 
