@@ -87,3 +87,11 @@ $string['queued_info'] = 'The OpenSesame course has been queued for creation and
 $string['created_info'] = 'The OpenSesame course has been created in Moodle.';
 $string['imageimported_info'] = 'The OpenSesame course image has been added to the Moodle course.';
 $string['scormimported_info'] = 'The OpenSesame activity has been added to the Moodle course, sync is complete.';
+$string['statusinfo'] = 'Status info';
+$string['statusinfo_body'] = '
+<p>Retrieved: The course information has been retrieved from OpenSesame.</p>
+<p>Queued: The OpenSesame course has been queued for creation and sync.</p>
+<p>Course created: The OpenSesame course has been created in Moodle.</p>
+<p>Course image imported: The OpenSesame course image has been added to the Moodle course.</p>
+<p>Course activity synced: The OpenSesame activity has been added to the Moodle course, sync is complete.</p>
+';
