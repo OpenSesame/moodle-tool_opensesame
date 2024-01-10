@@ -185,17 +185,16 @@ class opensesame_course extends base {
     }
 
     /**
-     * Return the scorms that have invalid names.
+     * Return the scorms activities
      *
      * @return array
      */
-    public static function op_scorms_invalid_name() {
+    public static function op_activities() {
         global $DB;
-        $sql = "SELECT s.id, s.name, toc.idopensesame
+        $sql = "SELECT s.id, s.name, toc.idopensesame, toc.courseid, toc.title
               FROM {tool_opensesame_course} toc
               JOIN {scorm} s ON s.course = toc.courseid
-             WHERE status = 'scormimported'
-               AND s.name LIKE 'scorm_%'";
+             WHERE status = 'scormimported'";
         $invalidscorms = $DB->get_records_sql($sql);
         return $invalidscorms;
     }

@@ -66,12 +66,12 @@ $paginationurl->params([
 ]);
 $currentpage = $page + 1;
 $queueblocked = process_course_task::queue_is_blocked();
-$invalidscorms = opensesame_course::op_scorms_invalid_name();
+$activities = opensesame_course::op_activities();
 
 $templatecontext = [
     'data' => $templatedata,
     'pages' => $pages,
-    'changenames' => !empty($invalidscorms),
+    'changenames' => true,
     'currentpage' => $currentpage,
     'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
@@ -88,13 +88,34 @@ if (!empty($resettasks) && $queueblocked) {
     redirect(new moodle_url($baseurl), get_string('resumeadhoc', 'tool_opensesame'), null);
 }
 
-if (!empty($invalidscorms) && $updatenames) {
-    foreach ($invalidscorms as $invalidscorm) {
-        $scorm = $DB->get_record('scorm', ['id' => $invalidscorm->id]);
-        $scorm->name = $invalidscorm->idopensesame;
+if ($updatenames) {
+    foreach ($activities as $activities) {
+        $scorm = $DB->get_record('scorm', ['id' => $activities->id]);
+        $pluginconfig = get_config('tool_opensesame');
+        $activityname = $pluginconfig->activity_name;
+        $activityprefix = $pluginconfig->activity_prefix;
+        
+        switch ($activityname) {
+            case 'guid':
+                $name = $activities->guid;
+                break;
+            case 'courseid':
+                $name = $activities->courseid;
+                break;
+            case 'coursename':
+                $name = $activities->title;
+                break;
+            case 'prefix':
+                $name = '';
+                break;
+            default:
+                $name = $activities->guid;
+                break;
+        }
+        $scorm->name = !empty($activityprefix) ? $activityprefix . $name : $name;
         $DB->update_record('scorm', $scorm);
-        echo $invalidscorm->id . ' ' . $invalidscorm->name . ' ' . $invalidscorm->idopensesame . '<br>';
     }
+
     redirect(new moodle_url($baseurl), get_string('namesupdated', 'tool_opensesame'), null);
 }
 

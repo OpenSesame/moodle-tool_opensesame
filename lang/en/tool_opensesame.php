@@ -77,6 +77,15 @@ $string['coursesyncfailmax_desc'] = 'If adhoc tasks fails consecutively adhoc ta
 $string['resetfailtasks'] = 'Resume adhoc queue';
 $string['resumeadhoc'] = 'The adhoc task queue for opensesame has been resumed';
 $string['adhocblocked'] = 'Adhoc task queue for opensesame courses creation has been blocked due to consecutive failed attempts';
-$string['updateactivityname'] = 'Some activities have scorm_* schema names. Click here to update them.';
+$string['updateactivityname'] = 'To update the activity name with the latest schema names, click the button below.';
 $string['updatenames'] = 'Update';
-$string['namesupdated'] = 'Success - the scorm_* schema names have been updated.';
+$string['namesupdated'] = 'Success - the schema names have been updated.';
+$string['guid'] = 'GUID';
+$string['coursename'] = 'Course name';
+$string['courseid'] = 'Course ID';
+$string['prefix'] = 'Use prefix as name';
+$string['activity_name'] = 'Activity name';
+$string['activity_name_desc'] = 'Select the schema to be used in the Activity name.';
+$string['activity_prefix'] = 'Activity prefix';
+$string['activity_prefix_desc'] = 'Enter the prefix to be used in the Activity name.';
+
