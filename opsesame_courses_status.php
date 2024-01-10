@@ -94,7 +94,7 @@ if ($updatenames) {
         $pluginconfig = get_config('tool_opensesame');
         $activityname = $pluginconfig->activity_name;
         $activityprefix = $pluginconfig->activity_prefix;
-        
+
         switch ($activityname) {
             case 'guid':
                 $name = $activities->guid;
