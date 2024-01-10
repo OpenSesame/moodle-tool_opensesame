@@ -43,6 +43,8 @@ $output = ''; // Final output to render.
 $page        = optional_param('page', 1, PARAM_INT);
 $pagesize    = optional_param('pagesize', 50, PARAM_INT);
 $resettasks    = optional_param('reset', 0, PARAM_BOOL);
+$updatenames    = optional_param('updatenames', 0, PARAM_BOOL);
+
 
 if ($page >= 1) {
     $page = $page - 1;
@@ -64,10 +66,12 @@ $paginationurl->params([
 ]);
 $currentpage = $page + 1;
 $queueblocked = process_course_task::queue_is_blocked();
+$invalidscorms = opensesame_course::op_scorms_invalid_name();
 
 $templatecontext = [
     'data' => $templatedata,
     'pages' => $pages,
+    'changenames' => !empty($invalidscorms),
     'currentpage' => $currentpage,
     'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
@@ -82,6 +86,16 @@ if (!empty($resettasks) && $queueblocked) {
     }
     $opsecourses->close();
     redirect(new moodle_url($baseurl), get_string('resumeadhoc', 'tool_opensesame'), null);
+}
+
+if (!empty($invalidscorms) && $updatenames) {
+    foreach ($invalidscorms as $invalidscorm) {
+        $scorm = $DB->get_record('scorm', ['id' => $invalidscorm->id]);
+        $scorm->name = $invalidscorm->idopensesame;
+        $DB->update_record('scorm', $scorm);
+        echo $invalidscorm->id . ' ' . $invalidscorm->name . ' ' . $invalidscorm->idopensesame . '<br>';
+    }
+    redirect(new moodle_url($baseurl), get_string('namesupdated', 'tool_opensesame'), null);
 }
 
 $output .= $OUTPUT->render_from_template('tool_opensesame/opensesame_courses_table', $templatecontext);

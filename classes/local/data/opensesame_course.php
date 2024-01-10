@@ -183,4 +183,20 @@ class opensesame_course extends base {
         $count = $DB->count_records('tool_opensesame_course');
         return $count;
     }
+
+    /**
+     * Return the scorms that have invalid names.
+     *
+     * @return array
+     */
+    public static function op_scorms_invalid_name() {
+        global $DB;
+        $sql = "SELECT s.id, s.name, toc.idopensesame
+              FROM {tool_opensesame_course} toc
+              JOIN {scorm} s ON s.course = toc.courseid
+             WHERE status = 'scormimported'
+               AND s.name LIKE 'scorm_%'";
+        $invalidscorms = $DB->get_records_sql($sql);
+        return $invalidscorms;
+    }
 }

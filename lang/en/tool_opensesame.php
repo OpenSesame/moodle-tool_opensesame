@@ -77,3 +77,6 @@ $string['coursesyncfailmax_desc'] = 'If adhoc tasks fails consecutively adhoc ta
 $string['resetfailtasks'] = 'Resume adhoc queue';
 $string['resumeadhoc'] = 'The adhoc task queue for opensesame has been resumed';
 $string['adhocblocked'] = 'Adhoc task queue for opensesame courses creation has been blocked due to consecutive failed attempts';
+$string['updateactivityname'] = 'Some activities have scorm_* schema names. Click here to update them.';
+$string['updatenames'] = 'Update';
+$string['namesupdated'] = 'Success - the scorm_* schema names have been updated.';
