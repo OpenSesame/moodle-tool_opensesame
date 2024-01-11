@@ -559,7 +559,7 @@ class opensesame_handler extends migration_handler {
     private function delete_disabled_courses() {
         global $DB;
 
-        $sql = 'SELECT courseid, status 
+        $sql = 'SELECT courseid, status
                   FROM {tool_opensesame_course}
                  WHERE active = 0
                    AND (courseid IS NOT NULL AND courseid <> 0)
