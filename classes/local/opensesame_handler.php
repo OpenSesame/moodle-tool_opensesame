@@ -289,12 +289,13 @@ class opensesame_handler extends migration_handler {
      */
     public function process_imageimported_to_scormimported(opensesame_course &$oscourse, opensesame $api): string {
         $courseid = $oscourse->courseid;
+        $guid = $oscourse->idopensesame;
         $allowedtype = get_config('tool_opensesame', 'allowedtypes');
 
         if ($allowedtype == SCORM_TYPE_LOCAL) {
-            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api);
+            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api, $guid);
         } else { // AICC type.
-            $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api);
+            $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api, $guid);
         }
 
         return $message;
@@ -302,11 +303,11 @@ class opensesame_handler extends migration_handler {
 
     /**
      * Generates a file name for a downloaded package.
-     * @param int $courseid
+     * @param string $guid
      * @return string
      */
-    private function generate_os_package_filename(int $courseid): string {
-        return 'opensesame_package_' . $courseid . '.zip';
+    private function generate_os_package_filename(string $guid): string {
+        return $guid . '.zip';
     }
 
     /**
@@ -314,10 +315,11 @@ class opensesame_handler extends migration_handler {
      * @param string $downloadurl
      * @param int $courseid
      * @param opensesame $api
+     * @param string $guid
      */
-    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api) {
+    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api, $guid) {
         // Download file.
-        $filename = $this->generate_os_package_filename($courseid);
+        $filename = $this->generate_os_package_filename($guid);
         $path = $api->download_scorm_package($downloadurl, $filename);
         // Create a file from temporary folder in the user file draft area.
         $context = context_course::instance($courseid);
@@ -426,7 +428,10 @@ class opensesame_handler extends migration_handler {
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
-        $moduleinfo->name = 'scorm_' . $courseid;
+        $opcourse = opensesame_course::get_record([
+            'courseid' => $courseid,
+        ]);
+        $moduleinfo->name = self::generate_activity_name($opcourse);
         $moduleinfo->introeditor = ['text' => '',
             'format' => '1', 'itemid' => '0'];
         $moduleinfo->showdescription = 0;
@@ -510,5 +515,34 @@ class opensesame_handler extends migration_handler {
         $targetcategory = end($treecategory); // Select last grandchild category.
 
         return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
+    }
+
+    /**
+     * Generates a name for a course activity.
+     * @param object $opcourse
+     * @return string
+     */
+    public static function generate_activity_name($opcourse) {
+        $pluginconfig = get_config('tool_opensesame');
+        $activityname = $pluginconfig->activity_name;
+        $activityprefix = $pluginconfig->activity_prefix;
+        switch ($activityname) {
+            case 'guid':
+                $name = $opcourse->guid;
+                break;
+            case 'courseid':
+                $name = $opcourse->courseid;
+                break;
+            case 'coursename':
+                $name = $opcourse->title;
+                break;
+            case 'prefix':
+                $name = '';
+                break;
+            default:
+                $name = $opcourse->guid;
+                break;
+        }
+        return !empty($activityprefix) ? $activityprefix . $name : $name;
     }
 }
