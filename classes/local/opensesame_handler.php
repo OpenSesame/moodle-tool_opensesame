@@ -154,12 +154,18 @@ class opensesame_handler extends migration_handler {
             $page++;
         } while (!empty($requestdata->paging->next));
 
-        // Queue all entities which don't exist.
-        $this->process_and_log_entities(opensesame_course::get_recordset([
+        // Queue all entities which don't exist and are active.
+        $newentities = opensesame_course::get_recordset([
             'status' => opensesame_course::STATUS_RETRIEVED,
-        ]), $api, [
+            'active' => 1
+        ]);
+
+        $this->process_and_log_entities($newentities, $api, [
             opensesame_course::STATUS_QUEUED => true,
         ]);
+
+        // Delete all courses that are disabled.
+        $this->delete_disabled_courses();
     }
 
     /**
@@ -545,4 +551,35 @@ class opensesame_handler extends migration_handler {
         }
         return !empty($activityprefix) ? $activityprefix . $name : $name;
     }
+
+    /**
+     * Deletes all disabled course from Moodle.
+     * @return bool If successful.
+     */
+    private function delete_disabled_courses() {
+        global $DB;
+
+        $sql = 'SELECT courseid, status
+                  FROM {tool_opensesame_course}
+                 WHERE active = 0
+                   AND (courseid IS NOT NULL AND courseid <> 0)
+                   AND status <> :status';
+
+        $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_DELETED]);
+
+        foreach ($disabledcourses as $disabledcourse) {
+            !PHPUNIT_TEST ? mtrace('[INFO] Deleting course: ' . $disabledcourse->courseid) : false;
+            // Delete course.
+            if (delete_course($disabledcourse->courseid, true)) {
+                $disabledcourse->courseid = 0;
+                $disabledcourse->status = opensesame_course::STATUS_DELETED;
+                $disabledcourse->mtrace_errors_save();
+                !PHPUNIT_TEST ? mtrace('[INFO] Success delete, course: ' . $disabledcourse->courseid) : false;
+            } else {
+                !PHPUNIT_TEST ? mtrace('[ERROR] Error deleting course: ' . $disabledcourse->courseid) : false;
+            }
+        }
+        return true;
+    }
+
 }
