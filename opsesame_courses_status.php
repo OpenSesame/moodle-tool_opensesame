@@ -89,30 +89,9 @@ if (!empty($resettasks) && $queueblocked) {
 }
 
 if ($updatenames) {
-    foreach ($activities as $activities) {
-        $scorm = $DB->get_record('scorm', ['id' => $activities->id]);
-        $pluginconfig = get_config('tool_opensesame');
-        $activityname = $pluginconfig->activity_name;
-        $activityprefix = $pluginconfig->activity_prefix;
-
-        switch ($activityname) {
-            case 'guid':
-                $name = $activities->guid;
-                break;
-            case 'courseid':
-                $name = $activities->courseid;
-                break;
-            case 'coursename':
-                $name = $activities->title;
-                break;
-            case 'prefix':
-                $name = '';
-                break;
-            default:
-                $name = $activities->guid;
-                break;
-        }
-        $scorm->name = !empty($activityprefix) ? $activityprefix . $name : $name;
+    foreach ($activities as $activity) {
+        $scorm = $DB->get_record('scorm', ['id' => $activity->id]);
+        $scorm->name = self::generate_activity_name($activity);
         $DB->update_record('scorm', $scorm);
     }
 
