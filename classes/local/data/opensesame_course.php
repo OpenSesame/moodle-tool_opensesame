@@ -71,6 +71,9 @@ class opensesame_course extends base {
     /** @var string */
     const STATUS_SCORM_IMPORTED = 'scormimported';
 
+    /** @var string */
+    const STATUS_DELETED = 'deleted';
+
     /** @var string[] Array of steps. */
     protected static $steps = [
         self::STATUS_RETRIEVED,
@@ -149,7 +152,7 @@ class opensesame_course extends base {
                 'type' => PARAM_ALPHANUMEXT,
                 'null' => NULL_NOT_ALLOWED,
                 'default' => self::STATUS_RETRIEVED,
-                'choices' => static::$steps,
+                'choices' => array_merge(static::$steps, [self::STATUS_DELETED]),
             ],
         );
     }
