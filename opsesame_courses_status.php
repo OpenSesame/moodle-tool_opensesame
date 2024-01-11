@@ -25,6 +25,7 @@
 
 use tool_opensesame\api\opensesame;
 use tool_opensesame\local\data\opensesame_course;
+use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\task\process_course_task;
 
 // Requirements.
@@ -91,7 +92,7 @@ if (!empty($resettasks) && $queueblocked) {
 if ($updatenames) {
     foreach ($activities as $activity) {
         $scorm = $DB->get_record('scorm', ['id' => $activity->id]);
-        $scorm->name = self::generate_activity_name($activity);
+        $scorm->name = opensesame_handler::generate_activity_name($activity);
         $DB->update_record('scorm', $scorm);
     }
 
