@@ -108,7 +108,6 @@ class opensesame extends \curl {
             $url = $this->baseurl . $resource;
         }
 
-        !PHPUNIT_TEST ? mtrace("Getting this: $url") : false;
         $this->resetHeader();
         $this->resetcookie();
         $this->reset_request_state_vars();
@@ -116,17 +115,24 @@ class opensesame extends \curl {
         $header = array_merge($header, $this->get_authentication_header());
         $this->setHeader($header);
 
+        !PHPUNIT_TEST ? mtrace("Retrieving page: $params[page]") : false;
         $response = $this->get($url, $params);
 
         $httpcode = $this->get_http_code();
         if ($httpcode !== 200) {
+            $debug = "HTTP code: $httpcode" . PHP_EOL;
             if ($httpcode === 401) {
                 unset_config('accesstoken', 'tool_opensesame');
                 $this->accesstoken = null;
             }
-            throw new \Exception("Could not process GET HTTP request for API URL $url: " . $this->get_http_code());
+            $debug .= "Response: $response" . PHP_EOL;
+            foreach ($params as $key => $value) {
+                $debug .= "$key: $value" . PHP_EOL;
+            }
+            !PHPUNIT_TEST ? mtrace("Debug: " . $debug) : false;
+            return false;
         }
-
+        !PHPUNIT_TEST ? mtrace("Success retrieve Page: $params[page]") : false;
         return $response;
     }
 
@@ -144,6 +150,7 @@ class opensesame extends \curl {
         $attempts = 0;
         $response = false;
         $exception = null;
+
         do {
             try {
                 $response = $this->get_request($resource, $header, $params, $url);
@@ -267,6 +274,17 @@ class opensesame extends \curl {
         );
 
         return json_decode($response);
+    }
+
+    /**
+     * Debug the request information.
+     * @param int $pagesize
+     * @return void
+     */
+    public function request_debug($pagesize): void {
+        $url = $this->baseurl . "/v1/content";
+        $customerintegrationid = $this->customerintegrationid;
+        !PHPUNIT_TEST ? mtrace("Getting this: $url Customer Integration Id: $customerintegrationid Pagesize: $pagesize") : false;
     }
 
     /**

@@ -141,6 +141,7 @@ class opensesame_handler extends migration_handler {
         $page = 1;
         $pagesize = get_config('tool_opensesame', 'apicall_pagesize');
         $pagesize = $pagesize ? $pagesize : 50;
+        $api->request_debug($pagesize);
         do {
             $requestdata = $api->get_course_list($pagesize, $page);
 
