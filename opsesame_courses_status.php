@@ -25,6 +25,7 @@
 
 use tool_opensesame\api\opensesame;
 use tool_opensesame\local\data\opensesame_course;
+use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\task\process_course_task;
 
 // Requirements.
@@ -43,6 +44,8 @@ $output = ''; // Final output to render.
 $page        = optional_param('page', 1, PARAM_INT);
 $pagesize    = optional_param('pagesize', 50, PARAM_INT);
 $resettasks    = optional_param('reset', 0, PARAM_BOOL);
+$updatenames    = optional_param('updatenames', 0, PARAM_BOOL);
+
 
 if ($page >= 1) {
     $page = $page - 1;
@@ -52,7 +55,7 @@ if ($page >= 1) {
 
 $countallopcourses = opensesame_course::count_op_courses();
 $templatedata = opensesame_course::export_for_mustache($page, $pagesize);
-$pagecount = round($countallopcourses / $pagesize);
+$pagecount = ceil($countallopcourses / $pagesize);
 $pages = [1];
 if ($pagecount >= 1) {
     $pages = range(1, $pagecount);
@@ -64,10 +67,12 @@ $paginationurl->params([
 ]);
 $currentpage = $page + 1;
 $queueblocked = process_course_task::queue_is_blocked();
+$activities = opensesame_course::op_activities();
 
 $templatecontext = [
     'data' => $templatedata,
     'pages' => $pages,
+    'changenames' => true,
     'currentpage' => $currentpage,
     'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
@@ -82,6 +87,16 @@ if (!empty($resettasks) && $queueblocked) {
     }
     $opsecourses->close();
     redirect(new moodle_url($baseurl), get_string('resumeadhoc', 'tool_opensesame'), null);
+}
+
+if ($updatenames) {
+    foreach ($activities as $activity) {
+        $scorm = $DB->get_record('scorm', ['id' => $activity->id]);
+        $scorm->name = opensesame_handler::generate_activity_name($activity);
+        $DB->update_record('scorm', $scorm);
+    }
+
+    redirect(new moodle_url($baseurl), get_string('namesupdated', 'tool_opensesame'), null);
 }
 
 $output .= $OUTPUT->render_from_template('tool_opensesame/opensesame_courses_table', $templatecontext);

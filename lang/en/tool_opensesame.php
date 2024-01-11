@@ -82,11 +82,13 @@ $string['queued'] = 'Queued';
 $string['created'] = 'Course created';
 $string['imageimported'] = 'Course image imported';
 $string['scormimported'] = 'Course activity synced';
+$string['deleted'] = 'Course deleted';
 $string['retrieved_info'] = 'The course information has been retrieved from OpenSesame.';
 $string['queued_info'] = 'The OpenSesame course has been queued for creation and sync.';
 $string['created_info'] = 'The OpenSesame course has been created in Moodle.';
 $string['imageimported_info'] = 'The OpenSesame course image has been added to the Moodle course.';
 $string['scormimported_info'] = 'The OpenSesame activity has been added to the Moodle course, sync is complete.';
+$string['deleted_info'] = 'The OpenSesame course has been deleted from Moodle.';
 $string['statusinfo'] = 'Status info';
 $string['statusinfo_body'] = '
 <p>Retrieved: The course information has been retrieved from OpenSesame.</p>
@@ -95,3 +97,15 @@ $string['statusinfo_body'] = '
 <p>Course image imported: The OpenSesame course image has been added to the Moodle course.</p>
 <p>Course activity synced: The OpenSesame activity has been added to the Moodle course, sync is complete.</p>
 ';
+$string['updateactivityname'] = 'To update the activity name with the latest schema names, click the button below.';
+$string['updatenames'] = 'Update';
+$string['namesupdated'] = 'Success - the schema names have been updated.';
+$string['guid'] = 'GUID';
+$string['coursename'] = 'Course name';
+$string['courseid'] = 'Course ID';
+$string['prefix'] = 'Use prefix as name';
+$string['activity_name'] = 'Activity name';
+$string['activity_name_desc'] = 'Select the schema to be used in the Activity name.';
+$string['activity_prefix'] = 'Activity prefix';
+$string['activity_prefix_desc'] = 'Enter the prefix to be used in the Activity name.';
+

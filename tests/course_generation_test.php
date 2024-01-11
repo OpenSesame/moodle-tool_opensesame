@@ -60,6 +60,8 @@ class course_generation_test extends advanced_testcase {
      * Test setup
      */
     protected function setUp(): void {
+        set_config('activity_name', 'courseid', 'tool_opensesame');
+        set_config('activity_prefix', 'scorm_', 'tool_opensesame');
         $this->opsmgenerator = self::getDataGenerator()->get_plugin_generator('tool_opensesame');
         $this->setAdminUser();
         $this->resetAfterTest();
