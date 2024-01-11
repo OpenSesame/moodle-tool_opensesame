@@ -206,7 +206,8 @@ class opensesame_course extends base {
         $sql = "SELECT s.id, s.name, toc.idopensesame, toc.courseid, toc.title
               FROM {tool_opensesame_course} toc
               JOIN {scorm} s ON s.course = toc.courseid
-             WHERE status = 'scormimported'";
+             WHERE status = 'scormimported'
+               AND (toc.courseid IS NOT NULL && toc.courseid != 0)";
         $invalidscorms = $DB->get_records_sql($sql);
         return $invalidscorms;
     }

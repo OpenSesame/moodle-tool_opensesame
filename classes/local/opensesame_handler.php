@@ -534,7 +534,7 @@ class opensesame_handler extends migration_handler {
         $activityprefix = $pluginconfig->activity_prefix;
         switch ($activityname) {
             case 'guid':
-                $name = $opcourse->guid;
+                $name = $opcourse->idopensesame;
                 break;
             case 'courseid':
                 $name = $opcourse->courseid;

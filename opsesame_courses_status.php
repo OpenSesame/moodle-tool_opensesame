@@ -92,7 +92,8 @@ if (!empty($resettasks) && $queueblocked) {
 if ($updatenames) {
     foreach ($activities as $activity) {
         $scorm = $DB->get_record('scorm', ['id' => $activity->id]);
-        $scorm->name = opensesame_handler::generate_activity_name($activity);
+        $opcourse = $DB->get_record('tool_opensesame_course', ['idopensesame' => $activity->idopensesame]);
+        $scorm->name = opensesame_handler::generate_activity_name($opcourse);
         $DB->update_record('scorm', $scorm);
     }
 
