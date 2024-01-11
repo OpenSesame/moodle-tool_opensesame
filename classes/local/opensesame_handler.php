@@ -523,7 +523,6 @@ class opensesame_handler extends migration_handler {
      * @return string
      */
     public static function generate_activity_name($opcourse) {
-        
         $pluginconfig = get_config('tool_opensesame');
         $activityname = $pluginconfig->activity_name;
         $activityprefix = $pluginconfig->activity_prefix;
