@@ -141,6 +141,7 @@ class opensesame_handler extends migration_handler {
         $page = 1;
         $pagesize = get_config('tool_opensesame', 'apicall_pagesize');
         $pagesize = $pagesize ? $pagesize : 50;
+        $api->request_debug($pagesize);
         do {
             $requestdata = $api->get_course_list($pagesize, $page);
 
@@ -153,12 +154,18 @@ class opensesame_handler extends migration_handler {
             $page++;
         } while (!empty($requestdata->paging->next));
 
-        // Queue all entities which don't exist.
-        $this->process_and_log_entities(opensesame_course::get_recordset([
+        // Queue all entities which don't exist and are active.
+        $newentities = opensesame_course::get_recordset([
             'status' => opensesame_course::STATUS_RETRIEVED,
-        ]), $api, [
+            'active' => 1
+        ]);
+
+        $this->process_and_log_entities($newentities, $api, [
             opensesame_course::STATUS_QUEUED => true,
         ]);
+
+        // Delete all courses that are disabled.
+        $this->delete_disabled_courses();
     }
 
     /**
@@ -288,12 +295,13 @@ class opensesame_handler extends migration_handler {
      */
     public function process_imageimported_to_scormimported(opensesame_course &$oscourse, opensesame $api): string {
         $courseid = $oscourse->courseid;
+        $guid = $oscourse->idopensesame;
         $allowedtype = get_config('tool_opensesame', 'allowedtypes');
 
         if ($allowedtype == SCORM_TYPE_LOCAL) {
-            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api);
+            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api, $guid);
         } else { // AICC type.
-            $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api);
+            $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api, $guid);
         }
 
         return $message;
@@ -301,11 +309,11 @@ class opensesame_handler extends migration_handler {
 
     /**
      * Generates a file name for a downloaded package.
-     * @param int $courseid
+     * @param string $guid
      * @return string
      */
-    private function generate_os_package_filename(int $courseid): string {
-        return 'opensesame_package_' . $courseid . '.zip';
+    private function generate_os_package_filename(string $guid): string {
+        return $guid . '.zip';
     }
 
     /**
@@ -313,10 +321,11 @@ class opensesame_handler extends migration_handler {
      * @param string $downloadurl
      * @param int $courseid
      * @param opensesame $api
+     * @param string $guid
      */
-    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api) {
+    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api, $guid) {
         // Download file.
-        $filename = $this->generate_os_package_filename($courseid);
+        $filename = $this->generate_os_package_filename($guid);
         $path = $api->download_scorm_package($downloadurl, $filename);
         // Create a file from temporary folder in the user file draft area.
         $context = context_course::instance($courseid);
@@ -425,7 +434,10 @@ class opensesame_handler extends migration_handler {
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
-        $moduleinfo->name = 'scorm_' . $courseid;
+        $opcourse = opensesame_course::get_record([
+            'courseid' => $courseid,
+        ]);
+        $moduleinfo->name = self::generate_activity_name($opcourse);
         $moduleinfo->introeditor = ['text' => '',
             'format' => '1', 'itemid' => '0'];
         $moduleinfo->showdescription = 0;
@@ -510,4 +522,64 @@ class opensesame_handler extends migration_handler {
 
         return $DB->get_field('course_categories', 'id', ['name' => $targetcategory]);
     }
+
+    /**
+     * Generates a name for a course activity.
+     * @param object $opcourse
+     * @return string
+     */
+    public static function generate_activity_name($opcourse) {
+        $pluginconfig = get_config('tool_opensesame');
+        $activityname = $pluginconfig->activity_name;
+        $activityprefix = $pluginconfig->activity_prefix;
+        switch ($activityname) {
+            case 'guid':
+                $name = $opcourse->guid;
+                break;
+            case 'courseid':
+                $name = $opcourse->courseid;
+                break;
+            case 'coursename':
+                $name = $opcourse->title;
+                break;
+            case 'prefix':
+                $name = '';
+                break;
+            default:
+                $name = $opcourse->guid;
+                break;
+        }
+        return !empty($activityprefix) ? $activityprefix . $name : $name;
+    }
+
+    /**
+     * Deletes all disabled course from Moodle.
+     * @return bool If successful.
+     */
+    private function delete_disabled_courses() {
+        global $DB;
+
+        $sql = 'SELECT courseid, status
+                  FROM {tool_opensesame_course}
+                 WHERE active = 0
+                   AND (courseid IS NOT NULL AND courseid <> 0)
+                   AND status <> :status';
+
+        $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_DELETED]);
+
+        foreach ($disabledcourses as $disabledcourse) {
+            !PHPUNIT_TEST ? mtrace('[INFO] Deleting course: ' . $disabledcourse->courseid) : false;
+            // Delete course.
+            if (delete_course($disabledcourse->courseid, true)) {
+                $disabledcourse->courseid = 0;
+                $disabledcourse->status = opensesame_course::STATUS_DELETED;
+                $disabledcourse->mtrace_errors_save();
+                !PHPUNIT_TEST ? mtrace('[INFO] Success delete, course: ' . $disabledcourse->courseid) : false;
+            } else {
+                !PHPUNIT_TEST ? mtrace('[ERROR] Error deleting course: ' . $disabledcourse->courseid) : false;
+            }
+        }
+        return true;
+    }
+
 }
