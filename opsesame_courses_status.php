@@ -52,7 +52,7 @@ if ($page >= 1) {
 
 $countallopcourses = opensesame_course::count_op_courses();
 $templatedata = opensesame_course::export_for_mustache($page, $pagesize);
-$pagecount = round($countallopcourses / $pagesize);
+$pagecount = ceil($countallopcourses / $pagesize);
 $pages = [1];
 if ($pagecount >= 1) {
     $pages = range(1, $pagecount);
