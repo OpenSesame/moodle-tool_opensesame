@@ -174,6 +174,7 @@ class opensesame_course extends base {
                 $courseurl = new \moodle_url('/course/view.php', ['id' => $opcourse->courseid]);
             }
             $opcourses[$key]->courseurl = $courseurl ?? null;
+            $opcourses[$key]->statusinfo = get_string($opcourse->status . '_info', 'tool_opensesame');
             $opcourses[$key]->status = get_string($opcourse->status, 'tool_opensesame');
         }
         return $opcourses;

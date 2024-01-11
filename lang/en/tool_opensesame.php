@@ -30,9 +30,9 @@ $string['allowedtypes_desc'] = 'Which scorm type should appear in OpenSesame Cou
 $string['authurl'] = 'Authorization API URL';
 $string['authurldesc'] = 'Authorization API URL for OpenSesame Integration';
 $string['autoconfigure'] = 'Auto configure AICC Configuration';
-$string['autoconfiguredesc'] = 'Automatically  AICC Configuration required by the Opensesame API.';
-$string['autoconfigureconfirmation'] = 'Automatically enable aicc configurations that are required by the opensesame API. The following actions will be carried out: <ul><li>enable AICC protocol support</li></ul>';
-$string['autoconfigsuccess'] = 'Success - the Opensesame API required AICC configurations has been automatically configured.';
+$string['autoconfiguredesc'] = 'Automatically  AICC Configuration required by the OpenSesame API.';
+$string['autoconfigureconfirmation'] = 'Automatically enable aicc configurations that are required by the OpenSesame API. The following actions will be carried out: <ul><li>Enable AICC protocol support</li></ul>';
+$string['autoconfigsuccess'] = 'Success - the OpenSesame API required AICC configurations has been automatically configured.';
 $string['apiauthtoken'] = 'API Authorization token';
 $string['apiauthtokendesc'] = 'API Authorization Token for OpenSesame Integration';
 $string['apiurlempty'] = 'URL of OpenSesame API is not configured correctly.';
@@ -72,13 +72,26 @@ $string['opcategory'] = 'OpenSesame category';
 $string['opcategory_desc'] = 'Select parent for OpenSesame categories';
 $string['apicall_pagesize'] = 'API page size';
 $string['apicall_pagesize_desc'] = 'Page size for the api call when retrieving OpenSesame courses';
-$string['coursesyncfailmax'] = 'Maximun consecutive fail task';
+$string['coursesyncfailmax'] = 'Maximum consecutive task failures.';
 $string['coursesyncfailmax_desc'] = 'If adhoc tasks fails consecutively adhoc task creation will blocked';
 $string['resetfailtasks'] = 'Resume adhoc queue';
-$string['resumeadhoc'] = 'The adhoc task queue for opensesame has been resumed';
-$string['adhocblocked'] = 'Adhoc task queue for opensesame courses creation has been blocked due to consecutive failed attempts';
+$string['resumeadhoc'] = 'The adhoc task queue for OpenSesame has been resumed.';
+$string['adhocblocked'] = 'Adhoc task queue for OpenSesame course creation has been blocked due to consecutive task failures.';
 $string['retrieved'] = 'Retrieved';
 $string['queued'] = 'Queued';
 $string['created'] = 'Course created';
 $string['imageimported'] = 'Course image imported';
 $string['scormimported'] = 'Course activity synced';
+$string['retrieved_info'] = 'The course information has been retrieved from OpenSesame.';
+$string['queued_info'] = 'The OpenSesame course has been queued for creation and sync.';
+$string['created_info'] = 'The OpenSesame course has been created in Moodle.';
+$string['imageimported_info'] = 'The OpenSesame course image has been added to the Moodle course.';
+$string['scormimported_info'] = 'The OpenSesame activity has been added to the Moodle course, sync is complete.';
+$string['statusinfo'] = 'Status info';
+$string['statusinfo_body'] = '
+<p>Retrieved: The course information has been retrieved from OpenSesame.</p>
+<p>Queued: The OpenSesame course has been queued for creation and sync.</p>
+<p>Course created: The OpenSesame course has been created in Moodle.</p>
+<p>Course image imported: The OpenSesame course image has been added to the Moodle course.</p>
+<p>Course activity synced: The OpenSesame activity has been added to the Moodle course, sync is complete.</p>
+';
