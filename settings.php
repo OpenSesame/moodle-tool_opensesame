@@ -82,6 +82,21 @@ if ($hassiteconfig) {
         get_string('coursesyncfailmax', 'tool_opensesame'),
         get_string('coursesyncfailmax_desc', 'tool_opensesame'), 5, PARAM_INT));
 
+        $options = [
+                'guid' => new lang_string('guid', 'tool_opensesame'),
+                'courseid' => new lang_string('courseid', 'tool_opensesame'),
+                'coursename' => new lang_string('coursename', 'tool_opensesame'),
+                'prefix' => new lang_string('prefix', 'tool_opensesame')
+        ];
+        $name = get_string('activity_name', 'tool_opensesame');
+        $desc = get_string('activity_name_desc', 'tool_opensesame');
+        $default = 'guid';
+        $settings->add(new admin_setting_configselect('tool_opensesame/activity_name', $name, $desc, $default, $options));
+
+        $settings->add(new admin_setting_configtext('tool_opensesame/activity_prefix',
+        get_string('activity_prefix', 'tool_opensesame'),
+        get_string('activity_prefix_desc', 'tool_opensesame'), '', PARAM_TEXT));
+
     // Add external page to manage OpenSesame AICC Link Configurations.
     $ADMIN->add('opensesameintegration', new admin_externalpage('aicc_config', new lang_string('aicc', 'tool_opensesame'),
             "$CFG->wwwroot/$CFG->admin/tool/opensesame/autoconfigaicc.php"));

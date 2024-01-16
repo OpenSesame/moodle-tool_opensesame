@@ -39,24 +39,28 @@
     <div class="alert alert-danger" role="alert">{{#str}} adhocblocked, tool_opensesame {{/str}}</div>
     <a class="btn btn-primary mb-2" role="button" href="?reset=1">{{#str}} resetfailtasks, tool_opensesame {{/str}}</a>
 {{/adhocblocked}}
+{{#changenames}}
+    <div class="alert alert-warning" role="alert">{{#str}} updateactivityname, tool_opensesame {{/str}}</div>
+    <a class="btn btn-primary mb-2" role="button" href="?updatenames=1">{{#str}} updatenames, tool_opensesame {{/str}}</a>
+{{/changenames}}
 <table class="generaltable">
     <thead>
         <tr>
             <th>{{#str}} optableth:id, tool_opensesame {{/str}}</th>
             <th>{{#str}} optableth:title, tool_opensesame {{/str}}</th>
             <th>{{#str}} optableth:category, tool_opensesame {{/str}}</th>
-            <th>{{#str}} optableth:status, tool_opensesame {{/str}}</th>
-            <th>{{#str}} optableth:moodleid, tool_opensesame {{/str}}</th>
+            <th>{{#str}} optableth:course, tool_opensesame {{/str}}</th>
+            <th>{{#str}} optableth:status, tool_opensesame {{/str}} <button role="button" data-toggle="popover" data-trigger="hover" data-placement="bottom" title="{{#str}} statusinfo, tool_opensesame {{/str}}" data-html=true data-content="{{#str}} statusinfo_body, tool_opensesame {{/str}}" style="border: none; background: none;"><i class="fa-solid fa-exclamation-circle text-info"></i></button></th>
         </tr>
     </thead>
     <tbody>
     {{#data}}
         <tr>
-            <th>{{id}}</th>
+            <th>{{idopensesame}}</th>
             <th>{{title}}</th>
             <th>{{oscategories}}</th>
-            <th>{{status}}</th>
-            <th>{{courseid}}</th>
+            <th>{{#courseurl}}<a href="{{courseurl}}">{{#str}} view {{/str}} {{#str}} course {{/str}} - {{courseid}}</a>{{/courseurl}}</th>
+            <th data-toggle="tooltip" data-html="true" data-placement="bottom" title="{{statusinfo}}">{{status}}</th>
         </tr>
     {{/data}}
     </tbody>

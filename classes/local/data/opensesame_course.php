@@ -71,6 +71,9 @@ class opensesame_course extends base {
     /** @var string */
     const STATUS_SCORM_IMPORTED = 'scormimported';
 
+    /** @var string */
+    const STATUS_ARCHIVED = 'archived';
+
     /** @var string[] Array of steps. */
     protected static $steps = [
         self::STATUS_RETRIEVED,
@@ -149,7 +152,7 @@ class opensesame_course extends base {
                 'type' => PARAM_ALPHANUMEXT,
                 'null' => NULL_NOT_ALLOWED,
                 'default' => self::STATUS_RETRIEVED,
-                'choices' => static::$steps,
+                'choices' => array_merge(static::$steps, [self::STATUS_ARCHIVED]),
             ],
         );
     }
@@ -166,9 +169,18 @@ class opensesame_course extends base {
         global $DB;
 
         $limitfrom = $page * $pagesize;
-        $fields = 'id, title, oscategories, status, courseid';
+        $fields = 'idopensesame, title, oscategories, courseid, status';
         $opcourses = array_values($DB->get_records('tool_opensesame_course', [], '', $fields, $limitfrom, $pagesize));
 
+        foreach ($opcourses as $key => $opcourse) {
+            $courseurl = '';
+            if (!empty($opcourse->courseid)) {
+                $courseurl = new \moodle_url('/course/view.php', ['id' => $opcourse->courseid]);
+            }
+            $opcourses[$key]->courseurl = $courseurl;
+            $opcourses[$key]->statusinfo = get_string($opcourse->status . '_info', 'tool_opensesame');
+            $opcourses[$key]->status = get_string($opcourse->status, 'tool_opensesame');
+        }
         return $opcourses;
     }
 
@@ -182,5 +194,20 @@ class opensesame_course extends base {
         global $DB;
         $count = $DB->count_records('tool_opensesame_course');
         return $count;
+    }
+
+    /**
+     * Return the scorms activities
+     *
+     * @return array
+     */
+    public static function op_activities() {
+        global $DB;
+        $sql = "SELECT s.id, s.name, toc.idopensesame, toc.courseid, toc.title
+              FROM {tool_opensesame_course} toc
+              JOIN {scorm} s ON s.course = toc.courseid
+             WHERE status = 'scormimported'
+               AND (toc.courseid IS NOT NULL && toc.courseid != 0)";
+        return $DB->get_records_sql($sql);
     }
 }

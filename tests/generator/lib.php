@@ -50,7 +50,7 @@ class tool_opensesame_generator extends component_generator_base {
                 "publisherName" => "Publisher XYZ_$i",
                 "packageDownloadUrl" => "$url/package_$i.zip",
                 "aiccLaunchUrl" => "$url/aicc",
-                "active" => rand(0, 1),
+                "active" => 1,
                 "timecreated" => time(),
                 "timemodified" => time(),
                 "usermodified" => time(),
