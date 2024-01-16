@@ -72,7 +72,7 @@ class opensesame_course extends base {
     const STATUS_SCORM_IMPORTED = 'scormimported';
 
     /** @var string */
-    const STATUS_DELETED = 'deleted';
+    const STATUS_ARCHIVED = 'archived';
 
     /** @var string[] Array of steps. */
     protected static $steps = [
@@ -152,7 +152,7 @@ class opensesame_course extends base {
                 'type' => PARAM_ALPHANUMEXT,
                 'null' => NULL_NOT_ALLOWED,
                 'default' => self::STATUS_RETRIEVED,
-                'choices' => array_merge(static::$steps, [self::STATUS_DELETED]),
+                'choices' => array_merge(static::$steps, [self::STATUS_ARCHIVED]),
             ],
         );
     }
@@ -208,7 +208,6 @@ class opensesame_course extends base {
               JOIN {scorm} s ON s.course = toc.courseid
              WHERE status = 'scormimported'
                AND (toc.courseid IS NOT NULL && toc.courseid != 0)";
-        $invalidscorms = $DB->get_records_sql($sql);
-        return $invalidscorms;
+        return $DB->get_records_sql($sql);
     }
 }

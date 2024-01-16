@@ -565,14 +565,14 @@ class opensesame_handler extends migration_handler {
                    AND (courseid IS NOT NULL AND courseid <> 0)
                    AND status <> :status';
 
-        $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_DELETED]);
+        $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_ARCHIVED]);
 
         foreach ($disabledcourses as $disabledcourse) {
-            !PHPUNIT_TEST ? mtrace('[INFO] Deleting course: ' . $disabledcourse->courseid) : false;
+            !PHPUNIT_TEST ? mtrace('[INFO] Deleting disabled course: ' . $disabledcourse->courseid) : false;
             // Delete course.
             if (delete_course($disabledcourse->courseid, true)) {
                 $disabledcourse->courseid = 0;
-                $disabledcourse->status = opensesame_course::STATUS_DELETED;
+                $disabledcourse->status = opensesame_course::STATUS_ARCHIVED;
                 $disabledcourse->mtrace_errors_save();
                 !PHPUNIT_TEST ? mtrace('[INFO] Success delete, course: ' . $disabledcourse->courseid) : false;
             } else {
