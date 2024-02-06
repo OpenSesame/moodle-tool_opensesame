@@ -248,6 +248,10 @@ class opensesame extends \curl {
             if (!$authenticated) {
                 return false;
             }
+            $this->resetHeader();
+            $this->resetcookie();
+            $this->reset_request_state_vars();
+            $this->resetopt();
         }
         return $this->accesstoken;
     }
