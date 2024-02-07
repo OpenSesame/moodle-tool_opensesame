@@ -107,12 +107,12 @@ class opensesame extends \curl {
         if (empty($url)) {
             $url = $this->baseurl . $resource;
         }
+        $header = array_merge($header, $this->get_authentication_header());
 
         $this->resetHeader();
         $this->resetcookie();
         $this->reset_request_state_vars();
         $this->resetopt();
-        $header = array_merge($header, $this->get_authentication_header());
         $this->setHeader($header);
 
         !PHPUNIT_TEST ? mtrace("Retrieving page: $params[page]") : false;
