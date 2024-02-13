@@ -96,6 +96,7 @@ $string['statusinfo_body'] = '
 <p>Course created: The OpenSesame course has been created in Moodle.</p>
 <p>Course image imported: The OpenSesame course image has been added to the Moodle course.</p>
 <p>Course activity synced: The OpenSesame activity has been added to the Moodle course, sync is complete.</p>
+<p>Course archived: The OpenSesame course has been archived on OpenSesame and deleted from Moodle.</p>
 ';
 $string['updateactivityname'] = 'To update the activity name with the latest schema names, click the button below.';
 $string['updatenames'] = 'Update';
@@ -108,3 +109,4 @@ $string['activity_name'] = 'Activity name';
 $string['activity_name_desc'] = 'Select the schema to be used in the Activity name.';
 $string['activity_prefix'] = 'Activity prefix';
 $string['activity_prefix_desc'] = 'Enter the prefix to be used in the Activity name.';
+$string['aiccnotactive'] = 'AICC is not active.';

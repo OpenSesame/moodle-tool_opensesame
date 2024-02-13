@@ -443,9 +443,15 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
+        $aiccactive = get_config('scorm', 'allowtypeexternalaicc');
+
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
         if ($moduleinfo->scormtype == SCORM_TYPE_AICCURL) {
-            $moduleinfo->packageurl = $downloadurl;
+            if (!empty($aiccactive)) {
+                $moduleinfo->packageurl = $downloadurl;
+            } else {
+                throw new \moodle_exception('aiccnotactive', 'tool_opensesame');
+            }
         }
         $moduleinfo->packagefile = $draftitemid;
         // Update frequency is daily.
