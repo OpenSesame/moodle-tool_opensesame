@@ -42,6 +42,7 @@ use file_storage;
 use stdClass;
 use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
+use tool_opensesame\auto_config;
 
 /**
  * Test class for opensesame retrieve, create record and queue adhoc tasks.
@@ -60,6 +61,8 @@ class course_generation_test extends advanced_testcase {
      * Test setup
      */
     protected function setUp(): void {
+        $ac = new auto_config();
+        $ac->configure();
         set_config('activity_name', 'courseid', 'tool_opensesame');
         set_config('activity_prefix', 'scorm_', 'tool_opensesame');
         $this->opsmgenerator = self::getDataGenerator()->get_plugin_generator('tool_opensesame');

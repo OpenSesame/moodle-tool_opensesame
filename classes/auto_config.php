@@ -40,6 +40,8 @@ class auto_config {
      * Enable AICC.
      */
     private function enable_aicc(): void {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/scorm/lib.php');
         $allowedtypes = get_config('tool_opensesame', 'allowedtypes');
         if ($allowedtypes == SCORM_TYPE_AICCURL) {
             set_config('aicchacpkeepsessiondata', 1, 'scorm');
