@@ -41,6 +41,7 @@ use advanced_testcase;
 use stdClass;
 use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
+use tool_opensesame\auto_config;
 
 /**
  * Test class for opensesame retrieve and create record and queue adhoc tasks.
@@ -61,6 +62,8 @@ class course_queing_test extends advanced_testcase {
      * @return void
      */
     protected function setUp(): void {
+        $ac = new auto_config();
+        $ac->configure();
         $this->opsmgenerator = self::getDataGenerator()->get_plugin_generator('tool_opensesame');
         $this->resetAfterTest();
     }

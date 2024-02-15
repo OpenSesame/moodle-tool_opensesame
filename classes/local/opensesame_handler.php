@@ -443,9 +443,15 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->showdescription = 0;
         $moduleinfo->mform_isexpanded_id_packagehdr = 1;
         require_once($CFG->dirroot . '/mod/scorm/lib.php');
+        $aiccactive = get_config('scorm', 'allowtypeexternalaicc');
+
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
         if ($moduleinfo->scormtype == SCORM_TYPE_AICCURL) {
-            $moduleinfo->packageurl = $downloadurl;
+            if (!empty($aiccactive)) {
+                $moduleinfo->packageurl = $downloadurl;
+            } else {
+                throw new \moodle_exception('aiccnotactive', 'tool_opensesame');
+            }
         }
         $moduleinfo->packagefile = $draftitemid;
         // Update frequency is daily.
@@ -516,7 +522,7 @@ class opensesame_handler extends migration_handler {
     private function extract_category_id_from_os_string($stringcategories) {
         global $DB;
 
-        $firstelement = explode(',', $stringcategories)[0]; // Select only first tree.
+        $firstelement = explode(', |', $stringcategories)[0]; // Select only first tree.
         $treecategory = explode('|', $firstelement); // Take tree and explode it by | symbol.
         $targetcategory = end($treecategory); // Select last grandchild category.
 
@@ -559,24 +565,31 @@ class opensesame_handler extends migration_handler {
     private function delete_disabled_courses() {
         global $DB;
 
-        $sql = 'SELECT courseid, status
+        $sql = 'SELECT id, courseid, status
                   FROM {tool_opensesame_course}
                  WHERE active = 0
-                   AND (courseid IS NOT NULL AND courseid <> 0)
-                   AND status <> :status';
+                   AND ((courseid IS NOT NULL AND courseid <> 0) OR status <> :status)';
 
         $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_ARCHIVED]);
 
         foreach ($disabledcourses as $disabledcourse) {
+            $persitentcourse = new opensesame_course($disabledcourse->id);
             !PHPUNIT_TEST ? mtrace('[INFO] Deleting disabled course: ' . $disabledcourse->courseid) : false;
             // Delete course.
-            if (delete_course($disabledcourse->courseid, true)) {
-                $disabledcourse->courseid = 0;
-                $disabledcourse->status = opensesame_course::STATUS_ARCHIVED;
-                $disabledcourse->mtrace_errors_save();
+            if (!empty($disabledcourse->courseid) && delete_course($disabledcourse->courseid, true)) {
+                $persitentcourse->courseid = 0;
+                $persitentcourse->status = opensesame_course::STATUS_ARCHIVED;
+                $persitentcourse->mtrace_errors_save();
                 !PHPUNIT_TEST ? mtrace('[INFO] Success delete, course: ' . $disabledcourse->courseid) : false;
             } else {
-                !PHPUNIT_TEST ? mtrace('[ERROR] Error deleting course: ' . $disabledcourse->courseid) : false;
+                if (!empty($disabledcourse->courseid) && $DB->record_exists('course', ['id' => $disabledcourse->courseid])) {
+                    !PHPUNIT_TEST ? mtrace('[ERROR] Error deleting course: ' . $disabledcourse->courseid) : false;
+                } else {
+                    $persitentcourse->courseid = 0;
+                    $persitentcourse->status = opensesame_course::STATUS_ARCHIVED;
+                    $persitentcourse->mtrace_errors_save();
+                    !PHPUNIT_TEST ? mtrace('[INFO] Course already deleted: ' . $disabledcourse->courseid) : false;
+                }
             }
         }
         return true;
