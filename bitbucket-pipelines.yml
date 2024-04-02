@@ -54,7 +54,7 @@ definitions:
   caches:
     npm: $HOME/.npm
 pipelines:
-  mariadb:
+  default:
     - parallel:
         steps:
           - step:
