@@ -8,6 +8,12 @@ definitions:
   installscript: &baseInst
     echo "Checking out Moodle Workplace\n" ;
     moodle-plugin-ci install --branch='MOODLE_401_STABLE' ;
+  installscript2: &baseInstmysql
+    echo "Checking out Moodle Workplace\n" ;
+    moodle-plugin-ci install --db-type='mysqli' --branch='MOODLE_401_STABLE' ;
+  installscript3: &baseInstpostgres
+    echo "Checking out Moodle Workplace\n" ;
+    moodle-plugin-ci install --db-type='pgsql' --branch='MOODLE_401_STABLE' ;
   steps:
     - step: &maridb
         name: 'Moodle 4.1, PHP 7.4 and MariaDB 10.6'
@@ -23,19 +29,15 @@ definitions:
         caches:
           - npm
           - composer
-          - docker
         services:
           - mysql
-          - docker
     - step: &postgres
         name: 'Moodle 4.1, PHP 7.4 and PostgreSQL 13'
         caches:
           - npm
           - composer
-          - docker
         services:
           - postgres
-          - docker
   services:
     mariadb:
       image: mariadb:10.6
@@ -121,23 +123,23 @@ pipelines:
               <<: *mysql
               name: PHP Savepoints mysql
               script:
-                - *baseInst
+                - *baseInstmysql
                 - moodle-plugin-ci savepoints
           - step:
               <<: *mysql
               name: PHPUnit mysql
               script:
-                - *baseInst
+                - *baseInstmysql
                 - moodle-plugin-ci phpunit
           - step:
               <<: *postgres
               name: PHP Savepoints postgres
               script:
-                - *baseInst
+                - *baseInstpostgres
                 - moodle-plugin-ci savepoints
           - step:
               <<: *postgres
               name: PHPUnit postgres
               script:
-                - *baseInst
+                - *baseInstpostgres
                 - moodle-plugin-ci phpunit
