@@ -65,7 +65,7 @@ pipelines:
                 - moodle-plugin-ci phplint
           - step:
               <<: *maridb
-              name: PHP Copy detector
+              name: PHP Copy detector 
               script:
                 - *baseInst
                 - moodle-plugin-ci phpcpd
@@ -117,129 +117,27 @@ pipelines:
               script:
                 - *baseInst
                 - moodle-plugin-ci phpunit
-  mysql:
-    - parallel:
-        steps:
           - step:
               <<: *mysql
-              name: PHP Lint
-              script:
-                - *baseInst
-                - moodle-plugin-ci phplint
-          - step:
-              <<: *mysql
-              name: PHP Copy detector
-              script:
-                - *baseInst
-                - moodle-plugin-ci phpcpd
-          - step:
-              <<: *mysql
-              name: PHP Mess detector
-              script:
-                - *baseInst
-                - moodle-plugin-ci phpmd
-          - step:
-              <<: *mysql
-              name: PHP Code checker
-              script:
-                - *baseInst
-                - moodle-plugin-ci codechecker
-          - step:
-              <<: *mysql
-              name: PHP Validate
-              script:
-                - *baseInst
-                - moodle-plugin-ci validate
-          - step:
-              <<: *mysql
-              name: PHP Savepoints
+              name: PHP Savepoints mysql
               script:
                 - *baseInst
                 - moodle-plugin-ci savepoints
           - step:
               <<: *mysql
-              name: PHP Mustache
-              script:
-                - *baseInst
-                - moodle-plugin-ci mustache
-          - step:
-              <<: *mysql
-              name: PHP Grunt
-              script:
-                - *baseInst
-                - moodle-plugin-ci grunt
-          - step:
-              <<: *mysql
-              name: PHP Doc
-              script:
-                - *baseInst
-                - moodle-plugin-ci phpdoc
-          - step:
-              <<: *mysql
-              name: PHPUnit
+              name: PHPUnit mysql
               script:
                 - *baseInst
                 - moodle-plugin-ci phpunit
-  postgres:
-    - parallel:
-        steps:
           - step:
               <<: *postgres
-              name: PHP Lint
-              script:
-                - *baseInst
-                - moodle-plugin-ci phplint
-          - step:
-              <<: *postgres
-              name: PHP Copy detector
-              script:
-                - *baseInst
-                - moodle-plugin-ci phpcpd
-          - step:
-              <<: *postgres
-              name: PHP Mess detector
-              script:
-                - *baseInst
-                - moodle-plugin-ci phpmd
-          - step:
-              <<: *postgres
-              name: PHP Code checker
-              script:
-                - *baseInst
-                - moodle-plugin-ci codechecker
-          - step:
-              <<: *postgres
-              name: PHP Validate
-              script:
-                - *baseInst
-                - moodle-plugin-ci validate
-          - step:
-              <<: *postgres
-              name: PHP Savepoints
+              name: PHP Savepoints postgres
               script:
                 - *baseInst
                 - moodle-plugin-ci savepoints
           - step:
               <<: *postgres
-              name: PHP Mustache
-              script:
-                - *baseInst
-                - moodle-plugin-ci mustache
-          - step:
-              <<: *postgres
-              name: PHP Grunt
-              script:
-                - *baseInst
-                - moodle-plugin-ci grunt
-          - step:
-              <<: *postgres
-              name: PHP Doc
-              script:
-                - *baseInst
-                - moodle-plugin-ci phpdoc
-          - step:
-              <<: *postgres
-              name: PHPUnit
+              name: PHPUnit postgres
               script:
                 - *baseInst
                 - moodle-plugin-ci phpunit

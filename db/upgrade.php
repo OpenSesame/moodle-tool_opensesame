@@ -245,12 +245,12 @@ function xmldb_tool_opensesame_upgrade(int $oldversion) {
     if ($oldversion < 2024040200) {
         // Change active field to unitarian integer.
         $table = new xmldb_table('tool_opensesame_course');
-        $field = new xmldb_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 1);    
+        $field = new xmldb_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 1);
         // Conditionally launch add field descriptionhtml.
         if (!$dbman->field_exists($table, $fieldtoadd)) {
             $dbman->change_field_type($table, $fieldtoadd);
         }
-    
+
         upgrade_plugin_savepoint(true, 2024040200, 'tool', 'opensesame');
     }
 
