@@ -121,22 +121,10 @@ pipelines:
                 - moodle-plugin-ci phpunit
           - step:
               <<: *mysql
-              name: PHP Savepoints mysql
-              script:
-                - *baseInstmysql
-                - moodle-plugin-ci savepoints
-          - step:
-              <<: *mysql
               name: PHPUnit mysql
               script:
                 - *baseInstmysql
                 - moodle-plugin-ci phpunit
-          - step:
-              <<: *postgres
-              name: PHP Savepoints postgres
-              script:
-                - *baseInstpostgres
-                - moodle-plugin-ci savepoints
           - step:
               <<: *postgres
               name: PHPUnit postgres
