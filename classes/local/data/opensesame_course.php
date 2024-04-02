@@ -204,10 +204,10 @@ class opensesame_course extends base {
     public static function op_activities() {
         global $DB;
         $sql = "SELECT s.id, s.name, toc.idopensesame, toc.courseid, toc.title
-              FROM {tool_opensesame_course} toc
-              JOIN {scorm} s ON s.course = toc.courseid
-             WHERE status = 'scormimported'
-               AND (toc.courseid IS NOT NULL && toc.courseid != 0)";
+                  FROM {tool_opensesame_course} toc
+                  JOIN {scorm} s ON s.course = toc.courseid
+                 WHERE status = 'scormimported'
+                       AND (toc.courseid IS NOT NULL AND toc.courseid != 0)";
         return $DB->get_records_sql($sql);
     }
 }

@@ -9,7 +9,7 @@ definitions:
     echo "Checking out Moodle Workplace\n" ;
     moodle-plugin-ci install --branch='MOODLE_401_STABLE' ;
   steps:
-    - step: &base
+    - step: &maridb
         name: 'Moodle 4.1, PHP 7.4 and MariaDB 10.6'
         caches:
           - npm
@@ -18,73 +18,227 @@ definitions:
         services:
           - mariadb
           - docker
+    - step: &mysql
+        name: 'Moodle 4.1, PHP 7.4 and MySQL 5.7'
+        caches:
+          - npm
+          - composer
+          - docker
+        services:
+          - mysql
+          - docker
+    - step: &postgres
+        name: 'Moodle 4.1, PHP 7.4 and PostgreSQL 13'
+        caches:
+          - npm
+          - composer
+          - docker
+        services:
+          - postgres
+          - docker
   services:
     mariadb:
       image: mariadb:10.6
       variables:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+    mysql:
+      image: 'mysql:5.7'
+      variables:
+        MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    postgres:
+      image: 'postgres:13'
+      variables:
+        POSTGRES_USER: 'postgres'
+        POSTGRES_HOST_AUTH_METHOD: 'trust'
+
   caches:
     npm: $HOME/.npm
 pipelines:
-  default:
+  mariadb:
     - parallel:
         steps:
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Lint
               script:
                 - *baseInst
                 - moodle-plugin-ci phplint
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Copy detector
               script:
                 - *baseInst
                 - moodle-plugin-ci phpcpd
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Mess detector
               script:
                 - *baseInst
                 - moodle-plugin-ci phpmd
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Code checker
               script:
                 - *baseInst
                 - moodle-plugin-ci codechecker
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Validate
               script:
                 - *baseInst
                 - moodle-plugin-ci validate
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Savepoints
               script:
                 - *baseInst
                 - moodle-plugin-ci savepoints
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Mustache
               script:
                 - *baseInst
                 - moodle-plugin-ci mustache
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Grunt
               script:
                 - *baseInst
                 - moodle-plugin-ci grunt
           - step:
-              <<: *base
+              <<: *maridb
               name: PHP Doc
               script:
                 - *baseInst
                 - moodle-plugin-ci phpdoc
           - step:
-              <<: *base
+              <<: *maridb
+              name: PHPUnit
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpunit
+  mysql:
+    - parallel:
+        steps:
+          - step:
+              <<: *mysql
+              name: PHP Lint
+              script:
+                - *baseInst
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *mysql
+              name: PHP Copy detector
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *mysql
+              name: PHP Mess detector
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *mysql
+              name: PHP Code checker
+              script:
+                - *baseInst
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *mysql
+              name: PHP Validate
+              script:
+                - *baseInst
+                - moodle-plugin-ci validate
+          - step:
+              <<: *mysql
+              name: PHP Savepoints
+              script:
+                - *baseInst
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *mysql
+              name: PHP Mustache
+              script:
+                - *baseInst
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *mysql
+              name: PHP Grunt
+              script:
+                - *baseInst
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *mysql
+              name: PHP Doc
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *mysql
+              name: PHPUnit
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpunit
+  postgres:
+    - parallel:
+        steps:
+          - step:
+              <<: *postgres
+              name: PHP Lint
+              script:
+                - *baseInst
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *postgres
+              name: PHP Copy detector
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *postgres
+              name: PHP Mess detector
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *postgres
+              name: PHP Code checker
+              script:
+                - *baseInst
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *postgres
+              name: PHP Validate
+              script:
+                - *baseInst
+                - moodle-plugin-ci validate
+          - step:
+              <<: *postgres
+              name: PHP Savepoints
+              script:
+                - *baseInst
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *postgres
+              name: PHP Mustache
+              script:
+                - *baseInst
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *postgres
+              name: PHP Grunt
+              script:
+                - *baseInst
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *postgres
+              name: PHP Doc
+              script:
+                - *baseInst
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *postgres
               name: PHPUnit
               script:
                 - *baseInst

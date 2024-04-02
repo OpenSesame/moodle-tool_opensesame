@@ -568,7 +568,7 @@ class opensesame_handler extends migration_handler {
         $sql = 'SELECT id, courseid, status
                   FROM {tool_opensesame_course}
                  WHERE active = 0
-                   AND ((courseid IS NOT NULL AND courseid <> 0) OR status <> :status)';
+                   AND ((courseid IS NOT NULL AND courseid != 0) OR status != :status)';
 
         $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_ARCHIVED]);
 
