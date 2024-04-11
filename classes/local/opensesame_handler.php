@@ -562,13 +562,13 @@ class opensesame_handler extends migration_handler {
      * Deletes all disabled course from Moodle.
      * @return bool If successful.
      */
-    private function delete_disabled_courses() {
+    public static function delete_disabled_courses() {
         global $DB;
 
         $sql = 'SELECT id, courseid, status
                   FROM {tool_opensesame_course}
                  WHERE active = 0
-                   AND ((courseid IS NOT NULL AND courseid <> 0) OR status <> :status)';
+                   AND ((courseid IS NOT NULL AND courseid != 0) OR status != :status)';
 
         $disabledcourses = $DB->get_records_sql($sql, ['status' => opensesame_course::STATUS_ARCHIVED]);
 
