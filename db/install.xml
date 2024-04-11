@@ -18,7 +18,7 @@
         <FIELD NAME="publishername" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Courses are not authored by OpenSesame. They are created by one of OpenSesame's publisher partners."/>
         <FIELD NAME="packagedownloadurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The URL of the content package."/>
         <FIELD NAME="aicclaunchurl" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The content item's AICC URL."/>
-        <FIELD NAME="active" TYPE="char" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Moodle created course reference"/>
         <FIELD NAME="status" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="retrieved" SEQUENCE="false" COMMENT="Migration status"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
