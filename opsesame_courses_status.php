@@ -45,7 +45,8 @@ $page        = optional_param('page', 1, PARAM_INT);
 $pagesize    = optional_param('pagesize', 50, PARAM_INT);
 $resettasks    = optional_param('reset', 0, PARAM_BOOL);
 $updatenames    = optional_param('updatenames', 0, PARAM_BOOL);
-
+$resync = optional_param('resync', 0, PARAM_BOOL);
+$courseid = optional_param('courseid', 0, PARAM_INT);
 
 if ($page >= 1) {
     $page = $page - 1;
@@ -79,10 +80,21 @@ $templatecontext = [
     'paginationurl' => $paginationurl->out(false),
     'adhocblocked' => $queueblocked
 ];
-if (!empty($resettasks) && $queueblocked) {
+if (!empty($resettasks) && $queueblocked || !empty($resync)) {
+
+    $conditions = !empty($resync) ? []: ['status' => 'queued'];
+    if (!empty($courseid)) {
+        $conditions['courseid'] = $courseid;
+    } else {
+        $DB->delete_records('task_adhoc', ['component' => 'tool_opensesame']);
+    }
     process_course_task::reset_fail_sync_count();
-    $opsecourses = $DB->get_recordset('tool_opensesame_course', ['status' => 'queued']);
+    $opsecourses = $DB->get_recordset('tool_opensesame_course', $conditions);
     foreach ($opsecourses as $opsecourse) {
+        if (!empty($resync)) {
+            $opsecourse->status = 'queued';
+            $DB->update_record('tool_opensesame_course', $opsecourse);
+        }
         process_course_task::queue_task($opsecourse->id);
     }
     $opsecourses->close();

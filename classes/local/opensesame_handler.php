@@ -299,9 +299,11 @@ class opensesame_handler extends migration_handler {
         $allowedtype = get_config('tool_opensesame', 'allowedtypes');
 
         if ($allowedtype == SCORM_TYPE_LOCAL) {
-            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl, $courseid, $api, $guid);
+            $scormurl = $oscourse->packagedownloadurl . '?standard=scorm';
+            $message = $this->get_os_scorm_package($scormurl, $courseid, $api, $guid);
         } else { // AICC type.
-            $message = $this->get_os_scorm_package($oscourse->aicclaunchurl, $courseid, $api, $guid);
+            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl,
+                $courseid, $api, $guid, $oscourse->aicclaunchurl);
         }
 
         return $message;
@@ -322,8 +324,9 @@ class opensesame_handler extends migration_handler {
      * @param int $courseid
      * @param opensesame $api
      * @param string $guid
+     * @param string|null $launchurl
      */
-    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api, $guid) {
+    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api, $guid, $launchurl = null) {
         // Download file.
         $filename = $this->generate_os_package_filename($guid);
         $path = $api->download_scorm_package($downloadurl, $filename);
@@ -347,9 +350,8 @@ class opensesame_handler extends migration_handler {
         $draftitemid = file_get_submitted_draft_itemid('packagefile');
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
-        get_fast_modinfo($courseid);
 
-        return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
+        return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl, $launchurl);
     }
 
     /**
@@ -358,12 +360,13 @@ class opensesame_handler extends migration_handler {
      * @param int $courseid
      * @param int $draftitemid
      * @param string $downloadurl
+     * @param string $launchurl
      * @return string
      * @throws \coding_exception
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_course_scorm_mod(int $courseid, int $draftitemid, string $downloadurl): string {
+    public function create_course_scorm_mod(int $courseid, int $draftitemid, string $downloadurl, string $launchurl = null): string {
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
         require_once($CFG->dirroot . '/course/format/lib.php');
@@ -378,21 +381,19 @@ class opensesame_handler extends migration_handler {
             if (count($instances) > 1) {
                 return "Course with id {$courseid} has multiple scorm activities, please delete them.";
             }
-            foreach ($instances as $id => $info) {
-                $cmid = $id;
-                break;
-            }
+            $instance = reset($instances);
+            $cmid = $instance->id;
         }
         // Found a course module scorm for this course update the activity.
         if (!is_null($cmid)) {
             // Check the course module exists.
-            $cm = get_coursemodule_from_id('', $cmid, 0, false, MUST_EXIST);
+            $cm = get_coursemodule_from_id('scorm', $cmid, $courseid, false, MUST_EXIST);
             [$cm, $context, $module, $data, $cw] = get_moduleinfo_data($cm, $course);
             $data->return = 0;
             $data->sr = 0;
             $data->update = $cmid;
             $moduleinfo = $this->build_scorm_modinfo(
-                $downloadurl, $courseid, $draftitemid, $module, '0', 0, $cmid, $cm->instance, $cm->id);
+                $downloadurl, $courseid, $draftitemid, $module, '0', 0, $cmid, $cm->instance, $cm->id, $launchurl);
             update_moduleinfo($cm, $moduleinfo, $course);
         } else {
             // Create top course section.
@@ -408,7 +409,7 @@ class opensesame_handler extends migration_handler {
             $data->sr = 0;
             $data->add = $add;
             $moduleinfo = $this->build_scorm_modinfo(
-                $downloadurl, $courseid, $draftitemid, $module, $add, $section);
+                $downloadurl, $courseid, $draftitemid, $module, $add, $section, null, null, null, $launchurl);
             add_moduleinfo($moduleinfo, $course);
         }
         return '';
@@ -426,11 +427,12 @@ class opensesame_handler extends migration_handler {
      * @param null|int $updt
      * @param string|null $instance
      * @param null|int $cm = $cmid when creating a new mod this value should be = NULL
+     * @param null|string $launchurl
      * @return \stdClass
      * @throws \dml_exception
      */
-    private function build_scorm_modinfo(string $downloadurl, int $courseid, int $draftitemid, object $mod, string $add = '0',
-                                         int $section = 0, int $updt = null, string $instance = null, int $cm = null
+    private function build_scorm_modinfo(string $downloadurl, int $courseid, int $draftitemid = null, object $mod, string $add = '0',
+                                         int $section = 0, int $updt = null, string $instance = null, int $cm = null, string $launchurl = null
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
@@ -448,7 +450,7 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->scormtype = get_config('tool_opensesame', 'allowedtypes');
         if ($moduleinfo->scormtype == SCORM_TYPE_AICCURL) {
             if (!empty($aiccactive)) {
-                $moduleinfo->packageurl = $downloadurl;
+                $moduleinfo->packageurl = $launchurl;
             } else {
                 throw new \moodle_exception('aiccnotactive', 'tool_opensesame');
             }
