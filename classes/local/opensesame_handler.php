@@ -302,7 +302,7 @@ class opensesame_handler extends migration_handler {
             $scormurl = $oscourse->packagedownloadurl . '?standard=scorm';
             $message = $this->get_os_scorm_package($scormurl, $courseid, $api, $guid);
         } else { // AICC type.
-            $message = $this->create_course_scorm_mod($courseid, null, null, $oscourse->aicclaunchurl);
+            $message = $this->create_course_scorm_mod($courseid, null, $oscourse->aicclaunchurl);
         }
 
         return $message;
@@ -349,7 +349,7 @@ class opensesame_handler extends migration_handler {
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
 
-        return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
+        return $this->create_course_scorm_mod($courseid, $draftitemid);
     }
 
     /**
@@ -357,14 +357,13 @@ class opensesame_handler extends migration_handler {
      *
      * @param int $courseid
      * @param int|null $draftitemid
-     * @param string $downloadurl
      * @param string $launchurl
      * @return string
      * @throws \coding_exception
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_course_scorm_mod(int $courseid, int $draftitemid = null, string $downloadurl = null, string $launchurl = null): string {
+    public function create_course_scorm_mod(int $courseid, int $draftitemid = null, string $launchurl = null): string {
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
         require_once($CFG->dirroot . '/course/format/lib.php');
@@ -391,7 +390,7 @@ class opensesame_handler extends migration_handler {
             $data->sr = 0;
             $data->update = $cmid;
             $moduleinfo = $this->build_scorm_modinfo(
-                $downloadurl, $courseid, $draftitemid, $module, '0', 0, $cmid, $cm->instance, $cm->id, $launchurl);
+                $launchurl, $courseid, $draftitemid, $module, '0', 0, $cmid, $cm->instance, $cm->id);
             update_moduleinfo($cm, $moduleinfo, $course);
         } else {
             // Create top course section.
@@ -407,7 +406,7 @@ class opensesame_handler extends migration_handler {
             $data->sr = 0;
             $data->add = $add;
             $moduleinfo = $this->build_scorm_modinfo(
-                $downloadurl, $courseid, $draftitemid, $module, $add, $section, null, null, null, $launchurl);
+                $launchurl, $courseid, $draftitemid, $module, $add, $section);
             add_moduleinfo($moduleinfo, $course);
         }
         return '';
@@ -416,7 +415,7 @@ class opensesame_handler extends migration_handler {
     /**
      * Builds the scorm module info object.
      *
-     * @param string $downloadurl
+     * @param string|null $launchurl
      * @param int $courseid
      * @param int $draftitemid
      * @param object $mod
@@ -425,12 +424,11 @@ class opensesame_handler extends migration_handler {
      * @param null|int $updt
      * @param string|null $instance
      * @param null|int $cm = $cmid when creating a new mod this value should be = NULL
-     * @param null|string $launchurl
      * @return \stdClass
      * @throws \dml_exception
      */
-    private function build_scorm_modinfo(string $downloadurl, int $courseid, int $draftitemid = null, object $mod, string $add = '0',
-                                         int $section = 0, int $updt = null, string $instance = null, int $cm = null, string $launchurl = null
+    private function build_scorm_modinfo(string $launchurl = null, int $courseid, int $draftitemid = null, object $mod, string $add = '0',
+                                         int $section = 0, int $updt = null, string $instance = null, int $cm = null
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
