@@ -157,7 +157,7 @@ class opensesame_handler extends migration_handler {
         // Queue all entities which don't exist and are active.
         $newentities = opensesame_course::get_recordset([
             'status' => opensesame_course::STATUS_RETRIEVED,
-            'active' => 1
+            'active' => 1,
         ]);
 
         $this->process_and_log_entities($newentities, $api, [
@@ -202,7 +202,7 @@ class opensesame_handler extends migration_handler {
         }
 
         $oscourse = opensesame_course::get_record([
-            'id' => $id
+            'id' => $id,
         ]);
         if (empty($oscourse)) {
             // Open sesame course has been deleted.
