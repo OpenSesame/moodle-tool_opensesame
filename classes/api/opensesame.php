@@ -262,7 +262,7 @@ class opensesame extends \curl {
         $params = [
             'limit' => $pagesize,
             'customerIntegrationId' => $this->customerintegrationid,
-            'page' => $page
+            'page' => $page,
         ];
 
         $header = ['Accept: application/json', 'Content-Type: application/json'];

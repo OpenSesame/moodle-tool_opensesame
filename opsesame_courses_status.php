@@ -78,11 +78,11 @@ $templatecontext = [
     'prevpage' => $currentpage - 1 ? $currentpage - 1 : false,
     'nextpage' => $currentpage < $pagecount ? $currentpage + 1 : false,
     'paginationurl' => $paginationurl->out(false),
-    'adhocblocked' => $queueblocked
+    'adhocblocked' => $queueblocked,
 ];
 if (!empty($resettasks) && $queueblocked || !empty($resync)) {
 
-    $conditions = !empty($resync) ? []: ['status' => 'queued'];
+    $conditions = !empty($resync) ? [] : ['status' => 'queued'];
     if (!empty($courseid)) {
         $conditions['courseid'] = $courseid;
     } else {

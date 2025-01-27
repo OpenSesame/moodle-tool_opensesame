@@ -59,7 +59,7 @@ if ($hassiteconfig) {
     require_once($CFG->dirroot . '/mod/scorm/lib.php');
     $options = [
             SCORM_TYPE_LOCAL => new lang_string('onlylocal', 'tool_opensesame'),
-            SCORM_TYPE_AICCURL => new lang_string('onlyaiccurl', 'tool_opensesame')
+            SCORM_TYPE_AICCURL => new lang_string('onlyaiccurl', 'tool_opensesame'),
     ];
     $name = get_string('allowedtypes', 'tool_opensesame');
     $desc = get_string('allowedtypes_desc', 'tool_opensesame');
@@ -86,7 +86,7 @@ if ($hassiteconfig) {
                 'guid' => new lang_string('guid', 'tool_opensesame'),
                 'courseid' => new lang_string('courseid', 'tool_opensesame'),
                 'coursename' => new lang_string('coursename', 'tool_opensesame'),
-                'prefix' => new lang_string('prefix', 'tool_opensesame')
+                'prefix' => new lang_string('prefix', 'tool_opensesame'),
         ];
         $name = get_string('activity_name', 'tool_opensesame');
         $desc = get_string('activity_name_desc', 'tool_opensesame');
