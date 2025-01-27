@@ -302,8 +302,7 @@ class opensesame_handler extends migration_handler {
             $scormurl = $oscourse->packagedownloadurl . '?standard=scorm';
             $message = $this->get_os_scorm_package($scormurl, $courseid, $api, $guid);
         } else { // AICC type.
-            $message = $this->get_os_scorm_package($oscourse->packagedownloadurl,
-                $courseid, $api, $guid, $oscourse->aicclaunchurl);
+            $message = $this->create_course_scorm_mod($courseid, draftitemid: null, null, $oscourse->aicclaunchurl);
         }
 
         return $message;
@@ -324,9 +323,8 @@ class opensesame_handler extends migration_handler {
      * @param int $courseid
      * @param opensesame $api
      * @param string $guid
-     * @param string|null $launchurl
      */
-    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api, $guid, $launchurl = null) {
+    private function get_os_scorm_package(string $downloadurl, int $courseid, opensesame $api, $guid) {
         // Download file.
         $filename = $this->generate_os_package_filename($guid);
         $path = $api->download_scorm_package($downloadurl, $filename);
@@ -351,14 +349,14 @@ class opensesame_handler extends migration_handler {
         // Copy the existing files which were previously uploaded into the draft area.
         file_prepare_draft_area($draftitemid, $context->id, 'mod_scorm', 'package', 0);
 
-        return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl, $launchurl);
+        return $this->create_course_scorm_mod($courseid, $draftitemid, $downloadurl);
     }
 
     /**
      * Creates the moduleinfo to create scorm module.
      *
      * @param int $courseid
-     * @param int $draftitemid
+     * @param int|null $draftitemid
      * @param string $downloadurl
      * @param string $launchurl
      * @return string
@@ -366,7 +364,7 @@ class opensesame_handler extends migration_handler {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function create_course_scorm_mod(int $courseid, int $draftitemid, string $downloadurl, string $launchurl = null): string {
+    public function create_course_scorm_mod(int $courseid, int $draftitemid = null, string $downloadurl = null, string $launchurl = null): string {
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/modlib.php');
         require_once($CFG->dirroot . '/course/format/lib.php');
