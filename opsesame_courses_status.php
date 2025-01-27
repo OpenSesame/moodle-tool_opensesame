@@ -98,7 +98,15 @@ if (!empty($resettasks) && $queueblocked || !empty($resync)) {
         process_course_task::queue_task($opsecourse->id);
     }
     $opsecourses->close();
-    redirect(new moodle_url($baseurl), get_string('resumeadhoc', 'tool_opensesame'), null);
+    $messageid = 'resumeadhoc';
+    if (!empty($resync)) {
+        if (!empty($courseid)) {
+            $messageid = 'resyncqueued';
+        } else {
+            $messageid = 'resyncallqueued';
+        }
+    }
+    redirect(new moodle_url($baseurl), get_string($messageid , 'tool_opensesame', $courseid), null);
 }
 
 if ($updatenames) {
