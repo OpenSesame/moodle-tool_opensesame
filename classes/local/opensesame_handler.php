@@ -302,7 +302,7 @@ class opensesame_handler extends migration_handler {
             $scormurl = $oscourse->packagedownloadurl . '?standard=scorm';
             $message = $this->get_os_scorm_package($scormurl, $courseid, $api, $guid);
         } else { // AICC type.
-            $message = $this->create_course_scorm_mod($courseid, draftitemid: null, null, $oscourse->aicclaunchurl);
+            $message = $this->create_course_scorm_mod($courseid, null, null, $oscourse->aicclaunchurl);
         }
 
         return $message;
