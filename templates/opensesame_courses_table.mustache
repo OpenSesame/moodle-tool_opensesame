@@ -39,6 +39,7 @@
     <div class="alert alert-danger" role="alert">{{#str}} adhocblocked, tool_opensesame {{/str}}</div>
     <a class="btn btn-primary mb-2" role="button" href="?reset=1">{{#str}} resetfailtasks, tool_opensesame {{/str}}</a>
 {{/adhocblocked}}
+<a class="btn btn-primary mb-2" role="button" href="?resync=1">{{#str}} resynccourses, tool_opensesame {{/str}}</a>
 {{#changenames}}
     <div class="alert alert-warning" role="alert">{{#str}} updateactivityname, tool_opensesame {{/str}}</div>
     <a class="btn btn-primary mb-2" role="button" href="?updatenames=1">{{#str}} updatenames, tool_opensesame {{/str}}</a>
@@ -51,6 +52,7 @@
             <th>{{#str}} optableth:category, tool_opensesame {{/str}}</th>
             <th>{{#str}} optableth:course, tool_opensesame {{/str}}</th>
             <th>{{#str}} optableth:status, tool_opensesame {{/str}} <button role="button" data-toggle="popover" data-trigger="hover" data-placement="bottom" title="{{#str}} statusinfo, tool_opensesame {{/str}}" data-html=true data-content="{{#str}} statusinfo_body, tool_opensesame {{/str}}" style="border: none; background: none;"><i class="fa-solid fa-exclamation-circle text-info"></i></button></th>
+            <th>{{#str}} optableth:actions, tool_opensesame {{/str}}</th>
         </tr>
     </thead>
     <tbody>
@@ -61,6 +63,7 @@
             <th>{{oscategories}}</th>
             <th>{{#courseurl}}<a href="{{courseurl}}">{{#str}} view {{/str}} {{#str}} course {{/str}} - {{courseid}}</a>{{/courseurl}}</th>
             <th data-toggle="tooltip" data-html="true" data-placement="bottom" title="{{statusinfo}}">{{status}}</th>
+            <th><a role="button" href="?courseid={{courseid}}&resync=1"><i class="fa-solid fa-sync"></i></a></th>
         </tr>
     {{/data}}
     </tbody>
