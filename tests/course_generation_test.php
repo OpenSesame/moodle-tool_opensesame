@@ -86,7 +86,7 @@ class course_generation_test extends advanced_testcase {
                     'clientid',
                     'clientsecret',
                     'customerintegrationid',
-                    'http://example.com/'
+                    'http://example.com/',
                     ]
             )
             ->onlyMethods(['process_created_to_imageimported'])
