@@ -18,7 +18,9 @@
  * Strings for component 'tool_opensesame', language 'en'
  *
  * @package    tool_opensesame
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,13 +28,11 @@ $string['aicc'] = 'AICC configurations';
 $string['allowedtypes'] = 'Allowed types';
 $string['allowedtypes_desc'] = 'Which scorm type should appear in Opensesame course API Integration.';
 $string['authurl'] = 'Authorization API URL';
-$string['authurldesc'] = 'Authorization API URL for Opensesame integration';
-$string['autoconfigure'] = 'Auto configure AICC configuration';
-$string['autoconfiguredesc'] = 'Automatically  AICC configuration required by the Opensesame API.';
-$string['autoconfigureconfirmation'] = 'Automatically enable AICC configurations.
-The following actions will be carried out:
-<ul><li>enable AICC protocol support</li></ul>';
-$string['autoconfigsuccess'] = 'Success - the Opensesame API required AICC configurations has been automatically configured.';
+$string['authurldesc'] = 'Authorization API URL for OpenSesame Integration';
+$string['autoconfigure'] = 'Auto configure AICC Configuration';
+$string['autoconfiguredesc'] = 'Automatically  AICC Configuration required by the OpenSesame API.';
+$string['autoconfigureconfirmation'] = 'Automatically enable aicc configurations that are required by the OpenSesame API. The following actions will be carried out: <ul><li>Enable AICC protocol support</li></ul>';
+$string['autoconfigsuccess'] = 'Success - the OpenSesame API required AICC configurations has been automatically configured.';
 $string['apiauthtoken'] = 'API Authorization token';
 $string['apiauthtokendesc'] = 'API authorization token for Opensesame integration';
 $string['apiurlempty'] = 'URL of Opensesame API is not configured correctly.';
@@ -60,7 +60,55 @@ $string['clientsecret_missing'] = 'clientsecret missing';
 $string['authurl_missing'] = 'authurl missing';
 $string['baseurl_missing'] = 'baseurl missing';
 $string['customerintegrationid_missing'] = 'customerintegrationid missing';
-$string['access_token_missing'] = 'access token missing';
-$string['privacy:metadata'] = 'The Opensesame API integration plugin does not store any personal data.';
-$string['statuscode400'] = '400 Bad Request response status code indicates that the server cannot or will not process the request due to something that is perceived to be a client error';
-
+$string['optableth:id'] = 'GUID';
+$string['optableth:title'] = 'Title';
+$string['optableth:category'] = 'OpenSesame categories';
+$string['optableth:status'] = 'Status';
+$string['optableth:course'] = 'Course';
+$string['optableth:actions'] = 'Actions';
+$string['opsecoursestatuspage'] = 'OpenSesame courses status';
+$string['opcategory'] = 'OpenSesame category';
+$string['opcategory_desc'] = 'Select parent for OpenSesame categories';
+$string['apicall_pagesize'] = 'API page size';
+$string['apicall_pagesize_desc'] = 'Page size for the api call when retrieving OpenSesame courses';
+$string['coursesyncfailmax'] = 'Maximum consecutive task failures.';
+$string['coursesyncfailmax_desc'] = 'If adhoc tasks fails consecutively adhoc task creation will blocked';
+$string['resetfailtasks'] = 'Resume adhoc queue';
+$string['resumeadhoc'] = 'The adhoc task queue for OpenSesame has been resumed.';
+$string['adhocblocked'] = 'Adhoc task queue for OpenSesame course creation has been blocked due to consecutive task failures.';
+$string['retrieved'] = 'Retrieved';
+$string['queued'] = 'Queued';
+$string['created'] = 'Course created';
+$string['imageimported'] = 'Course image imported';
+$string['scormimported'] = 'Course activity synced';
+$string['archived'] = 'Course archived';
+$string['retrieved_info'] = 'The course information has been retrieved from OpenSesame.';
+$string['queued_info'] = 'The OpenSesame course has been queued for creation and sync.';
+$string['created_info'] = 'The OpenSesame course has been created in Moodle.';
+$string['imageimported_info'] = 'The OpenSesame course image has been added to the Moodle course.';
+$string['scormimported_info'] = 'The OpenSesame activity has been added to the Moodle course, sync is complete.';
+$string['resynccourses'] = 'Resync all courses';
+$string['resyncqueued'] = 'The courseid {$a} has been queued for resync.';
+$string['resyncallqueued'] = 'All OpenSesame courses have been queued for resync.';
+$string['archived_info'] = 'The OpenSesame course has been archived on OpenSesame and deleted from Moodle.';
+$string['statusinfo'] = 'Status info';
+$string['statusinfo_body'] = '
+<p>Retrieved: The course information has been retrieved from OpenSesame.</p>
+<p>Queued: The OpenSesame course has been queued for creation and sync.</p>
+<p>Course created: The OpenSesame course has been created in Moodle.</p>
+<p>Course image imported: The OpenSesame course image has been added to the Moodle course.</p>
+<p>Course activity synced: The OpenSesame activity has been added to the Moodle course, sync is complete.</p>
+<p>Course archived: The OpenSesame course has been archived on OpenSesame and deleted from Moodle.</p>
+';
+$string['updateactivityname'] = 'To update the activity name with the latest schema names, click the button below.';
+$string['updatenames'] = 'Update';
+$string['namesupdated'] = 'Success - the schema names have been updated.';
+$string['guid'] = 'GUID';
+$string['coursename'] = 'Course name';
+$string['courseid'] = 'Course ID';
+$string['prefix'] = 'Use prefix as name';
+$string['activity_name'] = 'Activity name';
+$string['activity_name_desc'] = 'Select the schema to be used in the Activity name.';
+$string['activity_prefix'] = 'Activity prefix';
+$string['activity_prefix_desc'] = 'Enter the prefix to be used in the Activity name.';
+$string['aiccnotactive'] = 'AICC is not active.';

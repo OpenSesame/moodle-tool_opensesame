@@ -13,15 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Version details.
  *
  * @package    tool_opensesame
- * @copyright  2023 Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @copyright  2023 Moodle
+ * @author     Felicia Wilkes <felicia.wilkes@moodle.com>
+ * @author     David Castro <david.castro@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
-
-$plugin->version = 2023072800; // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires = 2020061500; // Requires this Moodle version. 3.9.
+$plugin->version   = 2025013000; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2020061500; // Requires this Moodle version. 3.9.
 $plugin->component = 'tool_opensesame'; // Full name of the plugin (used for diagnostics).
+$plugin->release   = '1.1.0';
