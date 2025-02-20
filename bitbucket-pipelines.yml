@@ -7,34 +7,34 @@ image:
 definitions:
   .install-401: &install401
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_401_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_401_STABLE" ;
   .install-402: &install402
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_402_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_402_STABLE" ;
   .install-403: &install403
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_403_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_403_STABLE" ;
   .install-404: &install404
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_404_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_404_STABLE" ;
   .install-405: &install405
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_405_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_405_STABLE" ;
   .install-401: &install401full
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --branch="MOODLE_401_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_401_STABLE" ;
   .install-402: &install402full
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --branch="MOODLE_402_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_402_STABLE" ;
   .install-403: &install403full
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --branch="MOODLE_403_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_403_STABLE" ;
   .install-404: &install404full
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --branch="MOODLE_404_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_404_STABLE" ;
   .install-405: &install405full
       setphpversion 8.1 ;
-      moodle-plugin-ci -vvv install --branch="MOODLE_405_STABLE" --repo="$REPOSITORY" ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_405_STABLE" ;
   steps:
     - step: &base
         name: 'Set up Docker, Composer and MariaDB 10.6'
