@@ -57,6 +57,7 @@ class queries_test extends advanced_testcase {
      * @return void
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
