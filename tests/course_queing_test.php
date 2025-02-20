@@ -62,6 +62,7 @@ class course_queing_test extends advanced_testcase {
      * @return void
      */
     protected function setUp(): void {
+        parent::setUp();
         $ac = new auto_config();
         $ac->configure();
         $this->opsmgenerator = self::getDataGenerator()->get_plugin_generator('tool_opensesame');
