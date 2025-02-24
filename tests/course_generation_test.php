@@ -61,6 +61,7 @@ class course_generation_test extends advanced_testcase {
      * Test setup
      */
     protected function setUp(): void {
+        parent::setUp();
         $ac = new auto_config();
         $ac->configure();
         set_config('activity_name', 'courseid', 'tool_opensesame');
