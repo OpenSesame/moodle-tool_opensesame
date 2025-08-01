@@ -51,7 +51,7 @@ definitions:
           - mariadb
   services:
     mariadb:
-      image: mariadb:10.6
+      image: mariadb:10.11.13
       variables:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
   caches:
