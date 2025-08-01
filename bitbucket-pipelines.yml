@@ -21,7 +21,7 @@ definitions:
       setphpversion 8.1 ;
       moodle-plugin-ci -vvv install --no-init --branch="MOODLE_405_STABLE" ;
   .install-500: &install500
-      setphpversion 8.1 ;
+      setphpversion 8.2 ;
       moodle-plugin-ci -vvv install --no-init --branch="MOODLE_500_STABLE" ;
   .install-401: &install401full
       setphpversion 8.1 ;
