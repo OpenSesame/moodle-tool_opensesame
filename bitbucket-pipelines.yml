@@ -20,6 +20,9 @@ definitions:
   .install-405: &install405
       setphpversion 8.1 ;
       moodle-plugin-ci -vvv install --no-init --branch="MOODLE_405_STABLE" ;
+  .install-500: &install500
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_500_STABLE" ;
   .install-401: &install401full
       setphpversion 8.1 ;
       moodle-plugin-ci -vvv install --branch="MOODLE_401_STABLE" ;
@@ -35,6 +38,9 @@ definitions:
   .install-405: &install405full
       setphpversion 8.1 ;
       moodle-plugin-ci -vvv install --branch="MOODLE_405_STABLE" ;
+  .install-500: &install500full
+      setphpversion 8.2 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_500_STABLE" ;
   steps:
     - step: &base
         name: 'Set up Docker, Composer and MariaDB 10.6'
@@ -389,4 +395,71 @@ pipelines:
               name: PHP Deprecations 4.5
               script:
                 - *install405
+                - moodle-plugin-ci codechecker --standard=/usr/local/mds --max-warnings=1
+          # Moodle 5.0
+          - step:
+              <<: *base
+              name: PHP Lint 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *base
+              name: PHP Copy detector 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *base
+              name: PHP Mess detector 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *base
+              name: PHP Code checker 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *base
+              name: PHP Validate 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci validate
+          - step:
+              <<: *base
+              name: PHP Savepoints 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *base
+              name: PHP Mustache 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *base
+              name: PHP Grunt 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *base
+              name: PHP Doc 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *base
+              name: PHPUnit 5.0
+              script:
+                - *install500full
+                - moodle-plugin-ci phpunit
+          - step:
+              <<: *base
+              name: PHP Deprecations 5.0
+              script:
+                - *install500
                 - moodle-plugin-ci codechecker --standard=/usr/local/mds --max-warnings=1
