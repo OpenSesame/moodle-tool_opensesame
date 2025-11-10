@@ -30,29 +30,49 @@ defined('MOODLE_INTERNAL') || die;
 global $CFG;
 
 if ($hassiteconfig) {
-
     // Place settings category named opensesameintegration under tab courses.
-    $ADMIN->add('tools',
-            new admin_category('opensesameintegration', new lang_string('opensesamecat', 'tool_opensesame')),
+    $ADMIN->add(
+        'tools',
+        new admin_category('opensesameintegration', new lang_string('opensesamecat', 'tool_opensesame')),
     );
     // Places the link to the settingspage under the new category.
     $settings = new admin_settingpage('tool_opensesame', get_string('opensesameintegration', 'tool_opensesame'));
     // Creating new settings to add the new settingspage.
 
-    $settings->add(new admin_setting_configtext('tool_opensesame/clientid', get_string('clientid', 'tool_opensesame'),
-            get_string('clientiddesc', 'tool_opensesame'), '', PARAM_RAW));
-    $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/clientsecret',
-            get_string('clientsecret', 'tool_opensesame'),
-            get_string('clientsecretdesc', 'tool_opensesame'), ''));
-    $settings->add(new admin_setting_configtext('tool_opensesame/authurl', get_string('authurl', 'tool_opensesame'),
-            get_string('authurldesc', 'tool_opensesame'), 'https://auth.coursecloud.net/oauth2/aus1l01v8s55riV0C0h8/v1/token',
-            PARAM_URL));
-    $settings->add(new admin_setting_configtext('tool_opensesame/baseurl', get_string('baseurl', 'tool_opensesame'),
-            get_string('baseurldesc', 'tool_opensesame'), 'https://api.delivery.opensesame.com', PARAM_URL));
+    $settings->add(new admin_setting_configtext(
+        'tool_opensesame/clientid',
+        get_string('clientid', 'tool_opensesame'),
+        get_string('clientiddesc', 'tool_opensesame'),
+        '',
+        PARAM_RAW
+    ));
+    $settings->add(new admin_setting_configpasswordunmask(
+        'tool_opensesame/clientsecret',
+        get_string('clientsecret', 'tool_opensesame'),
+        get_string('clientsecretdesc', 'tool_opensesame'),
+        ''
+    ));
+    $settings->add(new admin_setting_configtext(
+        'tool_opensesame/authurl',
+        get_string('authurl', 'tool_opensesame'),
+        get_string('authurldesc', 'tool_opensesame'),
+        'https://auth.coursecloud.net/oauth2/aus1l01v8s55riV0C0h8/v1/token',
+        PARAM_URL
+    ));
+    $settings->add(new admin_setting_configtext(
+        'tool_opensesame/baseurl',
+        get_string('baseurl', 'tool_opensesame'),
+        get_string('baseurldesc', 'tool_opensesame'),
+        'https://api.delivery.opensesame.com',
+        PARAM_URL
+    ));
 
-    $settings->add(new admin_setting_configpasswordunmask('tool_opensesame/customerintegrationid',
-            get_string('customerintegrationid', 'tool_opensesame'),
-            get_string('customerintegrationiddesc', 'tool_opensesame'), ''));
+    $settings->add(new admin_setting_configpasswordunmask(
+        'tool_opensesame/customerintegrationid',
+        get_string('customerintegrationid', 'tool_opensesame'),
+        get_string('customerintegrationiddesc', 'tool_opensesame'),
+        ''
+    ));
 
     // Add scorm type select.
     // Types allowed.
@@ -70,17 +90,29 @@ if ($hassiteconfig) {
     $options += core_course_category::make_categories_list('moodle/category:manage');
     $name = get_string('opcategory', 'tool_opensesame');
 
-    $settings->add(new admin_setting_configselect_autocomplete('tool_opensesame/opsesamecategory',
+    $settings->add(new admin_setting_configselect_autocomplete(
+        'tool_opensesame/opsesamecategory',
         get_string('opcategory', 'tool_opensesame'),
-        get_string('opcategory_desc', 'tool_opensesame'), 0, $options));
+        get_string('opcategory_desc', 'tool_opensesame'),
+        0,
+        $options
+    ));
 
-    $settings->add(new admin_setting_configtext('tool_opensesame/apicall_pagesize',
-            get_string('apicall_pagesize', 'tool_opensesame'),
-            get_string('apicall_pagesize_desc', 'tool_opensesame'), 50, PARAM_INT));
+    $settings->add(new admin_setting_configtext(
+        'tool_opensesame/apicall_pagesize',
+        get_string('apicall_pagesize', 'tool_opensesame'),
+        get_string('apicall_pagesize_desc', 'tool_opensesame'),
+        50,
+        PARAM_INT
+    ));
 
-    $settings->add(new admin_setting_configtext('tool_opensesame/coursesyncfailmax',
+    $settings->add(new admin_setting_configtext(
+        'tool_opensesame/coursesyncfailmax',
         get_string('coursesyncfailmax', 'tool_opensesame'),
-        get_string('coursesyncfailmax_desc', 'tool_opensesame'), 5, PARAM_INT));
+        get_string('coursesyncfailmax_desc', 'tool_opensesame'),
+        5,
+        PARAM_INT
+    ));
 
         $options = [
                 'guid' => new lang_string('guid', 'tool_opensesame'),
@@ -93,20 +125,28 @@ if ($hassiteconfig) {
         $default = 'guid';
         $settings->add(new admin_setting_configselect('tool_opensesame/activity_name', $name, $desc, $default, $options));
 
-        $settings->add(new admin_setting_configtext('tool_opensesame/activity_prefix',
-        get_string('activity_prefix', 'tool_opensesame'),
-        get_string('activity_prefix_desc', 'tool_opensesame'), '', PARAM_TEXT));
+        $settings->add(new admin_setting_configtext(
+            'tool_opensesame/activity_prefix',
+            get_string('activity_prefix', 'tool_opensesame'),
+            get_string('activity_prefix_desc', 'tool_opensesame'),
+            '',
+            PARAM_TEXT
+        ));
 
     // Add external page to manage OpenSesame AICC Link Configurations.
-    $ADMIN->add('opensesameintegration', new admin_externalpage('aicc_config', new lang_string('aicc', 'tool_opensesame'),
-            "$CFG->wwwroot/$CFG->admin/tool/opensesame/autoconfigaicc.php"));
+    $ADMIN->add('opensesameintegration', new admin_externalpage(
+        'aicc_config',
+        new lang_string('aicc', 'tool_opensesame'),
+        "$CFG->wwwroot/$CFG->admin/tool/opensesame/autoconfigaicc.php"
+    ));
 
     // Add external page see opensesame courses status.
-    $ADMIN->add('opensesameintegration', new admin_externalpage('courses_status',
-    new lang_string('opsecoursestatuspage', 'tool_opensesame'),
-    "$CFG->wwwroot/$CFG->admin/tool/opensesame/opsesame_courses_status.php"));
+    $ADMIN->add('opensesameintegration', new admin_externalpage(
+        'courses_status',
+        new lang_string('opsecoursestatuspage', 'tool_opensesame'),
+        "$CFG->wwwroot/$CFG->admin/tool/opensesame/opsesame_courses_status.php"
+    ));
 
     // Add to the admin settings for opensesameintegration.
     $ADMIN->add('opensesameintegration', $settings);
-
 }

@@ -81,7 +81,6 @@ $templatecontext = [
     'adhocblocked' => $queueblocked,
 ];
 if (!empty($resettasks) && $queueblocked || !empty($resync)) {
-
     $conditions = !empty($resync) ? [] : ['status' => 'queued'];
     if (!empty($courseid)) {
         $conditions['courseid'] = $courseid;
@@ -106,7 +105,7 @@ if (!empty($resettasks) && $queueblocked || !empty($resync)) {
             $messageid = 'resyncallqueued';
         }
     }
-    redirect(new moodle_url($baseurl), get_string($messageid , 'tool_opensesame', $courseid), null);
+    redirect(new moodle_url($baseurl), get_string($messageid, 'tool_opensesame', $courseid), null);
 }
 
 if ($updatenames) {
