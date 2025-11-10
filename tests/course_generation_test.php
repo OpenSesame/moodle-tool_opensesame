@@ -43,6 +43,14 @@ use stdClass;
 use tool_opensesame\local\opensesame_handler;
 use tool_opensesame\api\opensesame;
 use tool_opensesame\auto_config;
+use cm_info;
+use coding_exception;
+use mod_scorm\completion\custom_completion;
+use moodle_exception;
+
+global $CFG;
+require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 
 /**
  * Test class for opensesame retrieve, create record and queue adhoc tasks.
@@ -140,5 +148,135 @@ class course_generation_test extends advanced_testcase {
             $this->assertStringContainsString($opcourse->publishername, $moodlecourse->summary);
             $this->assertEquals('scormimported', $opcourse->status);
         }
+    }
+
+    /**
+     * Data provider for get_state(). Reduced the states to what is used by our plugin.
+     *
+     * @return array[]
+     */
+    public static function get_state_provider(): array {
+        // Prepare various reusable user scorm track data used to mock various completion states/requirements.
+        $completionincomplete = (object) [
+            'id' => 1,
+            'scoid' => 1,
+            'element' => 'cmi.completion_status',
+            'value' => 'incomplete',
+        ];
+
+        $completionpassed = (object) [
+            'id' => 1,
+            'scoid' => 1,
+            'element' => 'cmi.completion_status',
+            'value' => 'passed',
+        ];
+
+        $completioncompleted = (object) [
+            'id' => 1,
+            'scoid' => 2,
+            'element' => 'cmi.success_status',
+            'value' => 'completed',
+        ];
+
+        return [
+            'Completion status Passed or Completed required, user has only completed, can make another attempt' => [
+                'completionstatusrequired', 6, [$completioncompleted], 0, \COMPLETION_COMPLETE, null,
+            ],
+            'Completion status Passed or Completed required, user has completed and passed' => [
+                'completionstatusrequired', 6, [$completionpassed, $completioncompleted], 0, COMPLETION_COMPLETE, null,
+            ],
+            'Completion status Passed or Completed required, user has not passed or completed, but has another attempt' => [
+                'completionstatusrequired', 6, [$completionincomplete], 2, COMPLETION_INCOMPLETE, null,
+            ],
+            'Completion status Passed or Completed required, user has used all attempts, but not passed or completed' => [
+                'completionstatusrequired', 6, [$completionincomplete], 1, COMPLETION_INCOMPLETE, null,
+            ],
+            'Completion status Passed or Completed required, user has used all attempts, but not passed' => [
+                'completionstatusrequired', 6, [$completionincomplete, $completioncompleted], 2, COMPLETION_COMPLETE, null,
+            ],
+        ];
+    }
+
+    /**
+     * Test for get_state().
+     *
+     * @dataProvider get_state_provider
+     * @param string $rule The custom completion condition.
+     * @param int $rulevalue The custom completion rule value.
+     * @param array $uservalue The relevant record database mock data recorded against the user for the rule.
+     * @param int $maxattempts The number of attempts the activity allows (0 = unlimited).
+     * @param int|null $status Expected completion status for the rule.
+     * @param string|null $exception Expected exception.
+     */
+    public function test_get_state(string $rule, int $rulevalue, array $uservalue, int $maxattempts, ?int $status,
+            ?string $exception): void {
+        global $DB;
+
+        if (!is_null($exception)) {
+            $this->expectException($exception);
+        }
+
+        // Custom completion rule data for cm_info::customdata.
+        $customdataval = [
+            'customcompletionrules' => [
+                $rule => $rulevalue
+            ]
+        ];
+
+        // Build a mock cm_info instance.
+        $mockcminfo = $this->getMockBuilder(cm_info::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['__get'])
+            ->getMock();
+
+        // Mock the return of the magic getter method when fetching the cm_info object's
+        // customdata and instance values.
+        $mockcminfo->expects($this->any())
+            ->method('__get')
+            ->will($this->returnValueMap([
+                ['customdata', $customdataval],
+                ['instance', 1],
+            ]));
+
+        // Mock the DB call fetching user's SCORM track data.
+        $DB = $this->createMock(get_class($DB));
+        $DB->expects($this->atMost(1))
+            ->method('get_records_sql')
+            ->willReturn($uservalue);
+
+        // For completed all scos tests, mock the DB call that fetches the sco IDs.
+        if ($rule === 'completionstatusallscos') {
+            $returnscos = [];
+
+            foreach ($uservalue as $data) {
+                $returnscos[$data->scoid] = (object) ['id' => $data->scoid];
+            }
+
+            $DB->expects($this->atMost(1))
+                ->method('get_records')
+                ->willReturn($returnscos);
+        }
+
+        // Anything not complete will check if attempts have been exhausted, mock the DB calls for that check.
+        if ($status != COMPLETION_COMPLETE) {
+            $mockscorm = (object) [
+                'id' => 1,
+                'version' => SCORM_13,
+                'grademethod' => GRADESCOES,
+                'maxattempt' => $maxattempts,
+            ];
+
+            $DB->expects($this->atMost(1))
+                ->method('get_record')
+                ->willReturn($mockscorm);
+
+            $DB->expects($this->atMost(1))
+                ->method('count_records_sql')
+                ->willReturn(count($uservalue));
+        }
+
+        $customcompletion = new custom_completion($mockcminfo, 2);
+
+        $this->assertEquals($status, $customcompletion->get_state($rule));
     }
 }
