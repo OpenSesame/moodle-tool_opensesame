@@ -493,9 +493,12 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->cmidnumber = null;
         $moduleinfo->section = $section;
         $moduleinfo->displayattemptstatus = 1;
-        $moduleinfo->completionstatusrequired = COMPLETION_CRITERIA_TYPE_GRADE;
-        $moduleinfo->completion = COMPLETION_CRITERIA_TYPE_DATE;
-        $moduleinfo->completionview = 1;
+        $course = get_course(1);
+        $defaultcompletion = \core_completion\manager::get_default_completion($course, $mod);
+        foreach ($defaultcompletion as $key => $value) {
+            $moduleinfo->$key = $value;
+        }
+
         $moduleinfo->instance = $instance;
         return $moduleinfo;
     }
