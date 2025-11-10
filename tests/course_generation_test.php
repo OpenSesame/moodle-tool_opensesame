@@ -48,6 +48,8 @@ use coding_exception;
 use mod_scorm\completion\custom_completion;
 use moodle_exception;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
 require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->dirroot . '/mod/scorm/locallib.php');
