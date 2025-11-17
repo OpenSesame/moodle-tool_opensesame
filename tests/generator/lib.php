@@ -23,7 +23,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class tool_opensesame_generator extends component_generator_base {
-
     /**
      * Create dummy data for opensesame to manage
      *

@@ -48,9 +48,11 @@ use coding_exception;
 use mod_scorm\completion\custom_completion;
 use moodle_exception;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
 require_once($CFG->libdir . '/completionlib.php');
-require_once($CFG->dirroot.'/mod/scorm/locallib.php');
+require_once($CFG->dirroot . '/mod/scorm/locallib.php');
 
 /**
  * Test class for opensesame retrieve, create record and queue adhoc tasks.
@@ -60,8 +62,7 @@ require_once($CFG->dirroot.'/mod/scorm/locallib.php');
  * @author      2023 Oscar Nadjar <oscar.nadjar@moodle.com>
  * @license     Moodle Workplace License, distribution is restricted, contact support@moodle.com
  */
-class course_generation_test extends advanced_testcase {
-
+final class course_generation_test extends advanced_testcase {
     /** @var tool_opensesame_generator */
     protected $opsmgenerator;
 
@@ -82,7 +83,7 @@ class course_generation_test extends advanced_testcase {
     /**
      * Test process_single_os_course
      */
-    public function test_process_single_os_course() {
+    public function test_process_single_os_course(): void {
 
         global $DB, $CFG;
 
@@ -208,8 +209,14 @@ class course_generation_test extends advanced_testcase {
      * @param int|null $status Expected completion status for the rule.
      * @param string|null $exception Expected exception.
      */
-    public function test_get_state(string $rule, int $rulevalue, array $uservalue, int $maxattempts, ?int $status,
-            ?string $exception): void {
+    public function test_get_state(
+        string $rule,
+        int $rulevalue,
+        array $uservalue,
+        int $maxattempts,
+        ?int $status,
+        ?string $exception
+    ): void {
         global $DB;
 
         if (!is_null($exception)) {
@@ -219,8 +226,8 @@ class course_generation_test extends advanced_testcase {
         // Custom completion rule data for cm_info::customdata.
         $customdataval = [
             'customcompletionrules' => [
-                $rule => $rulevalue
-            ]
+                $rule => $rulevalue,
+            ],
         ];
 
         // Build a mock cm_info instance.

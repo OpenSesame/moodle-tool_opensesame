@@ -89,7 +89,7 @@ class opensesame_course extends base {
      * @return array
      */
     protected static function define_properties(): array {
-        return array(
+        return [
             'idopensesame' => [
                 'type' => PARAM_RAW,
                 'null' => NULL_NOT_ALLOWED,
@@ -154,7 +154,7 @@ class opensesame_course extends base {
                 'default' => self::STATUS_RETRIEVED,
                 'choices' => array_merge(static::$steps, [self::STATUS_ARCHIVED]),
             ],
-        );
+        ];
     }
 
     /**

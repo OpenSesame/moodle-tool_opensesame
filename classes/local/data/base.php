@@ -43,7 +43,6 @@ use core\persistent;
  * @property array $steps
  */
 abstract class base extends persistent {
-
     /** @var static[][] Array of static instances. */
     protected static $instances = [];
 

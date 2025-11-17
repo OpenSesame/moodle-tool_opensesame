@@ -26,7 +26,6 @@ use tool_opensesame\local\opensesame_handler;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class process_course_task extends \core\task\adhoc_task {
-
     /**
      * Execute the task.
      */
@@ -80,7 +79,6 @@ class process_course_task extends \core\task\adhoc_task {
         if ($lock = $lockfactory->get_lock($resourse, $timeout)) {
             $failcount = get_config('tool_opensesame', 'process_course_task_fails_count');
             $lock->release();
-
         } else {
             throw new \moodle_exception('locktimeout');
         }
@@ -107,7 +105,6 @@ class process_course_task extends \core\task\adhoc_task {
             }
             set_config('process_course_task_fails_count', $failcount, 'tool_opensesame');
             $lock->release();
-
         } else {
             throw new \moodle_exception('locktimeout');
         }
@@ -154,7 +151,6 @@ class process_course_task extends \core\task\adhoc_task {
             }
             $adhoctasks->close();
             $lock->release();
-
         } else {
             throw new \moodle_exception('locktimeout');
         }
