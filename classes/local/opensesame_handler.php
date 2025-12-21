@@ -37,6 +37,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->dirroot . '/backup/util/helper/copy_helper.class.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/externallib.php');
@@ -428,6 +429,11 @@ class opensesame_handler extends migration_handler {
             );
             add_moduleinfo($moduleinfo, $course);
         }
+
+        // Now we add the completion for the course.
+        $completion = new \core_completion\info($course);
+
+
         return '';
     }
 
@@ -494,11 +500,9 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->section = $section;
         $moduleinfo->displayattemptstatus = 1;
         $course = get_course(1);
-        $defaultcompletion = \core_completion\manager::get_default_completion($course, $mod);
-        foreach ($defaultcompletion as $key => $value) {
-            $moduleinfo->$key = $value;
-        }
-
+        $moduleinfo->completion = 1;
+        $moduleinfo->completionunlocked = 1;
+        $moduleinfo->completionstatusrequired = 6;
         $moduleinfo->instance = $instance;
         return $moduleinfo;
     }
