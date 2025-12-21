@@ -32,7 +32,6 @@ use tool_opensesame\api\opensesame;
 use tool_opensesame\auto_config;
 use tool_opensesame\local\data\opensesame_course;
 use tool_opensesame\task\process_course_task;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/user/lib.php');
@@ -42,6 +41,8 @@ require_once($CFG->dirroot . '/backup/util/helper/copy_helper.class.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/externallib.php');
 require_once($CFG->dirroot . '/grade/querylib.php');
+require_once($CFG->dirroot.'/completion/criteria/completion_criteria_activity.php');
+require_once($CFG->dirroot.'/completion/completion_aggregation.php');
 
 /**
  * Open sesame process handler.
@@ -427,12 +428,43 @@ class opensesame_handler extends migration_handler {
                 $add,
                 $section
             );
-            add_moduleinfo($moduleinfo, $course);
+            $moduleinfo = add_moduleinfo($moduleinfo, $course);
+            // Get cmid from moduleinfo for new modules.
+            $cmid = $moduleinfo->coursemodule;
+        }
+        // For updates, $cmid is already set from line 386.
+
+        // Check if criteria already exists for this activity.
+        $existingcriteria = \completion_criteria_activity::fetch([
+            'course' => $courseid,
+            'moduleinstance' => $cmid
+        ]);
+
+        if (!$existingcriteria) {
+            // Create activity completion criteria.
+            $criteria = new \completion_criteria_activity();
+            $criteria->course = $courseid;
+            $criteria->module = 'scorm';
+            $criteria->moduleinstance = $cmid;
+            $criteria->criteriatype = COMPLETION_CRITERIA_TYPE_ACTIVITY;
+            $criteria->id = null; // New criteria.
+            $criteria->insert();
         }
 
-        // Now we add the completion for the course.
-        $completion = new \core_completion\info($course);
+        // Set activity aggregation method to ALL (course completes when activity completes).
+        $aggdata = [
+            'course' => $courseid,
+            'criteriatype' => COMPLETION_CRITERIA_TYPE_ACTIVITY
+        ];
+        $aggregation = new \completion_aggregation($aggdata);
+        $aggregation->setMethod(COMPLETION_AGGREGATION_ALL);
+        $aggregation->save();
 
+        // Set overall aggregation method to ALL (course completes when all criteria are met).
+        $aggdata['criteriatype'] = null; // null means overall aggregation.
+        $aggregation = new \completion_aggregation($aggdata);
+        $aggregation->setMethod(COMPLETION_AGGREGATION_ALL);
+        $aggregation->save();
 
         return '';
     }
