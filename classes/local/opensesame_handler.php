@@ -36,13 +36,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/course/lib.php');
-require_once($CFG->libdir.'/completionlib.php');
+require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->dirroot . '/backup/util/helper/copy_helper.class.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/externallib.php');
 require_once($CFG->dirroot . '/grade/querylib.php');
-require_once($CFG->dirroot.'/completion/criteria/completion_criteria_activity.php');
-require_once($CFG->dirroot.'/completion/completion_aggregation.php');
+require_once($CFG->dirroot . '/completion/criteria/completion_criteria_activity.php');
+require_once($CFG->dirroot . '/completion/completion_aggregation.php');
 
 /**
  * Open sesame process handler.
@@ -437,7 +437,7 @@ class opensesame_handler extends migration_handler {
         // Check if criteria already exists for this activity.
         $existingcriteria = \completion_criteria_activity::fetch([
             'course' => $courseid,
-            'moduleinstance' => $cmid
+            'moduleinstance' => $cmid,
         ]);
 
         if (!$existingcriteria) {
@@ -454,7 +454,7 @@ class opensesame_handler extends migration_handler {
         // Set activity aggregation method to ALL (course completes when activity completes).
         $aggdata = [
             'course' => $courseid,
-            'criteriatype' => COMPLETION_CRITERIA_TYPE_ACTIVITY
+            'criteriatype' => COMPLETION_CRITERIA_TYPE_ACTIVITY,
         ];
         $aggregation = new \completion_aggregation($aggdata);
         $aggregation->setMethod(COMPLETION_AGGREGATION_ALL);
