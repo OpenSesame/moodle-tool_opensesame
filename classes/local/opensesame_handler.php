@@ -531,8 +531,7 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->cmidnumber = null;
         $moduleinfo->section = $section;
         $moduleinfo->displayattemptstatus = 1;
-        $course = get_course(1);
-        $moduleinfo->completion = 1;
+        $moduleinfo->completion = COMPLETION_TRACKING_AUTOMATIC;
         $moduleinfo->completionunlocked = 1;
         $moduleinfo->completionstatusrequired = 6;
         $moduleinfo->instance = $instance;
