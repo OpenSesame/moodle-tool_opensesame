@@ -51,8 +51,7 @@ use tool_opensesame\auto_config;
  * @author      2023 Oscar Nadjar <oscar.nadjar@moodle.com>
  * @license     Moodle Workplace License, distribution is restricted, contact support@moodle.com
  */
-class course_queing_test extends advanced_testcase {
-
+final class course_queing_test extends advanced_testcase {
     /** @var tool_opensesame_generator */
     protected $opsmgenerator;
 
@@ -62,6 +61,7 @@ class course_queing_test extends advanced_testcase {
      * @return void
      */
     protected function setUp(): void {
+        parent::setUp();
         $ac = new auto_config();
         $ac->configure();
         $this->opsmgenerator = self::getDataGenerator()->get_plugin_generator('tool_opensesame');
@@ -71,7 +71,7 @@ class course_queing_test extends advanced_testcase {
     /**
      * Test retrieve_and_process_queue_courses.
      */
-    public function test_retrieve_and_process_queue_courses() {
+    public function test_retrieve_and_process_queue_courses(): void {
 
         global $DB;
 
@@ -113,7 +113,7 @@ class course_queing_test extends advanced_testcase {
 
         foreach ($opsesamecourses as $courserecords) {
             $mockcourse = $courselist[$courserecords->idopensesame];
-            $this->assertTrue(isset($opsesameadhoctasks['"'.$courserecords->id.'"']));
+            $this->assertTrue(isset($opsesameadhoctasks['"' . $courserecords->id . '"']));
             $this->assertEquals($mockcourse->id, $courserecords->idopensesame);
             $this->assertEquals($mockcourse->title, $courserecords->title);
             $this->assertEquals($mockcourse->descriptionText, $courserecords->descriptiontext);

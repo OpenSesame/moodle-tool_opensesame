@@ -36,7 +36,6 @@ namespace tool_opensesame\api;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class opensesame extends \curl {
-
     /** @var string */
     private $authurl;
 
@@ -70,7 +69,14 @@ class opensesame extends \curl {
      * @throws \moodle_exception
      */
     public function __construct(
-            $authurl, $clientid, $clientsecret, $customerintegrationid, $baseurl, $retries = 3, $settings = []) {
+        $authurl,
+        $clientid,
+        $clientsecret,
+        $customerintegrationid,
+        $baseurl,
+        $retries = 3,
+        $settings = []
+    ) {
         parent::__construct($settings);
         $this->authurl = $authurl;
         $this->clientid = $clientid;
@@ -268,7 +274,7 @@ class opensesame extends \curl {
         $header = ['Accept: application/json', 'Content-Type: application/json'];
 
         $response = $this->get_request_retries(
-            "/v1/content" ,
+            "/v1/content",
             $header,
             $params,
         );
@@ -298,7 +304,15 @@ class opensesame extends \curl {
         $tempdir = make_request_directory();
         $path = "{$tempdir}/{$filename}";
         $res = download_file_content(
-            $downloadurl, $this->get_authentication_header(), null, false, 320, 20, false, $path);
+            $downloadurl,
+            $this->get_authentication_header(),
+            null,
+            false,
+            320,
+            20,
+            false,
+            $path
+        );
         if ($res === false) {
             throw new \Exception("Could not download file from URL: $downloadurl");
         }

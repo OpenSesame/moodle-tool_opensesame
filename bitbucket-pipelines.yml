@@ -5,129 +5,321 @@ image:
     access-key: "$AWS_ACCESS_KEY"
     secret-key: "$AWS_SECRET_KEY"
 definitions:
-  installscript: &baseInst
-    echo "Checking out Moodle Workplace\n" ;
-    moodle-plugin-ci install --branch='MOODLE_401_STABLE' ;
-  installscript2: &baseInstmysql
-    echo "Checking out Moodle Workplace\n" ;
-    moodle-plugin-ci install --db-type='mysqli' --branch='MOODLE_401_STABLE' ;
-  installscript3: &baseInstpostgres
-    echo "Checking out Moodle Workplace\n" ;
-    moodle-plugin-ci install --db-type='pgsql' --branch='MOODLE_401_STABLE' ;
+  .install-404: &install404
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_404_STABLE" ;
+  .install-405: &install405
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_405_STABLE" ;
+  .install-500: &install500
+      setphpversion 8.2 ;
+      moodle-plugin-ci -vvv install --no-init --branch="MOODLE_500_STABLE" ;
+  .install-401: &install401full
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_401_STABLE" ;
+  .install-402: &install402full
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_402_STABLE" ;
+  .install-403: &install403full
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_403_STABLE" ;
+  .install-404: &install404full
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_404_STABLE" ;
+  .install-405: &install405full
+      setphpversion 8.1 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_405_STABLE" ;
+  .install-500: &install500full
+      setphpversion 8.2 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_500_STABLE" ;
+  .install-501: &install501full
+      setphpversion 8.2 ;
+      moodle-plugin-ci -vvv install --branch="MOODLE_501_STABLE" ;
   steps:
-    - step: &maridb
-        name: 'Moodle 4.1, PHP 7.4 and MariaDB 10.6'
+    - step: &base
+        name: 'Set up Docker, Composer and MariaDB 10.6'
         caches:
           - npm
           - composer
-          - docker
         services:
           - mariadb
-          - docker
-    - step: &mysql
-        name: 'Moodle 4.1, PHP 7.4 and MySQL 5.7'
-        caches:
-          - npm
-          - composer
-        services:
-          - mysql
-    - step: &postgres
-        name: 'Moodle 4.1, PHP 7.4 and PostgreSQL 13'
-        caches:
-          - npm
-          - composer
-        services:
-          - postgres
   services:
     mariadb:
-      image: mariadb:10.6
+      image: mariadb:10.11.13
       variables:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
-    mysql:
-      image: 'mysql:5.7'
-      variables:
-        MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-    postgres:
-      image: 'postgres:13'
-      variables:
-        POSTGRES_USER: 'postgres'
-        POSTGRES_HOST_AUTH_METHOD: 'trust'
-
   caches:
-    npm: $HOME/.npm
+    npm:
+      path: $HOME/.npm
 pipelines:
   default:
     - parallel:
         steps:
+          # Moodle 4.4
           - step:
-              <<: *maridb
-              name: PHP Lint
+              <<: *base
+              name: PHP Lint 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci phplint
           - step:
-              <<: *maridb
-              name: PHP Copy detector 
+              <<: *base
+              name: PHP Copy detector 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci phpcpd
           - step:
-              <<: *maridb
-              name: PHP Mess detector
+              <<: *base
+              name: PHP Mess detector 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci phpmd
           - step:
-              <<: *maridb
-              name: PHP Code checker
+              <<: *base
+              name: PHP Code checker 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci codechecker
           - step:
-              <<: *maridb
-              name: PHP Validate
+              <<: *base
+              name: PHP Validate 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci validate
           - step:
-              <<: *maridb
-              name: PHP Savepoints
+              <<: *base
+              name: PHP Savepoints 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci savepoints
           - step:
-              <<: *maridb
-              name: PHP Mustache
+              <<: *base
+              name: PHP Mustache 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci mustache
           - step:
-              <<: *maridb
-              name: PHP Grunt
+              <<: *base
+              name: PHP Grunt 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci grunt
           - step:
-              <<: *maridb
-              name: PHP Doc
+              <<: *base
+              name: PHP Doc 4.4
               script:
-                - *baseInst
+                - *install404
                 - moodle-plugin-ci phpdoc
           - step:
-              <<: *maridb
-              name: PHPUnit
+              <<: *base
+              name: PHPUnit 4.4
               script:
-                - *baseInst
+                - *install404full
                 - moodle-plugin-ci phpunit
           - step:
-              <<: *mysql
-              name: PHPUnit mysql
+              <<: *base
+              name: PHP Deprecations 4.4
               script:
-                - *baseInstmysql
+                - *install404
+                - moodle-plugin-ci codechecker --standard=/usr/local/mds --max-warnings=1
+          # Moodle 4.5
+          - step:
+              <<: *base
+              name: PHP Lint 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *base
+              name: PHP Copy detector 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *base
+              name: PHP Mess detector 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *base
+              name: PHP Code checker 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *base
+              name: PHP Validate 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci validate
+          - step:
+              <<: *base
+              name: PHP Savepoints 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *base
+              name: PHP Mustache 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *base
+              name: PHP Grunt 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *base
+              name: PHP Doc 4.5
+              script:
+                - *install405
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *base
+              name: PHPUnit 4.5
+              script:
+                - *install405full
                 - moodle-plugin-ci phpunit
           - step:
-              <<: *postgres
-              name: PHPUnit postgres
+              <<: *base
+              name: PHP Deprecations 4.5
               script:
-                - *baseInstpostgres
+                - *install405
+                - moodle-plugin-ci codechecker --standard=/usr/local/mds --max-warnings=1
+          # Moodle 5.0
+          - step:
+              <<: *base
+              name: PHP Lint 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *base
+              name: PHP Copy detector 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *base
+              name: PHP Mess detector 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *base
+              name: PHP Code checker 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *base
+              name: PHP Validate 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci validate
+          - step:
+              <<: *base
+              name: PHP Savepoints 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *base
+              name: PHP Mustache 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *base
+              name: PHP Grunt 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *base
+              name: PHP Doc 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *base
+              name: PHPUnit 5.0
+              script:
+                - *install500full
                 - moodle-plugin-ci phpunit
+          - step:
+              <<: *base
+              name: PHP Deprecations 5.0
+              script:
+                - *install500
+                - moodle-plugin-ci codechecker --standard=/usr/local/mds --max-warnings=1
+          # Moodle 5.0
+          - step:
+              <<: *base
+              name: PHP Lint 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci phplint
+          - step:
+              <<: *base
+              name: PHP Copy detector 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci phpcpd
+          - step:
+              <<: *base
+              name: PHP Mess detector 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci phpmd
+          - step:
+              <<: *base
+              name: PHP Code checker 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci codechecker
+          - step:
+              <<: *base
+              name: PHP Validate 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci validate
+          - step:
+              <<: *base
+              name: PHP Savepoints 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci savepoints
+          - step:
+              <<: *base
+              name: PHP Mustache 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci mustache
+          - step:
+              <<: *base
+              name: PHP Grunt 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci grunt
+          - step:
+              <<: *base
+              name: PHP Doc 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci phpdoc
+          - step:
+              <<: *base
+              name: PHPUnit 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci phpunit
+          - step:
+              <<: *base
+              name: PHP Deprecations 5.1
+              script:
+                - *install501full
+                - moodle-plugin-ci codechecker --standard=/usr/local/mds --max-warnings=1

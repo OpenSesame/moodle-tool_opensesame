@@ -49,21 +49,21 @@ use tool_opensesame\local\data\opensesame_course;
  * @author      2024 Oscar Nadjar <oscar.nadjar@moodle.com>
  * @license     Moodle Workplace License, distribution is restricted, contact support@moodle.com
  */
-class queries_test extends advanced_testcase {
-
+final class queries_test extends advanced_testcase {
     /**
      * Test setup
      *
      * @return void
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
     /**
      * Test retrieve_and_process_queue_courses.
      */
-    public function test_queries_funtions() {
+    public function test_queries_funtions(): void {
 
         // This both test are to make sure the queries runs on several db engines.
         $this->assertTrue(opensesame_handler::delete_disabled_courses());

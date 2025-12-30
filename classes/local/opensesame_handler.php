@@ -32,15 +32,17 @@ use tool_opensesame\api\opensesame;
 use tool_opensesame\auto_config;
 use tool_opensesame\local\data\opensesame_course;
 use tool_opensesame\task\process_course_task;
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->dirroot . '/backup/util/helper/copy_helper.class.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/externallib.php');
 require_once($CFG->dirroot . '/grade/querylib.php');
+require_once($CFG->dirroot . '/completion/criteria/completion_criteria_activity.php');
+require_once($CFG->dirroot . '/completion/completion_aggregation.php');
 
 /**
  * Open sesame process handler.
@@ -52,7 +54,6 @@ require_once($CFG->dirroot . '/grade/querylib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class opensesame_handler extends migration_handler {
-
     /** @var array */
     const REMOTE_COURSE_TO_OS_COURSE_MAPPINGS = [
         'id' => 'idopensesame',
@@ -105,7 +106,11 @@ class opensesame_handler extends migration_handler {
      * @param mixed $customerintegrationid
      */
     public function __construct(
-        $authurl = null, $clientid = null, $clientsecret = null, $baseurl = null, $customerintegrationid = null
+        $authurl = null,
+        $clientid = null,
+        $clientsecret = null,
+        $baseurl = null,
+        $customerintegrationid = null
     ) {
         $authurl = $authurl ?? get_config('tool_opensesame', 'authurl');
         $clientid = $clientid ?? get_config('tool_opensesame', 'clientid');
@@ -184,7 +189,8 @@ class opensesame_handler extends migration_handler {
                 $oscourse,
                 $record,
                 self::REMOTE_COURSE_TO_OS_COURSE_MAPPINGS,
-                self::REMOTE_COURSE_TRANSFORMS);
+                self::REMOTE_COURSE_TRANSFORMS
+            );
             $oscourse->mtrace_errors_save();
         }
     }
@@ -271,12 +277,12 @@ class opensesame_handler extends migration_handler {
         $courseid = $oscourse->courseid;
         $context = context_course::instance($courseid);
         $fileinfo = [
-            'contextid' => $context->id,    // ID of the context.
-            'component' => 'course',        // Your component name.
+            'contextid' => $context->id, // ID of the context.
+            'component' => 'course', // Your component name.
             'filearea'  => 'overviewfiles', // Usually = table name.
-            'itemid'    => 0,               // Usually = ID of row in table.
-            'filepath'  => '/',             // Any path beginning and ending in /.
-            'filename'  => 'courseimage_' . $courseid . '.jpg',   // Any filename.
+            'itemid'    => 0, // Usually = ID of row in table.
+            'filepath'  => '/', // Any path beginning and ending in /.
+            'filename'  => 'courseimage_' . $courseid . '.jpg', // Any filename.
         ];
         // Create course image.
         $fs = get_file_storage();
@@ -390,7 +396,16 @@ class opensesame_handler extends migration_handler {
             $data->sr = 0;
             $data->update = $cmid;
             $moduleinfo = $this->build_scorm_modinfo(
-                $launchurl, $courseid, $draftitemid, $module, '0', 0, $cmid, $cm->instance, $cm->id);
+                $launchurl,
+                $courseid,
+                $draftitemid,
+                $module,
+                '0',
+                0,
+                $cmid,
+                $cm->instance,
+                $cm->id
+            );
             update_moduleinfo($cm, $moduleinfo, $course);
         } else {
             // Create top course section.
@@ -406,9 +421,51 @@ class opensesame_handler extends migration_handler {
             $data->sr = 0;
             $data->add = $add;
             $moduleinfo = $this->build_scorm_modinfo(
-                $launchurl, $courseid, $draftitemid, $module, $add, $section);
-            add_moduleinfo($moduleinfo, $course);
+                $launchurl,
+                $courseid,
+                $draftitemid,
+                $module,
+                $add,
+                $section
+            );
+            $moduleinfo = add_moduleinfo($moduleinfo, $course);
+            // Get cmid from moduleinfo for new modules.
+            $cmid = $moduleinfo->coursemodule;
         }
+        // For updates, $cmid is already set from line 386.
+
+        // Check if criteria already exists for this activity.
+        $existingcriteria = \completion_criteria_activity::fetch([
+            'course' => $courseid,
+            'moduleinstance' => $cmid,
+        ]);
+
+        if (!$existingcriteria) {
+            // Create activity completion criteria.
+            $criteria = new \completion_criteria_activity();
+            $criteria->course = $courseid;
+            $criteria->module = 'scorm';
+            $criteria->moduleinstance = $cmid;
+            $criteria->criteriatype = COMPLETION_CRITERIA_TYPE_ACTIVITY;
+            $criteria->id = null; // New criteria.
+            $criteria->insert();
+        }
+
+        // Set activity aggregation method to ALL (course completes when activity completes).
+        $aggdata = [
+            'course' => $courseid,
+            'criteriatype' => COMPLETION_CRITERIA_TYPE_ACTIVITY,
+        ];
+        $aggregation = new \completion_aggregation($aggdata);
+        $aggregation->setMethod(COMPLETION_AGGREGATION_ALL);
+        $aggregation->save();
+
+        // Set overall aggregation method to ALL (course completes when all criteria are met).
+        $aggdata['criteriatype'] = null; // null means overall aggregation.
+        $aggregation = new \completion_aggregation($aggdata);
+        $aggregation->setMethod(COMPLETION_AGGREGATION_ALL);
+        $aggregation->save();
+
         return '';
     }
 
@@ -427,8 +484,16 @@ class opensesame_handler extends migration_handler {
      * @return \stdClass
      * @throws \dml_exception
      */
-    private function build_scorm_modinfo(string $launchurl = null, int $courseid, int $draftitemid = null, object $mod, string $add = '0',
-                                         int $section = 0, int $updt = null, string $instance = null, int $cm = null
+    private function build_scorm_modinfo(
+        string $launchurl = null,
+        int $courseid,
+        int $draftitemid = null,
+        object $mod,
+        string $add = '0',
+        int $section = 0,
+        int $updt = null,
+        string $instance = null,
+        int $cm = null
     ): \stdClass {
         global $CFG;
         $moduleinfo = new \stdClass();
@@ -466,9 +531,9 @@ class opensesame_handler extends migration_handler {
         $moduleinfo->cmidnumber = null;
         $moduleinfo->section = $section;
         $moduleinfo->displayattemptstatus = 1;
-        $moduleinfo->completionstatusrequired = COMPLETION_CRITERIA_TYPE_ACTIVITY;
-        $moduleinfo->completion = COMPLETION_CRITERIA_TYPE_DATE;
-        $moduleinfo->completionview = 1;
+        $moduleinfo->completion = COMPLETION_TRACKING_AUTOMATIC;
+        $moduleinfo->completionunlocked = 1;
+        $moduleinfo->completionstatusrequired = 6;
         $moduleinfo->instance = $instance;
         return $moduleinfo;
     }
@@ -592,5 +657,4 @@ class opensesame_handler extends migration_handler {
         }
         return true;
     }
-
 }

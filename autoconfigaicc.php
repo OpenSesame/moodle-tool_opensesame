@@ -26,7 +26,7 @@
 
 use tool_opensesame\auto_config;
 
-require(__DIR__.'/../../../config.php');
+require(__DIR__ . '/../../../config.php');
 
 $PAGE->set_url(new moodle_url('/admin/tool/opensesame/autoconfigaicc.php'));
 $PAGE->set_context(context_system::instance());

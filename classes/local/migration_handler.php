@@ -36,7 +36,6 @@ use tool_opensesame\local\data\base;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class migration_handler {
-
     /** @var string Date transform. Used to convert a string to a unix timestapm. */
     const TRANSFORM_DATE = 'date';
 
@@ -88,8 +87,10 @@ abstract class migration_handler {
         }
         try {
             $message = '';
-            while (!isset($endstatus[$entity->status])
-                   && empty($message)) {
+            while (
+                !isset($endstatus[$entity->status])
+                   && empty($message)
+            ) {
                 $message = $this->process_step($entity, $api);
             }
 
@@ -145,7 +146,6 @@ abstract class migration_handler {
                     $todata->{$column} = $value;
                 }
             }
-
         }
         return '';
     }
